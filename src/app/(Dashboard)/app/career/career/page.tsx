@@ -1,3 +1,4 @@
+"use client";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";

@@ -1,15 +1,17 @@
 import { ReactNode } from "react"
 import { Card } from "antd"
 
+type MaxWidth = "sm" | "md" | "4xl"
+
 interface AuthLayoutProps {
   children: ReactNode
-  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "4xl"
+  maxWidth?: MaxWidth
   className?: string
 }
 
-const maxWidthClasses = {
+const maxWidthClasses: Record<MaxWidth, string> = {
   sm: "max-w-sm",
-  md: "max-w-2xl",
+  md: "max-w-md",
   "4xl": "max-w-4xl",
 }
 
