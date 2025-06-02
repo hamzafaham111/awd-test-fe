@@ -16,9 +16,10 @@ interface DataTableProps {
     // pagination?: object | false; // Remove this for internal control
   };
   rowSelection?: any;
+  expandable?: any;
 }
 
-export default function DataTable({ columns, data, tableData = {}, rowSelection }: DataTableProps) {
+export default function DataTable({ columns, data, tableData = {}, rowSelection, expandable }: DataTableProps) {
   const [search, setSearch] = useState("");
   const [pagination, setPagination] = useState({
     current: 1,
@@ -80,6 +81,7 @@ export default function DataTable({ columns, data, tableData = {}, rowSelection 
           rowSelection={rowSelection !== undefined ? rowSelection : (tableData.selectableRows ? {} : undefined)}
           pagination={pagination}
           onChange={handleTableChange}
+          expandable={expandable}
         />
       </div>
     </div>
