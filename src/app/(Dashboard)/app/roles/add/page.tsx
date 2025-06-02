@@ -28,8 +28,7 @@ export default function AddRolePage() {
   return (
     <div className="p-6 w-full">
       <Breadcrumbs items={[{ label: "Roles", href: "/app/roles" }, { label: "Add New Role" }]} />
-      <Card className="max-w-2xl mx-auto mt-6">
-        <h2 className="text-xl font-bold mb-6">Add New Role</h2>
+      <Card className="mx-auto mt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
             <label className="block mb-1 font-semibold">Role Name</label>
@@ -65,9 +64,10 @@ export default function AddRolePage() {
           </div>
         </div>
         <div className="flex justify-end">
-          <Button type="primary" loading={loading} onClick={handleSave} className="px-8 py-2 bg-sky-600 hover:bg-sky-700 rounded-md">
+          <button onClick={handleSave} className="px-8 text-white py-2 bg-sky-600 hover:bg-sky-700 rounded-md">
             Save
-          </Button>
+            {loading && <span className="ml-2">Saving...</span>}
+          </button>
         </div>
       </Card>
     </div>

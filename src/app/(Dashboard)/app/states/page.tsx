@@ -1,7 +1,7 @@
 "use client";
 
-import { Table, Card, Button, Input, Space, Tag, Modal, Form, Select } from "antd";
-import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Table, Card, Button, Input, Space, Tag, Modal, Form, Select, Dropdown, Menu } from "antd";
+import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined, DownOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import DataTable from "@/components/common/DataTable";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
@@ -34,12 +34,25 @@ const columns = [
   {
     title: "Actions",
     key: "actions",
-    render: () => (
-      <Space>
-        <Button type="link" icon={<EditOutlined />}>Edit</Button>
-        <Button type="link" danger icon={<DeleteOutlined />}>Delete</Button>
-      </Space>
-    ),
+    render: (_: any, record: any) => {
+      const menu = (
+        <Menu>
+          <Menu.Item key="edit" icon={<EditOutlined />}>
+            Edit
+          </Menu.Item>
+          <Menu.Item key="delete" icon={<DeleteOutlined />} danger>
+            Delete
+          </Menu.Item>
+        </Menu>
+      );
+      return (
+        <Dropdown overlay={menu} trigger={["click"]}>
+          <Button>
+            Action <DownOutlined />
+          </Button>
+        </Dropdown>
+      );
+    },
   },
 ];
 

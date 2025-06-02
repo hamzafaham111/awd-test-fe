@@ -14,11 +14,11 @@ export default function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
           {items.map((item, idx) => (
             <li key={idx} className="flex items-center">
               {item.href ? (
-                <Link href={item.href} className={idx === 0 ? "text-blue-800 hover:underline" : "text-gray-500 font-normal hover:underline"}>
+                <Link href={item.href} className={idx === 0 ? "text-sky-700 hover:underline" : "text-gray-500 font-normal hover:underline"}>
                   {item.label}
                 </Link>
               ) : (
-                <span className={idx === 0 ? "text-blue-800" : "text-gray-500 font-normal"}>
+                <span className={idx === 0 ? "text-sky-700" : "text-gray-500 font-normal"}>
                   {item.label}
                 </span>
               )}

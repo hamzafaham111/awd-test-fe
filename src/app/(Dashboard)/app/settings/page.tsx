@@ -1,70 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Button } from "antd";
-import { SettingOutlined } from "@ant-design/icons";
+import { Card } from "antd";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
-
-// Example tab content components
-function FeesAndCharges() {
-  return (
-    <div>
-      <h2 className="text-2xl font-bold mb-6">Fees & Charges</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h3 className="font-semibold mb-2">Inspection Fee (Seller)</h3>
-          <div className="mb-2">Per Inspection Fee Type:</div>
-          <select className="border rounded px-2 py-1 mb-2 w-full">
-            <option>Percentage</option>
-            <option>Fixed</option>
-          </select>
-          <div className="mb-2">Per Inspection Fee:</div>
-          <input className="border rounded px-2 py-1 w-full" defaultValue={50} />
-        </div>
-        <div>
-          <h3 className="font-semibold mb-2">Basic Arbitration Fee</h3>
-          <div className="mb-2">Basic Arbitration Fee Type:</div>
-          <select className="border rounded px-2 py-1 mb-2 w-full">
-            <option>Fixed</option>
-          </select>
-          <div className="mb-2">Basic Arbitration Fee:</div>
-          <input className="border rounded px-2 py-1 w-full" defaultValue={0} />
-          <div className="mb-2 mt-2">Basic Arbitration Days:</div>
-          <input className="border rounded px-2 py-1 w-full" defaultValue={7} />
-        </div>
-        <div>
-          <h3 className="font-semibold mb-2">Extended Arbitration Fee</h3>
-          <div className="mb-2">Extended Arbitration Fee Type:</div>
-          <select className="border rounded px-2 py-1 mb-2 w-full">
-            <option>Fixed</option>
-          </select>
-          <div className="mb-2">Extended Arbitration Fee:</div>
-          <input className="border rounded px-2 py-1 w-full" defaultValue={10} />
-          <div className="mb-2 mt-2">Extended Arbitration Days:</div>
-          <input className="border rounded px-2 py-1 w-full" defaultValue={30} />
-        </div>
-      </div>
-      <div className="flex justify-end mt-8">
-        <Button type="primary" className="bg-sky-600 hover:bg-sky-700 rounded-md px-8 py-2">Save</Button>
-      </div>
-    </div>
-  );
-}
-
-function AuctionSetting() {
-  return <div><h2 className="text-2xl font-bold mb-6">Auction Setting</h2><p>Settings for auctions go here.</p></div>;
-}
-function FedExInfo() {
-  return <div><h2 className="text-2xl font-bold mb-6">FedEx Information</h2><p>FedEx info form goes here.</p></div>;
-}
-function Security() {
-  return <div><h2 className="text-2xl font-bold mb-6">Security</h2><p>Security settings go here.</p></div>;
-}
-function Other() {
-  return <div><h2 className="text-2xl font-bold mb-6">Other Settings</h2><p>Other settings go here.</p></div>;
-}
+import FeesAndCharges from "@/components/settings/FeesAndCharges";
+import AuctionSetting from "@/components/settings/AuctionSetting";
+import FedExInfo from "@/components/settings/FedExInfo";
+import Security from "@/components/settings/Security";
+import Other from "@/components/settings/Other";
+import APIs from "@/components/settings/APIs";
+import EmailSettings from "@/components/settings/EmailSettings";
+import Maintenance from "@/components/settings/Maintenance";
+import Messages from "@/components/settings/Messages";
+import Reset from "@/components/settings/Reset";
 
 const tabs = [
   { key: "fees", label: "Fees And Charges", content: <FeesAndCharges /> },
@@ -72,11 +22,11 @@ const tabs = [
   { key: "fedex", label: "FedEx Information", content: <FedExInfo /> },
   { key: "security", label: "Security", content: <Security /> },
   { key: "other", label: "Other", content: <Other /> },
-  { key: "apis", label: "APIs", content: <div>API settings go here.</div> },
-  { key: "email", label: "Email Settings", content: <div>Email settings go here.</div> },
-  { key: "maintenance", label: "Maintenance", content: <div>Maintenance settings go here.</div> },
-  { key: "messages", label: "Messages", content: <div>Messages settings go here.</div> },
-  { key: "reset", label: "Reset", content: <div>Reset options go here.</div> },
+  { key: "apis", label: "APIs", content: <APIs /> },
+  { key: "email", label: "Email Settings", content: <EmailSettings /> },
+  { key: "maintenance", label: "Maintenance", content: <Maintenance /> },
+  { key: "messages", label: "Messages", content: <Messages /> },
+  { key: "reset", label: "Reset", content: <Reset /> },
 ];
 
 export default function SettingsPage() {
@@ -106,7 +56,7 @@ export default function SettingsPage() {
             </ul>
           </div>
           {/* Content Area */}
-          <div className="flex-1 px-8 min-h-[400px]">{activeTabObj?.content}</div>
+          <div className="flex-1 pl-4 min-h-[400px] w-full">{activeTabObj?.content}</div>
         </div>
       </Card>
     </div>

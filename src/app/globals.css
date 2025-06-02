@@ -93,3 +93,45 @@
 .ant-menu .ant-menu-submenu-title .anticon {
   color: inherit !important;
 }
+
+/* AntD Switch checked (on) state */
+.ant-switch-checked {
+  background-color: #0369a1 !important; /* Tailwind bg-sky-700 */
+}
+
+/* AntD Checkbox checked state */
+.ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #0369a1 !important;
+  border-color: #0369a1 !important;
+}
+.ant-checkbox-input:focus + .ant-checkbox-inner {
+  border-color: #0369a1 !important;
+}
+
+/* AntD Radio checked state */
+.ant-radio-checked .ant-radio-inner {
+  border-color: #0284c7 !important;
+}
+.ant-radio-checked .ant-radio-inner::after {
+  background-color: #0284c7 !important;
+  border-color: #0284c7 !important;
+  box-shadow: none !important; /* Remove the white ring */
+}
+.ant-radio-input:focus + .ant-radio-inner {
+  border-color: #0369a1 !important;
+}
+
+/* Force the radio dot (checked) to use sky-700, override AntD's box-shadow */
+.ant-radio-checked .ant-radio-inner::after {
+  background-color: #0369a1 !important;
+  border-color: #0369a1 !important;
+  box-shadow: 0 0 0 6px #fff inset !important; /* white background for the ring */
+}
+
+.ant-radio-checked .ant-radio-inner {
+  border-color: #0369a1 !important;
+}
+
+.ant-radio-input:focus + .ant-radio-inner {
+  border-color: #0369a1 !important;
+}

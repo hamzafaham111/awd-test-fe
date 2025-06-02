@@ -15,9 +15,10 @@ interface DataTableProps {
     addButtonHref?: string;
     // pagination?: object | false; // Remove this for internal control
   };
+  rowSelection?: any;
 }
 
-export default function DataTable({ columns, data, tableData = {} }: DataTableProps) {
+export default function DataTable({ columns, data, tableData = {}, rowSelection }: DataTableProps) {
   const [search, setSearch] = useState("");
   const [pagination, setPagination] = useState({
     current: 1,
@@ -57,14 +58,14 @@ export default function DataTable({ columns, data, tableData = {} }: DataTablePr
           />
           {tableData.showAddButton && tableData.addButtonLabel && tableData.addButtonHref && (
             <Link href={tableData.addButtonHref}>
-              <Button type="primary" className="ml-2">
+              <button className="ml-2 px-[18px] py-[6px] bg-sky-600 hover:bg-sky-700 rounded-lg font-[600] text-white border-0">
                 {tableData.addButtonLabel}
-              </Button>
+              </button>
             </Link>
           )}
         </div>
       )}
-      <div className="w-full overflow-x-auto">
+      <div className="w-full overflow-x-auto rounded-lg border p-2">
         <Table
           columns={columns.map(col => ({
             ...col,
@@ -76,7 +77,7 @@ export default function DataTable({ columns, data, tableData = {} }: DataTablePr
             }),
           }))}
           dataSource={filteredData}
-          rowSelection={tableData.selectableRows ? {} : undefined}
+          rowSelection={rowSelection !== undefined ? rowSelection : (tableData.selectableRows ? {} : undefined)}
           pagination={pagination}
           onChange={handleTableChange}
         />

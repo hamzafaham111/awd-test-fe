@@ -2,8 +2,9 @@
 
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { Input, Select, Button, Card, message } from "antd";
+import { Input, Select, Button, Card, message, Form, Radio, Checkbox, Collapse } from "antd";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
+import PermissionManager from "./PermissionManager";
 
 // Dummy roles data for demonstration
 const roles = [
@@ -50,21 +51,21 @@ export default function EditViewRolePage() {
   };
 
   return (
-    <div className="p-6 w-full">
-      <Breadcrumbs items={[{ label: "Roles", href: "/app/roles" }, { label: "Edit Role" }]} />
-      <Card className="max-w-2xl mx-auto mt-6">
-        <h2 className="text-xl font-bold mb-6">Edit Role</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div>
-            <label className="block mb-1 font-semibold">Role Name</label>
+    <div className="bg-white rounded-2xl shadow-lg p-8 mx-auto mt-8">
+        <Breadcrumbs items={[{ label: "Roles" }, { label: "Edit" }]} />
+        {/* <Button type="primary" loading={loading} onClick={handleSave} className="px-8 h-11 rounded-lg text-white bg-sky-600 hover:bg-sky-700 font-semibold">
+          Save
+        </Button> */}
+      <Form layout="vertical">
+        <div className="flex gap-4 mb-6">
+          <Form.Item label="Name" name="name" className="flex-1">
             <Input
               value={form.name}
               onChange={e => handleChange("name", e.target.value)}
               placeholder="Enter role name"
             />
-          </div>
-          <div>
-            <label className="block mb-1 font-semibold">Type</label>
+          </Form.Item>
+          <Form.Item label="Type" name="type" className="flex-1">
             <Select
               value={form.type}
               onChange={value => handleChange("type", value)}
@@ -74,26 +75,24 @@ export default function EditViewRolePage() {
               ]}
               className="w-full"
             />
-          </div>
-          <div>
-            <label className="block mb-1 font-semibold">Status</label>
-            <Select
+          </Form.Item>
+        </div>
+        <div className="flex items-center gap-8 mb-6">
+          <Form.Item label="Status" name="status" className="mb-0">
+            <Radio.Group
               value={form.status}
-              onChange={value => handleChange("status", value)}
-              options={[
-                { value: "Active", label: "Active" },
-                { value: "Inactive", label: "Inactive" },
-              ]}
-              className="w-full"
-            />
-          </div>
+              onChange={(e) => handleChange("status", e.target.value)}
+            >
+              <Radio value="Active">Active</Radio>
+              <Radio value="Inactive">Inactive</Radio>
+            </Radio.Group>
+          </Form.Item>
         </div>
-        <div className="flex justify-end">
-          <Button type="primary" loading={loading} onClick={handleSave} className="px-8 py-2 bg-sky-600 hover:bg-sky-700 rounded-md">
-            Save
-          </Button>
-        </div>
-      </Card>
+        <PermissionManager />
+       <div className="flex justify-end">
+       <button className="px-8 h-11 mt-2 rounded-lg text-white bg-sky-600 hover:bg-sky-700 font-semibold">Save Changes</button>
+       </div>
+      </Form>
     </div>
   );
 } 

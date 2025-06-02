@@ -10,7 +10,7 @@ interface UserState {
 const initialState: UserState = {
   id: 1,
   name: "Hamza Faham",
-  role: "superadmin", // or "inspector"
+  role: "superadmin", // or "inspector" - "ds" - "superadmin"
   avatar: "/images/dummy-profile-logo.jpg",
 };
 

@@ -44,7 +44,8 @@ const steps = [
   { id: 2, title: "Personal Information", subtitle: "Introduce yourself for better acquaintance." },
   { id: 3, title: "Dealership Information", subtitle: "Please tell us about your dealership." },
   { id: 4, title: "Dealership Information", subtitle: "What is the address on your dealership license?" },
-  { id: 5, title: "Verification", subtitle: "Complete your registration." },
+  { id: 5, title: "Preference setting", subtitle: "What is the address on your dealership license?" },
+  { id: 6, title: "Verification", subtitle: "Complete your registration." },
 ]
 
 const contactOptions = [
@@ -233,28 +234,75 @@ export default function Registration() {
         </div>
       )}
       {step === 3 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+        <div className="w-full">
+          <div className="flex flex-row gap-2">
+            <FormField name="dealershipName" className="w-4/4 md:w-2/4" label="Dealership Name" rules={[{ required: true, message: "Please enter dealership name" }]} />
+            <FormField name="dealershipStreetName" className="w-4/4 md:w-2/4" label="Dealership Street Name" rules={[{ required: true, message: "Please enter street name" }]} />
+          </div>
+          <div className="flex flex-row gap-2">
+          <FormField name="taxId" className="w-6/6 md:w-2/6" label="Tax ID" rules={[{ required: true, message: "Please enter tax ID" }]} />
+          <FormField name="website" className="w-6/6 md:w-2/6" label="Website" />
+          <FormField name="city" className="w-6/6 md:w-2/6" label="City" rules={[{ required: true, message: "Please enter city" }]} />
+          </div>
+          <div className="flex flex-row gap-2">
+          <FormField name="dealerLicense" className="w-6/6 md:w-2/6" type="upload" label="Dealer license" rules={[{ required: true, message: "Please upload dealer license" }]} />
+          <FormField name="businessLicense" className="w-6/6 md:w-2/6" type="upload" label="Business license" rules={[{ required: true, message: "Please upload business license" }]} />
+          <FormField name="certificateOfRetail" className="w-6/6 md:w-2/6" type="upload" label="Certificate of retail (CRT-61)" rules={[{ required: true, message: "Please upload certificate of retail" }]} />
+          </div>
+          <div className="flex flex-row gap-2">
+          <FormField name="zipcode" className="w-4/4 md:w-2/4" label="Zipcode" rules={[{ required: true, message: "Please enter zipcode" }]} />
+          <FormField name="state" className="w-4/4 md:w-2/4" type="select" label="State" rules={[{ required: true, message: "Please select state" }]} options={stateOptions} />
+          </div>
+          </div>
+      )}
+      {step === 4 && (
+        <div className="grid grid-cols-1 w-full">
           <FormField name="dealershipType" type="select" label="Dealership Type" rules={[{ required: true, message: "Please select your dealership type" }]} options={dealershipTypeOptions} />
           <FormField name="interest" type="select" label="What is your interest" rules={[{ required: true, message: "Please select your interest" }]} options={interestOptions} />
           <FormField name="numberOfLocations" label="No of Locations" rules={[{ required: true, message: "Please enter number of locations" }]} />
           <FormField name="carsInStock" label="How many cars do you stock?" rules={[{ required: true, message: "Please enter number of cars in stock" }]} />
         </div>
       )}
-      {step === 4 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
-          <FormField name="dealershipName" label="Dealership Name" rules={[{ required: true, message: "Please enter dealership name" }]} />
-          <FormField name="dealershipStreetName" label="Dealership Street Name" rules={[{ required: true, message: "Please enter street name" }]} />
-          <FormField name="taxId" label="Tax ID" rules={[{ required: true, message: "Please enter tax ID" }]} />
-          <FormField name="website" label="Website" />
-          <FormField name="city" label="City" rules={[{ required: true, message: "Please enter city" }]} />
-          <FormField name="zipcode" label="Zipcode" rules={[{ required: true, message: "Please enter zipcode" }]} />
-          <FormField name="state" type="select" label="State" rules={[{ required: true, message: "Please select state" }]} options={stateOptions} />
-          <FormField name="dealerLicense" type="upload" label="Dealer license" rules={[{ required: true, message: "Please upload dealer license" }]} />
-          <FormField name="businessLicense" type="upload" label="Business license" rules={[{ required: true, message: "Please upload business license" }]} />
-          <FormField name="certificateOfRetail" type="upload" label="Certificate of retail (CRT-61)" rules={[{ required: true, message: "Please upload certificate of retail" }]} />
+      {step === 5 && (
+        <div className="w-full">
+          <FormField
+            name="referralCode"
+            // label="Referral Code (Optional)"
+            placeholder="Enter referral code"
+            className="mb-4"
+          />
+          <FormField
+            name="heardAbout"
+            type="select"
+            placeholder="How did you hear about AWD?"
+            options={[
+              { label: "Google Search", value: "google" },
+              { label: "Friend/Colleague", value: "friend" },
+              { label: "Social Media", value: "social" },
+              { label: "Other", value: "other" },
+            ]}
+            className="mb-4"
+          />
+          <Form.Item name="textUpdates" valuePropName="checked" className="mb-4">
+            <label className="flex items-center">
+              <input type="checkbox" className="mr-2" />
+              Text me updates <a href="#" className="text-blue-600 underline ml-1">(Text message Policy)</a>
+            </label>
+          </Form.Item>
+          <Form.Item
+            name="agreeTerms"
+            valuePropName="checked"
+            rules={[{ required: true, message: "You must agree to Terms and Conditions" }]}
+            className="mb-6"
+          >
+            <label className="flex items-center">
+              <input type="checkbox" className="mr-2" />
+              I agree to <a href="#" className="text-blue-600 underline ml-1">Terms and Conditions</a> *
+            </label>
+          </Form.Item>
         </div>
       )}
-      {step === 5 && (
+      {step === 6 && (
         <div className="flex flex-col items-center justify-center min-h-[260px] w-full space-y-6">
           <div className="text-center">
             <div className="text-6xl mb-4">🎉</div>

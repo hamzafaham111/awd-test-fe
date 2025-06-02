@@ -14,7 +14,7 @@ const statusColors: Record<string, string> = {
 };
 
 const typeColors: Record<string, string> = {
-  "Fixed": "bg-blue-700 text-white border-blue-700",
+  "Fixed": "bg-blue-900 text-white border-blue-700",
 };
 
 const roles = [
@@ -28,15 +28,6 @@ const roles = [
 
 const columns = [
   {
-    title: <input type="checkbox" className="form-checkbox" disabled />,
-    dataIndex: "select",
-    key: "select",
-    render: (_: any, record: any) => (
-      <input type="checkbox" className="form-checkbox" />
-    ),
-    width: 48,
-  },
-  {
     title: "#",
     dataIndex: "key",
     key: "key",
@@ -49,7 +40,7 @@ const columns = [
     key: "name",
     render: (name: string, record: any) => (
       <Link href={`/app/roles/${record.key}`}>
-        <span className="text-blue-700 font-semibold cursor-pointer hover:underline">{name}</span>
+        <span className="text-blue-700 cursor-pointer hover:underline">{name}</span>
       </Link>
     ),
   },
