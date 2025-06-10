@@ -13,6 +13,9 @@ import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { usePageTitle } from "@/context/PageTitleContext";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/store";
+import { logout } from "@/store/userSlice";
 
 interface NavItem {
   label: string;
@@ -35,30 +38,28 @@ export default function Header({ navItems, roleLabel, dsMode = false, children }
   const [openKeys, setOpenKeys] = useState<string[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const router = useRouter();
+  const user = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
 
   // Dropdown menu for user profile
+  const handleLogout = () => {
+    alert("clicked");
+    console.log("handleLogout");
+    dispatch(logout());
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    router.push("/login");
+  };
+
   const userMenu = (
-    <div className="min-w-[180px] bg-white rounded-lg shadow-lg border border-gray-100">
-      <div className="px-4 py-3 border-b border-gray-100">
-        <div className="font-semibold text-gray-800">Hamza Faham</div>
-      </div>
-      <div className="flex flex-col">
-        <a
-          href="#"
-          className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-gray-700"
-        >
-          <SettingOutlined />
-          Account Settings
-        </a>
-        <button
-          className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-gray-700 text-left w-full"
-          onClick={() => {/* handle logout here */}}
-        >
-          <LogoutOutlined />
-          Logout
-        </button>
-      </div>
-    </div>
+    <Menu>
+      <Menu.Item key="settings" icon={<SettingOutlined />}>
+        Account Settings
+      </Menu.Item>
+      <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout}>
+        Logout
+      </Menu.Item>
+    </Menu>
   );
 
   // Fullscreen toggle handler
@@ -187,7 +188,7 @@ export default function Header({ navItems, roleLabel, dsMode = false, children }
           />
         </div>
         <Dropdown overlay={userMenu} trigger={["click"]} placement="bottomRight" arrow>
-          <Avatar size={40} src="/images/dummy-profile-logo.jpg" className="bg-blue-100 cursor-pointer" />
+          <Avatar size={40} src={user.avatar} className="bg-blue-100 cursor-pointer" />
         </Dropdown>
       </div>
       {/* Bottom Bar: Navigation (desktop/tablet only) */}

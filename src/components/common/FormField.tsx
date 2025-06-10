@@ -29,17 +29,28 @@ export function FormField({
   labelClassName = "",
   label,
   required,
+  value,
+  onChange,
+  fileList,
+  name,
   ...props
-}: FormFieldProps) {
+}: FormFieldProps & { value?: any; onChange?: any; fileList?: any; name?: string }) {
   const renderField = () => {
     switch (type) {
       case "password":
-        return <Input.Password size="large" prefix={prefix} placeholder={placeholder} disabled={disabled} className={inputClassName} />
+        return <Input.Password name={name} size="large" prefix={prefix} placeholder={placeholder} disabled={disabled} className={inputClassName} value={value} onChange={onChange} />
       case "email":
-        return <Input type="email" size="large" prefix={prefix} placeholder={placeholder} disabled={disabled} className={inputClassName} />
+        return <Input name={name} type="email" size="large" prefix={prefix} placeholder={placeholder} disabled={disabled} className={inputClassName} value={value} onChange={onChange} />
       case "select":
         return (
-          <Select size="large" placeholder={placeholder} disabled={disabled} className={inputClassName}>
+          <Select
+            size="large"
+            placeholder={placeholder}
+            disabled={disabled}
+            className={inputClassName}
+            value={value}
+            onChange={onChange}
+          >
             {options.map((option) => (
               <Select.Option key={option.value} value={option.value}>
                 {option.label}
@@ -49,7 +60,13 @@ export function FormField({
         )
       case "radio":
         return (
-          <Radio.Group className={`space-y-4 ${inputClassName}`} disabled={disabled}>
+          <Radio.Group
+            name={name}
+            className={`space-y-4 ${inputClassName}`}
+            disabled={disabled}
+            value={value}
+            onChange={onChange}
+          >
             {options.map((option) => (
               <Radio
                 key={option.value}
@@ -68,17 +85,20 @@ export function FormField({
             maxCount={uploadProps.maxCount}
             beforeUpload={() => false}
             disabled={disabled}
+            fileList={fileList}
+            onChange={onChange}
           >
             <Button icon={<PaperClipOutlined />} disabled={disabled}>Attachment</Button>
           </Upload>
         )
       default:
-        return <Input size="large" prefix={prefix} placeholder={placeholder} disabled={disabled} className={inputClassName} />
+        return <Input name={name} size="large" prefix={prefix} placeholder={placeholder} disabled={disabled} className={inputClassName} value={value} onChange={onChange} />
     }
   }
 
   return (
     <Form.Item
+      name={name}
       {...props}
       label={label ? (
         <span className={labelClassName}>

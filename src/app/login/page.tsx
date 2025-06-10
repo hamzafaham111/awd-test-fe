@@ -9,29 +9,68 @@ import { AuthLayout } from "@/components/layout/AuthLayout"
 import { Logo } from "@/components/common/Logo"
 import { FormField } from "@/components/common/FormField"
 import Image from "next/image"
+import { useDispatch } from "react-redux"
+import { setUser } from "@/store/userSlice"
+import axios from "axios"
+
 interface LoginForm {
   email: string
   password: string
   rememberMe: boolean
 }
 
+// Map backend role names to frontend role keys
+function mapBackendRoleToFrontend(roleName: string) {
+  switch (roleName) {
+    case "SUPER_ADMIN":
+      return "superadmin";
+    case "SELLER":
+    case "BUYER":
+    case "SELLER/BUYER":
+      return "ds";
+    case "INSPECTION":
+      return "inspector";
+    default:
+      return "ds";
+  }
+}
+
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const [form] = Form.useForm()
+  const dispatch = useDispatch()
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   async function onSubmit(values: LoginForm) {
     setIsLoading(true)
-
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      console.log(values)
+      const formData = new FormData()
+      formData.append("email", values.email)
+      formData.append("password", values.password)
+      const response = await axios.post(`${apiUrl}/users/api/v1/login/`, formData)
+      const userData = response.data
+      localStorage.setItem("access", userData.access)
+      localStorage.setItem("refresh", userData.refresh)
+      const user = userData.user
+      const frontendRole = mapBackendRoleToFrontend(user.role?.name || "")
+      dispatch(setUser({
+        id: user.id,
+        name: `${user.first_name} ${user.last_name}`.trim(),
+        role: frontendRole,
+        avatar: "/images/dummy-profile-logo.jpg",
+      }))
       message.success("Login successful!")
-      // In a real app, you would authenticate here
-      // router.push("/dashboard")
-    } catch (error) {
-      message.error("Login failed. Please try again.")
+      if (frontendRole === "superadmin") {
+        router.push("/")
+      } else if (frontendRole === "inspector") {
+        router.push("/")
+      } else {
+        router.push("/")
+      }
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.detail || error?.message || "Login failed. Please try again."
+      message.error(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -70,7 +109,7 @@ export default function Login() {
             type="password"
             rules={[
               { required: true, message: "Please enter your password" },
-              { min: 6, message: "Password must be at least 6 characters" }
+              { min: 5, message: "Password must be at least 5 characters" }
             ]}
             prefix={<LockOutlined />}
             placeholder="Password"

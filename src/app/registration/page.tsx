@@ -9,34 +9,38 @@ import { ProgressIndicator } from "@/components/common/ProgressIndicator"
 
 import { CheckCircleFilled } from "@ant-design/icons"
 import Image from "next/image"
-interface FormData {
+import axios from "axios"
+
+interface RegistrationFormData {
   // Step 1
-  hasDealer: string
+  has_dealer: string
   // Step 2
-  firstName: string
-  lastName: string
+  first_name: string
+  last_name: string
   email: string
-  phoneNumber: string
-  cellNumber: string
-  contactPreference: string
+  phone_number: string
+  mobile_no: string
+  contact_preference: string
 
   // Step 3
-  dealershipType: string
-  interest: string
-  numberOfLocations: string
-  carsInStock: string
-
-  // Step 4
-  dealershipName: string
-  dealershipStreetName: string
-  taxId: string
+  dealership_name: string
+  street_name: string
+  tax_id: string
   website: string
-  city: string
-  state: string
+  city_name: string
+  state_name: string
   zipcode: string
-  dealerLicense: UploadFile[]
-  businessLicense: UploadFile[]
-  certificateOfRetail: UploadFile[]
+  dealer_license: UploadFile[]
+  business_license: UploadFile[]
+  retail_certificate: UploadFile[]
+  dealership_type: string
+  dealership_interest: string
+  no_of_locations: string
+  cars_in_stock: string
+  referral_code: string
+  text_update: boolean
+  heard_about: string
+  agree_terms: boolean
 }
 
 const steps = [
@@ -55,15 +59,15 @@ const contactOptions = [
 ]
 
 const dealershipTypeOptions = [
-  { label: "Franchise", value: "franchise" },
-  { label: "Independent", value: "independent" },
-  { label: "Wholesale", value: "wholesale" },
+  { label: "Franchise", value: "1" },
+  { label: "Independent", value: "2" },
+  { label: "Wholesale", value: "3" },
 ]
 
 const interestOptions = [
-  { label: "Sell a vehicle", value: "sell" },
-  { label: "Buy a vehicle", value: "buy" },
-  { label: "Both buy and sell", value: "both" },
+  { label: "Sell a vehicle", value: "1" },
+  { label: "Buy a vehicle", value: "2" },
+  { label: "Both buy and sell", value: "3" },
 ]
 
 const stateOptions = [
@@ -81,12 +85,59 @@ const stateOptions = [
 export default function Registration() {
   const [currentStep, setCurrentStep] = useState(1)
   const [form] = Form.useForm()
-  const hasDealer = Form.useWatch("hasDealer", form)
+  const has_dealer = Form.useWatch("has_dealer", form)
 
   // Animation state
   const [animating, setAnimating] = useState(false)
   const [animationClass, setAnimationClass] = useState("in")
   const [pendingStep, setPendingStep] = useState<number | null>(null)
+
+  // 1. Add initial state for all form fields in snake_case
+  const initialFormData: RegistrationFormData = {
+    has_dealer: "",
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone_number: "",
+    mobile_no: "",
+    contact_preference: "",
+    dealership_name: "",
+    street_name: "",
+    tax_id: "",
+    website: "",
+    city_name: "",
+    dealer_license: [],
+    business_license: [],
+    retail_certificate: [],
+    state_name: "",
+    zipcode: "",
+    dealership_type: "",
+    dealership_interest: "",
+    no_of_locations: "",
+    cars_in_stock: "",
+    referral_code: "",
+    text_update: false,
+    heard_about: "",
+    agree_terms: false,
+  };
+  const [formData, setFormData] = useState<RegistrationFormData>(initialFormData);
+
+  // 2. Controlled change handlers
+  const handleChange = (name: keyof RegistrationFormData, value: RegistrationFormData[keyof RegistrationFormData]) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    if (type === "checkbox") {
+      // @ts-ignore
+      handleChange(name as keyof RegistrationFormData, (e.target as HTMLInputElement).checked);
+    } else {
+      handleChange(name as keyof RegistrationFormData, value);
+    }
+  };
+  const handleUploadChange = (name: keyof RegistrationFormData, fileList: UploadFile[]) => {
+    handleChange(name, fileList);
+  };
 
   // Animation handler
   const animateStep = (dir: number) => {
@@ -104,16 +155,20 @@ export default function Registration() {
     }, 500)
   }
 
+  const [showErrors, setShowErrors] = useState(false);
+
   const nextStep = async () => {
+    setShowErrors(true);
     try {
-      await form.validateFields()
+      await form.validateFields();
       if (currentStep < steps.length && !animating) {
-        animateStep(1)
+        animateStep(1);
+        setShowErrors(false); // Reset for next step
       }
     } catch (error) {
-      message.error("Please fill in all required fields")
+      message.error("Please fill in all required fields");
     }
-  }
+  };
 
   const prevStep = () => {
     if (currentStep > 1 && !animating) {
@@ -121,10 +176,41 @@ export default function Registration() {
     }
   }
 
-  const onFinish = (values: FormData) => {
-    console.log("Form submitted:", values)
-    message.success("Registration successful!")
-  }
+  // 6. Update onFinish to build FormData and map fields
+  const [submitting, setSubmitting] = useState(false);
+
+  const onFinish = async () => {
+    const apiData = new FormData();
+    Object.entries(formData).forEach(([key, value]) => {
+      if (["dealer_license", "business_license", "retail_certificate"].includes(key)) {
+        const files = value as UploadFile[];
+        if (files && files.length > 0 && files[0].originFileObj) {
+          apiData.append(key, files[0].originFileObj as File);
+        }
+      } else if (typeof value === "boolean") {
+        apiData.append(key, value ? "1" : "0");
+      } else {
+        apiData.append(key, value ?? "");
+      }
+    });
+
+    // Log FormData contents for debugging
+    for (let pair of apiData.entries()) {
+      console.log(pair[0] + ':', pair[1]);
+    }
+
+    setSubmitting(true);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    try {
+      await axios.post(`${apiUrl}/users/api/v1/register/`, apiData);
+      message.success("Registration successful!");
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.detail || error?.message || "Registration failed. Please try again.";
+      message.error(errorMsg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // Animation classes for Tailwind
   const getStepClass = (phase: string) => {
@@ -144,18 +230,19 @@ export default function Registration() {
     }
   }
 
-  // Custom animated radio card for step 1
+  // 3. DealerRadioCards: make fully controlled using formData and setFormData
   const DealerRadioCards = () => {
-    const value = hasDealer;
-    const setValue = (val: string) => form.setFieldsValue({ hasDealer: val });
+    const value = formData.has_dealer;
+    const setValue = (val: string) => handleChange("has_dealer", val);
     const options = [
       { label: "Yes, I have a valid dealer license", value: "yes" },
       { label: "No, I don't have a valid dealer license", value: "no" },
     ];
     return (
       <Form.Item
-        name="hasDealer"
-        rules={[{ required: true, message: "Please select an option" }]}
+        required
+        validateStatus={showErrors && !value ? "error" : ""}
+        help={showErrors && !value ? "Please select an option" : undefined}
         className="w-full mb-0 font-poppins"
       >
         <div className="flex flex-col gap-4 w-full items-center">
@@ -197,6 +284,29 @@ export default function Registration() {
     );
   };
 
+  // 4. Controlled FormField props generator
+  const getFieldProps = (name: keyof RegistrationFormData, extra = {}) => ({
+    name,
+    value: formData[name],
+    onChange: (e: any) => {
+      if (e && e.target) {
+        // For Input, e.target.value
+        handleChange(name, e.target.value);
+      } else {
+        // For Select, e is the value
+        handleChange(name, e);
+      }
+    },
+    ...extra,
+  });
+
+  // 5. Controlled Upload handler for FormField
+  const getUploadProps = (name: keyof RegistrationFormData) => ({
+    fileList: formData[name] as UploadFile[],
+    onChange: ({ fileList }: { fileList: UploadFile[] }) => handleUploadChange(name, fileList),
+    beforeUpload: () => false,
+  });
+
   // Step content generator
   const renderStepContent = (step: number) => (
     <Form
@@ -219,60 +329,59 @@ export default function Registration() {
       {step === 2 && (
         <div className="w-full">
           <div className="flex flex-row gap-2">
-          <FormField name="firstName" className="w-4/4 md:w-2/4" label="First Name" rules={[{ required: true, message: "Please enter your first name" }]} />
-          <FormField name="lastName" className="w-4/4 md:w-2/4" label="Last Name" rules={[{ required: true, message: "Please enter your last name" }]} />
+            <FormField {...getFieldProps("first_name")} className="w-4/4 md:w-2/4" label="First Name" rules={[{ required: true, message: "Please enter your first name" }]} required={true} />
+            <FormField {...getFieldProps("last_name")} className="w-4/4 md:w-2/4" label="Last Name" rules={[{ required: true, message: "Please enter your last name" }]} required={true} />
           </div>
-          <FormField name="email" type="email" label="Email" rules={[
+          <FormField {...getFieldProps("email")} type="email" label="Email" rules={[
             { required: true, message: "Please enter your email" },
             { type: "email", message: "Please enter a valid email" }
-          ]} />
+          ]} required={true} />
           <div className="flex flex-row gap-2">
-          <FormField name="contactPreference" className="w-6/6 md:w-2/6" type="select" label="Contact Preference" rules={[{ required: true, message: "Please select your contact preference" }]} options={contactOptions} />
-          <FormField name="phoneNumber" className="w-6/6 md:w-2/6" label="Phone Number" rules={[{ required: true, message: "Please enter your phone number" }]} />
-          <FormField name="cellNumber" className="w-6/6 md:w-2/6" label="Cell Number" />
+            <FormField {...getFieldProps("contact_preference")} className="w-6/6 md:w-2/6" type="select" label="Contact Preference" rules={[{ required: true, message: "Please select your contact preference" }]} options={contactOptions} required={true} />
+            <FormField {...getFieldProps("phone_number")} className="w-6/6 md:w-2/6" label="Phone Number" rules={[{ required: true, message: "Please enter your phone number" }]} required={true} />
+            <FormField {...getFieldProps("mobile_no")} className="w-6/6 md:w-2/6" label="Cell Number" required={true} />
           </div>
         </div>
       )}
       {step === 3 && (
         <div className="w-full">
           <div className="flex flex-row gap-2">
-            <FormField name="dealershipName" className="w-4/4 md:w-2/4" label="Dealership Name" rules={[{ required: true, message: "Please enter dealership name" }]} />
-            <FormField name="dealershipStreetName" className="w-4/4 md:w-2/4" label="Dealership Street Name" rules={[{ required: true, message: "Please enter street name" }]} />
+            <FormField {...getFieldProps("dealership_name")} className="w-4/4 md:w-2/4" label="Dealership Name" rules={[{ required: true, message: "Please enter dealership name" }]} required={true} />
+            <FormField {...getFieldProps("street_name")} className="w-4/4 md:w-2/4" label="Dealership Street Name" rules={[{ required: true, message: "Please enter street name" }]} required={true} />
           </div>
           <div className="flex flex-row gap-2">
-          <FormField name="taxId" className="w-6/6 md:w-2/6" label="Tax ID" rules={[{ required: true, message: "Please enter tax ID" }]} />
-          <FormField name="website" className="w-6/6 md:w-2/6" label="Website" />
-          <FormField name="city" className="w-6/6 md:w-2/6" label="City" rules={[{ required: true, message: "Please enter city" }]} />
+            <FormField {...getFieldProps("tax_id")} className="w-6/6 md:w-2/6" label="Tax ID" rules={[{ required: true, message: "Please enter tax ID" }]} required={true} />
+            <FormField {...getFieldProps("website")} className="w-6/6 md:w-2/6" label="Website" required={true} />
+            <FormField {...getFieldProps("city_name")} className="w-6/6 md:w-2/6" label="City" rules={[{ required: true, message: "Please enter city" }]} required={true} />
           </div>
           <div className="flex flex-row gap-2">
-          <FormField name="dealerLicense" className="w-6/6 md:w-2/6" type="upload" label="Dealer license" rules={[{ required: true, message: "Please upload dealer license" }]} />
-          <FormField name="businessLicense" className="w-6/6 md:w-2/6" type="upload" label="Business license" rules={[{ required: true, message: "Please upload business license" }]} />
-          <FormField name="certificateOfRetail" className="w-6/6 md:w-2/6" type="upload" label="Certificate of retail (CRT-61)" rules={[{ required: true, message: "Please upload certificate of retail" }]} />
+            <FormField {...getFieldProps("dealer_license")} {...getUploadProps("dealer_license")} className="w-6/6 md:w-2/6" type="upload" label="Dealer license" rules={[{ required: true, message: "Please upload dealer license" }]} required={true} />
+            <FormField {...getFieldProps("business_license")} {...getUploadProps("business_license")} className="w-6/6 md:w-2/6" type="upload" label="Business license" rules={[{ required: true, message: "Please upload business license" }]} required={true} />
+            <FormField {...getFieldProps("retail_certificate")} {...getUploadProps("retail_certificate")} className="w-6/6 md:w-2/6" type="upload" label="Certificate of retail (CRT-61)" rules={[{ required: true, message: "Please upload certificate of retail" }]} required={true} />
           </div>
           <div className="flex flex-row gap-2">
-          <FormField name="zipcode" className="w-4/4 md:w-2/4" label="Zipcode" rules={[{ required: true, message: "Please enter zipcode" }]} />
-          <FormField name="state" className="w-4/4 md:w-2/4" type="select" label="State" rules={[{ required: true, message: "Please select state" }]} options={stateOptions} />
+            <FormField {...getFieldProps("zipcode")} className="w-4/4 md:w-2/4" label="Zipcode" rules={[{ required: true, message: "Please enter zipcode" }]} required={true} />
+            <FormField {...getFieldProps("state_name")} className="w-4/4 md:w-2/4" type="select" label="State" rules={[{ required: true, message: "Please select state" }]} options={stateOptions} required={true} />
           </div>
-          </div>
+        </div>
       )}
       {step === 4 && (
         <div className="grid grid-cols-1 w-full">
-          <FormField name="dealershipType" type="select" label="Dealership Type" rules={[{ required: true, message: "Please select your dealership type" }]} options={dealershipTypeOptions} />
-          <FormField name="interest" type="select" label="What is your interest" rules={[{ required: true, message: "Please select your interest" }]} options={interestOptions} />
-          <FormField name="numberOfLocations" label="No of Locations" rules={[{ required: true, message: "Please enter number of locations" }]} />
-          <FormField name="carsInStock" label="How many cars do you stock?" rules={[{ required: true, message: "Please enter number of cars in stock" }]} />
+          <FormField {...getFieldProps("dealership_type")} type="select" label="Dealership Type" rules={[{ required: true, message: "Please select your dealership type" }]} options={dealershipTypeOptions} required={true} />
+          <FormField {...getFieldProps("dealership_interest")} type="select" label="What is your interest" rules={[{ required: true, message: "Please select your interest" }]} options={interestOptions} required={true} />
+          <FormField {...getFieldProps("no_of_locations")} label="No of Locations" rules={[{ required: true, message: "Please enter number of locations" }]} required={true} />
+          <FormField {...getFieldProps("cars_in_stock")} label="How many cars do you stock?" rules={[{ required: true, message: "Please enter number of cars in stock" }]} required={true} />
         </div>
       )}
       {step === 5 && (
         <div className="w-full">
           <FormField
-            name="referralCode"
-            // label="Referral Code (Optional)"
+            {...getFieldProps("referral_code")}
             placeholder="Enter referral code"
             className="mb-4"
           />
           <FormField
-            name="heardAbout"
+            {...getFieldProps("heard_about")}
             type="select"
             placeholder="How did you hear about AWD?"
             options={[
@@ -283,20 +392,32 @@ export default function Registration() {
             ]}
             className="mb-4"
           />
-          <Form.Item name="textUpdates" valuePropName="checked" className="mb-4">
+          <Form.Item className="mb-4">
             <label className="flex items-center">
-              <input type="checkbox" className="mr-2" />
+              <input
+                type="checkbox"
+                className="mr-2"
+                name="text_update"
+                checked={formData.text_update}
+                onChange={handleInputChange}
+              />
               Text me updates <a href="#" className="text-blue-600 underline ml-1">(Text message Policy)</a>
             </label>
           </Form.Item>
           <Form.Item
-            name="agreeTerms"
-            valuePropName="checked"
-            rules={[{ required: true, message: "You must agree to Terms and Conditions" }]}
             className="mb-6"
+            required
+            validateStatus={!formData.agree_terms ? "error" : ""}
+            help={!formData.agree_terms ? "You must agree to Terms and Conditions" : undefined}
           >
             <label className="flex items-center">
-              <input type="checkbox" className="mr-2" />
+              <input
+                type="checkbox"
+                className="mr-2"
+                name="agree_terms"
+                checked={formData.agree_terms}
+                onChange={handleInputChange}
+              />
               I agree to <a href="#" className="text-blue-600 underline ml-1">Terms and Conditions</a> *
             </label>
           </Form.Item>
@@ -354,8 +475,8 @@ export default function Registration() {
             {currentStep < steps.length ? (
               <button
                 onClick={nextStep}
-                className={`px-12 py-2 h-11 bg-sky-600 hover:bg-sky-700 rounded-lg text-white ${currentStep === 1 && !hasDealer ? "opacity-50 cursor-not-allowed" : ""}`}
-                disabled={(currentStep === 1 && !hasDealer) || animating}
+                className={`px-12 py-2 h-11 bg-sky-600 hover:bg-sky-700 rounded-lg text-white ${currentStep === 1 && !formData.has_dealer ? "opacity-50 cursor-not-allowed" : ""}`}
+                disabled={(currentStep === 1 && !formData.has_dealer) || animating}
               >
                 Continue
               </button>
@@ -365,7 +486,7 @@ export default function Registration() {
                 htmlType="submit"
                 className="px-8 py-2 h-11 bg-sky-600 hover:bg-sky-700 rounded-lg"
                 onClick={() => form.submit()}
-                disabled={animating}
+                disabled={animating || submitting}
               >
                 Complete Registration
               </Button>

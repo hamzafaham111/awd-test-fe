@@ -1,16 +1,17 @@
 "use client";
 import "../globals.css";
 import ClientHeader from "@/components/layout/ClientHeader";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { navItemsByRole, NavItem } from "@/data/navItems";
 import { Drawer, Button, Menu, Avatar, Dropdown } from "antd";
 import Image from "next/image";
 import { MenuOutlined, CloseOutlined, SettingOutlined, LogoutOutlined } from "@ant-design/icons";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/layout/Header";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { logout } from "@/store/userSlice";
 
 function AppLayoutInner({ children }: { children: React.ReactNode }) {
   const role = useSelector((state: RootState) => state.user.role) || 'superadmin';
@@ -19,6 +20,23 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openKeys, setOpenKeys] = useState<string[]>([]);
   const pathname = usePathname();
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    const access = typeof window !== 'undefined' ? localStorage.getItem('access') : null;
+    const user = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+    if (!access || !user) {
+      router.push('/login');
+    } else {
+      setAuthLoading(false);
+    }
+  }, [router]);
+
+  if (authLoading) {
+    return null; // Or a spinner if you prefer
+  }
 
   function findLabelByHref(items: any[], href: string): string | null {
     for (const item of items) {
@@ -31,6 +49,12 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
     return null;
   }
   const pageTitle = findLabelByHref(navItems, pathname) || "Dashboard";
+  const handleLogout = () => {
+    dispatch(logout());
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    router.push("/login");
+  };
   const userMenu = (
     <div className="min-w-[180px] bg-white rounded-lg shadow-lg border border-gray-100">
       <div className="px-4 py-3 border-b border-gray-100">
@@ -38,7 +62,7 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
       </div>
       <div className="flex flex-col">
         <a href="#" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-gray-700"><SettingOutlined />Account Settings</a>
-        <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-gray-700 text-left w-full"><LogoutOutlined />Logout</button>
+        <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-gray-700 text-left w-full" type="button" onClick={handleLogout}><LogoutOutlined />Logout</button>
       </div>
     </div>
   );

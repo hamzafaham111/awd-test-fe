@@ -72,7 +72,7 @@ export default function TicketStatusesPage() {
               isEnableFilterInput: true,
               selectableRows: true,
               showAddButton: true,
-              addButtonLabel: "Add",
+              addButtonLabel: "Add ",
               addButtonHref: "/tickets/statuses/create",
             }}
           />
