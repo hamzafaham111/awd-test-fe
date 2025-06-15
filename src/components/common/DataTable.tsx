@@ -1,6 +1,6 @@
-import { Table, Input } from "antd";
+import { Table, Input, Spin } from "antd";
 import { useState, useMemo } from "react";
-import { SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined, LoadingOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import { Button } from "antd";
 
@@ -17,9 +17,10 @@ interface DataTableProps {
   };
   rowSelection?: any;
   expandable?: any;
+  loading?: boolean;
 }
 
-export default function DataTable({ columns, data, tableData = {}, rowSelection, expandable }: DataTableProps) {
+export default function DataTable({ columns, data, tableData = {}, rowSelection, expandable, loading }: DataTableProps) {
   const [search, setSearch] = useState("");
   const [pagination, setPagination] = useState({
     current: 1,
@@ -45,6 +46,9 @@ export default function DataTable({ columns, data, tableData = {}, rowSelection,
       pageSize: pag.pageSize,
     }));
   };
+
+  // Custom sky-700 spinner
+  const sky700Spinner = <Spin indicator={<LoadingOutlined style={{ fontSize: 32, color: "#0369a1" }} spin />} />;
 
   return (
     <div>
@@ -82,6 +86,7 @@ export default function DataTable({ columns, data, tableData = {}, rowSelection,
           pagination={pagination}
           onChange={handleTableChange}
           expandable={expandable}
+          loading={loading ? { spinning: true, indicator: sky700Spinner } : false}
         />
       </div>
     </div>

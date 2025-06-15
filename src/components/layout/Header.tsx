@@ -43,8 +43,6 @@ export default function Header({ navItems, roleLabel, dsMode = false, children }
 
   // Dropdown menu for user profile
   const handleLogout = () => {
-    alert("clicked");
-    console.log("handleLogout");
     dispatch(logout());
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");

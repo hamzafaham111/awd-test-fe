@@ -7,6 +7,8 @@ import Link from "next/link";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 const statusColors: Record<string, string> = {
   "Active": "bg-green-100 text-green-700 border-green-300",
@@ -16,15 +18,6 @@ const statusColors: Record<string, string> = {
 const typeColors: Record<string, string> = {
   "Fixed": "bg-blue-900 text-white border-blue-700",
 };
-
-const roles = [
-  { key: 1, name: "Super admin", type: "Fixed", status: "Active" },
-  { key: 2, name: "Admin", type: "Fixed", status: "Active" },
-  { key: 3, name: "Manager", type: "Fixed", status: "Active" },
-  { key: 4, name: "Inspector", type: "Fixed", status: "Inactive" },
-  { key: 5, name: "Transporter", type: "Fixed", status: "Inactive" },
-  { key: 7, name: "Data Analyser", type: "Fixed", status: "Active" },
-];
 
 const columns = [
   {
@@ -99,12 +92,42 @@ const columns = [
 ];
 
 export default function RolesPage() {
+  const [rolesData, setRolesData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const role = useSelector((state: RootState) => state.user.role);
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const res = await axios.get(`${apiUrl}/users/api/v1/role/`, { headers });
+        setRolesData(res.data);
+      } catch (err: any) {
+        setError(err?.response?.data?.detail || err?.message || "Failed to fetch roles.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRoles();
+  }, []);
+
+  const mappedRoles = rolesData.map((r: any) => ({
+    key: r.id,
+    name: r.name,
+    type: r.is_fixed ? "Fixed" : "Flexible",
+    status: r.status === 1 ? "Active" : "Inactive",
+  }));
+
   if (role === "ds") return <div>Roles Page</div>;
   return (
     <div className="p-6">
       <Breadcrumbs items={[{ label: "Roles", href: "/app/roles" }]} />
-      <DataTable columns={columns} data={roles} tableData={{ selectableRows: true, isEnableFilterInput: true, showAddButton: true, addButtonLabel: "Add New Role", addButtonHref: "/app/roles/add" }} />
+        <DataTable columns={columns} data={mappedRoles} tableData={{ selectableRows: true, isEnableFilterInput: true, showAddButton: true, addButtonLabel: "Add New Role", addButtonHref: "/app/roles/add" }} loading={loading} />
       <div className="flex justify-between items-center mt-4">
         <div>
           <a href="#" className="text-blue-700 hover:underline">View Trash Records</a>

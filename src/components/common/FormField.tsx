@@ -87,8 +87,14 @@ export function FormField({
             disabled={disabled}
             fileList={fileList}
             onChange={onChange}
+            className="w-full"
           >
-            <Button icon={<PaperClipOutlined />} disabled={disabled}>Attachment</Button>
+            <div className="w-full">
+              <button type="button" className="bg-gray-100 text-sky-700 rounded-md border-none py-1 px-12">
+                <PaperClipOutlined />
+                Attachment
+              </button>
+            </div>
           </Upload>
         )
       default:
@@ -103,7 +109,7 @@ export function FormField({
       label={label ? (
         <span className={labelClassName}>
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {/* {required && <span className="text-red-500 ml-1">*</span>} */}
         </span>
       ) : undefined}
       required={required}

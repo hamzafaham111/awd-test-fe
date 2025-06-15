@@ -116,11 +116,11 @@ export default function Login() {
             disabled={isLoading}
           />
 
-          <div className="flex flex-col sm:flex-row items-center sm:justify-between w-full space-y-3 sm:space-y-0">
-            <Form.Item name="rememberMe" valuePropName="checked" className="mb-0 flex-1">
-              <Checkbox disabled={isLoading}>Remember for logged in</Checkbox>
-            </Form.Item>
-            <Link href="/forgot-password" className="text-sky-600 hover:underline font-medium">
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between mb-4">
+            <div className="mt-2 sm:mt-0">
+              <Checkbox>Remember for logged in</Checkbox>
+            </div>
+            <Link href="/forgot-password" className="text-sky-600 hover:underline">
               Forgot Password
             </Link>
           </div>
@@ -142,9 +142,9 @@ export default function Login() {
             </Link>
           </p>
         </div>
-        <div className="text-center text-xs text-gray-500 flex items-center justify-center">
+        <div className="text-center text-xs text-gray-500 flex flex-col sm:flex-row items-center justify-center mt-2">
           <p className="text-[10px]">Download Our Free App To Transact-On-The-Go!</p>
-          <Image src="/images/download-app.png" alt="Logo" className="my-4" width={250} height={150} />
+          <Image src="/images/download-app.png" alt="Logo" className="sm:my-4" width={250} height={150} />
         </div>
       </div>
     </AuthLayout>

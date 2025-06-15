@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Form, Button, message, Radio } from "antd"
+import { useState, useEffect } from "react"
+import { Form, Button, message, Radio, Checkbox } from "antd"
 import type { UploadFile } from "antd/es/upload/interface"
 import { AuthLayout } from "@/components/layout/AuthLayout"
 import { FormField } from "@/components/common/FormField"
@@ -10,6 +10,8 @@ import { ProgressIndicator } from "@/components/common/ProgressIndicator"
 import { CheckCircleFilled } from "@ant-design/icons"
 import Image from "next/image"
 import axios from "axios"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 interface RegistrationFormData {
   // Step 1
@@ -28,7 +30,7 @@ interface RegistrationFormData {
   tax_id: string
   website: string
   city_name: string
-  state_name: string
+  state_id: string
   zipcode: string
   dealer_license: UploadFile[]
   business_license: UploadFile[]
@@ -70,22 +72,11 @@ const interestOptions = [
   { label: "Both buy and sell", value: "3" },
 ]
 
-const stateOptions = [
-  { label: "Alabama (AL)", value: "AL" },
-  { label: "Alaska (AK)", value: "AK" },
-  { label: "Arizona (AZ)", value: "AZ" },
-  { label: "Arkansas (AR)", value: "AR" },
-  { label: "California (CA)", value: "CA" },
-  { label: "Florida (FL)", value: "FL" },
-  { label: "Georgia (GA)", value: "GA" },
-  { label: "Texas (TX)", value: "TX" },
-  { label: "New York (NY)", value: "NY" },
-]
-
 export default function Registration() {
   const [currentStep, setCurrentStep] = useState(1)
   const [form] = Form.useForm()
   const has_dealer = Form.useWatch("has_dealer", form)
+  const router = useRouter()
 
   // Animation state
   const [animating, setAnimating] = useState(false)
@@ -109,7 +100,7 @@ export default function Registration() {
     dealer_license: [],
     business_license: [],
     retail_certificate: [],
-    state_name: "",
+    state_id: "",
     zipcode: "",
     dealership_type: "",
     dealership_interest: "",
@@ -189,8 +180,14 @@ export default function Registration() {
         }
       } else if (typeof value === "boolean") {
         apiData.append(key, value ? "1" : "0");
+      } else if (typeof value === "string" || typeof value === "number") {
+        apiData.append(key, String(value));
+      } else if (value instanceof Blob) {
+        apiData.append(key, value);
+      } else if (value && typeof value === "object") {
+        apiData.append(key, JSON.stringify(value));
       } else {
-        apiData.append(key, value ?? "");
+        apiData.append(key, "");
       }
     });
 
@@ -202,8 +199,11 @@ export default function Registration() {
     setSubmitting(true);
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     try {
+      console.log(apiData);
       await axios.post(`${apiUrl}/users/api/v1/register/`, apiData);
       message.success("Registration successful!");
+      // Redirect to login page after successful registration
+      router.push("/login");
     } catch (error: any) {
       const errorMsg = error?.response?.data?.detail || error?.message || "Registration failed. Please try again.";
       message.error(errorMsg);
@@ -307,12 +307,37 @@ export default function Registration() {
     beforeUpload: () => false,
   });
 
+  // State options fetched from API
+  const [stateOptions, setStateOptions] = useState<{ label: string; value: string }[]>([]);
+  const [statesLoading, setStatesLoading] = useState(false);
+  const [statesError, setStatesError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStates = async () => {
+      setStatesLoading(true);
+      setStatesError(null);
+      try {
+        const res = await fetch("https://dev.awdauctions.com/utils/api/v1/states");
+        const data = await res.json();
+        // Assuming the response is an array of state objects with id and name
+        const options = Array.isArray(data)
+          ? data.map((state: any) => ({ label: state.name, value: String(state.id) }))
+          : [];
+        setStateOptions(options);
+      } catch (err: any) {
+        setStatesError("Failed to load states");
+      } finally {
+        setStatesLoading(false);
+      }
+    };
+    fetchStates();
+  }, []);
+
   // Step content generator
   const renderStepContent = (step: number) => (
     <Form
       form={form}
       layout="vertical"
-      onFinish={onFinish}
       className="max-w-3xl mx-auto w-full font-poppins"
     >
       {/* Step Title & Subtitle */}
@@ -336,32 +361,32 @@ export default function Registration() {
             { required: true, message: "Please enter your email" },
             { type: "email", message: "Please enter a valid email" }
           ]} required={true} />
-          <div className="flex flex-row gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <FormField {...getFieldProps("contact_preference")} className="w-6/6 md:w-2/6" type="select" label="Contact Preference" rules={[{ required: true, message: "Please select your contact preference" }]} options={contactOptions} required={true} />
             <FormField {...getFieldProps("phone_number")} className="w-6/6 md:w-2/6" label="Phone Number" rules={[{ required: true, message: "Please enter your phone number" }]} required={true} />
-            <FormField {...getFieldProps("mobile_no")} className="w-6/6 md:w-2/6" label="Cell Number" required={true} />
+            <FormField {...getFieldProps("mobile_no")} className="w-6/6 md:w-2/6" label="Cell Number" rules={[{required: true, message: "Please enter your Cell number"}]} required={true}/>
           </div>
         </div>
       )}
       {step === 3 && (
         <div className="w-full">
-          <div className="flex flex-row gap-2">
+          <div className="flex flex-col md:flex-row md:gap-2">
             <FormField {...getFieldProps("dealership_name")} className="w-4/4 md:w-2/4" label="Dealership Name" rules={[{ required: true, message: "Please enter dealership name" }]} required={true} />
             <FormField {...getFieldProps("street_name")} className="w-4/4 md:w-2/4" label="Dealership Street Name" rules={[{ required: true, message: "Please enter street name" }]} required={true} />
           </div>
-          <div className="flex flex-row gap-2">
+          <div className="flex flex-col md:flex-row md:gap-2">
             <FormField {...getFieldProps("tax_id")} className="w-6/6 md:w-2/6" label="Tax ID" rules={[{ required: true, message: "Please enter tax ID" }]} required={true} />
             <FormField {...getFieldProps("website")} className="w-6/6 md:w-2/6" label="Website" required={true} />
             <FormField {...getFieldProps("city_name")} className="w-6/6 md:w-2/6" label="City" rules={[{ required: true, message: "Please enter city" }]} required={true} />
           </div>
-          <div className="flex flex-row gap-2">
-            <FormField {...getFieldProps("dealer_license")} {...getUploadProps("dealer_license")} className="w-6/6 md:w-2/6" type="upload" label="Dealer license" rules={[{ required: true, message: "Please upload dealer license" }]} required={true} />
-            <FormField {...getFieldProps("business_license")} {...getUploadProps("business_license")} className="w-6/6 md:w-2/6" type="upload" label="Business license" rules={[{ required: true, message: "Please upload business license" }]} required={true} />
-            <FormField {...getFieldProps("retail_certificate")} {...getUploadProps("retail_certificate")} className="w-6/6 md:w-2/6" type="upload" label="Certificate of retail (CRT-61)" rules={[{ required: true, message: "Please upload certificate of retail" }]} required={true} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            <FormField {...getFieldProps("dealer_license")} {...getUploadProps("dealer_license")} className="w-full" type="upload" label="Dealer license" rules={[{ required: true, message: "Please upload dealer license" }]} required={true} />
+            <FormField {...getFieldProps("business_license")} {...getUploadProps("business_license")} className="w-full" type="upload" label="Business license" rules={[{ required: true, message: "Please upload business license" }]} required={true} />
+            <FormField {...getFieldProps("retail_certificate")} {...getUploadProps("retail_certificate")} className="w-full" type="upload" label="Certificate of retail (CRT-61)" rules={[{ required: true, message: "Please upload certificate of retail" }]} required={true} />
           </div>
-          <div className="flex flex-row gap-2">
+          <div className="flex flex-col md:flex-row md:gap-2">
             <FormField {...getFieldProps("zipcode")} className="w-4/4 md:w-2/4" label="Zipcode" rules={[{ required: true, message: "Please enter zipcode" }]} required={true} />
-            <FormField {...getFieldProps("state_name")} className="w-4/4 md:w-2/4" type="select" label="State" rules={[{ required: true, message: "Please select state" }]} options={stateOptions} required={true} />
+            <FormField {...getFieldProps("state_id")} className="w-4/4 md:w-2/4" type="select" label="State" rules={[{ required: true, message: "Please select state" }]} options={stateOptions} required={true} />
           </div>
         </div>
       )}
@@ -405,10 +430,16 @@ export default function Registration() {
             </label>
           </Form.Item>
           <Form.Item
-            className="mb-6"
-            required
-            validateStatus={!formData.agree_terms ? "error" : ""}
-            help={!formData.agree_terms ? "You must agree to Terms and Conditions" : undefined}
+            name="agree_terms"
+            valuePropName="checked"
+            rules={[
+              {
+                validator: (_, value) =>
+                  value
+                    ? Promise.resolve()
+                    : Promise.reject(new Error("You must agree to Terms and Conditions")),
+              },
+            ]}
           >
             <label className="flex items-center">
               <input
@@ -418,7 +449,7 @@ export default function Registration() {
                 checked={formData.agree_terms}
                 onChange={handleInputChange}
               />
-              I agree to <a href="#" className="text-blue-600 underline ml-1">Terms and Conditions</a> *
+              I agree to <Link href="/terms" target="_blank" className="text-blue-600 underline ml-1">Terms and Conditions</Link> *
             </label>
           </Form.Item>
         </div>
@@ -464,13 +495,13 @@ export default function Registration() {
           {/* Navigation Buttons - always at the bottom */}
           <div className="flex justify-center space-x-4 w-full">
             {currentStep > 1 && (
-              <Button
+              <button
                 onClick={prevStep}
-                className="px-8 py-2 h-11 border-sky-600 text-sky-600 hover:bg-sky-50 rounded-lg font-[600]"
+                className="px-12 py-2 h-11 border border-sky-600 text-sky-600 hover:bg-sky-50 rounded-lg font-[600]"
                 disabled={animating}
               >
                 Back
-              </Button>
+              </button>
             )}
             {currentStep < steps.length ? (
               <button
@@ -485,7 +516,7 @@ export default function Registration() {
                 type="primary"
                 htmlType="submit"
                 className="px-8 py-2 h-11 bg-sky-600 hover:bg-sky-700 rounded-lg"
-                onClick={() => form.submit()}
+                onClick={onFinish}
                 disabled={animating || submitting}
               >
                 Complete Registration

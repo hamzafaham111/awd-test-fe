@@ -1,99 +1,163 @@
 "use client";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { users } from "@/data/dummyUsers";
 import { Button, Input, Select } from "antd";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
+import axios from "axios";
+import { showToast } from "@/components/common/Toaster";
 
 export default function UserViewEditPage() {
   const { id } = useParams();
   const isAddMode = id === "add";
   const defaultUser = {
-    name: "",
     email: "",
-    mobile: "",
+    first_name: "",
+    last_name: "",
+    personal_email: "",
+    mobile_no: "",
     address: "",
-    role: "Inspector",
+    role_name: "ADMIN",
     password: "",
-    status: "Active",
+    status: "1",
   };
-  const user = isAddMode ? null : users.find(u => String(u.key) === String(id));
-  const [form, setForm] = useState(
+  const [userValues, setUserValues] = useState(
     isAddMode
       ? defaultUser
-      : { ...defaultUser, ...user }
+      : { ...defaultUser }
   );
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(!isAddMode);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
-  if (!isAddMode && !user) return <div className="p-6">User not found</div>;
+  useEffect(() => {
+    if (!isAddMode && id) {
+      const fetchUser = async () => {
+        setFetching(true);
+        setFetchError(null);
+        try {
+          const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+          const headers = token ? { Authorization: `Bearer ${token}` } : {};
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+          const res = await axios.get(`${apiUrl}/users/api/v1/admin/user/${id}/`, { headers });
+          setUserValues({ ...defaultUser, ...res.data });
+        } catch (err: any) {
+          setFetchError(err?.response?.data?.detail || err?.message || "Failed to fetch user data.");
+        } finally {
+          setFetching(false);
+        }
+      };
+      fetchUser();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isAddMode]);
+
+  if (!isAddMode && fetching) return <div className="p-6">Loading user data...</div>;
+  if (!isAddMode && fetchError) return <div className="p-6 text-red-500">{fetchError}</div>;
 
   const handleChange = (field: string, value: string) => {
-    setForm({ ...form, [field]: value });
+    setUserValues({ ...userValues, [field]: value });
   };
 
-  const handleSave = () => {
-    if (isAddMode) {
-      // Handle add new user
-      console.log("Added user:", form);
-    } else {
-      // Handle update user
-      console.log("Saved user:", form);
+  const handleSave = async () => {
+    setLoading(true);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    // Prepare payload for JSON
+    const payload = { ...userValues };
+    if (!userValues.password) {
+      delete (payload as any).password;
     }
-    // In a real app, dispatch Redux or call API here
+    const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+    };
+    try {
+      if (isAddMode) {
+        await axios.post(`${apiUrl}/users/api/v1/admin/add-user/`, payload, {
+          headers,
+        });
+        showToast({ type: "success", message: "User added successfully!" });
+      } else {
+        await axios.patch(`${apiUrl}/users/api/v1/admin/user/${id}/`, payload, {
+          headers,
+        });
+        showToast({ type: "success", message: "User updated successfully!" });
+      }
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.detail || error?.message || "Something went wrong.";
+      showToast({ type: "error", message: errorMsg });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="p-6 w-full">
-      <Breadcrumbs items={[{ label: "Users", href: "/app/app/users" }, { label: isAddMode ? "Add New User" : "Edit" }]} />
+      <Breadcrumbs 
+      items={[{ label: "Users", href: "/app/app/users" }, { label: isAddMode ? "Add New User" : "Edit" }]} 
+      showSaveButton={true}
+      saveButtonLabel={isAddMode ? "Add User" : "Save Changes"}
+      onSaveButtonClick={handleSave}
+      />
       <div className="bg-white rounded-xl shadow-md p-6 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
             <label className="block mb-1 font-semibold">First Name</label>
             <Input
-              value={form?.name?.split(" ")[0] || ""}
-              onChange={e => handleChange("name", e.target.value + " " + (form?.name?.split(" ")[1] || ""))}
+              value={userValues.first_name}
+              onChange={e => handleChange("first_name", e.target.value)}
             />
           </div>
           <div>
             <label className="block mb-1 font-semibold">Last Name</label>
             <Input
-              value={form?.name?.split(" ")[1] || ""}
-              onChange={e => handleChange("name", (form?.name?.split(" ")[0] || "") + " " + e.target.value)}
+              value={userValues.last_name}
+              onChange={e => handleChange("last_name", e.target.value)}
             />
           </div>
           <div>
-            <label className="block mb-1 font-semibold">Personal Email Address</label>
+            <label className="block mb-1 font-semibold">Email</label>
             <Input
-              value={form?.email}
+              value={userValues.email}
               onChange={e => handleChange("email", e.target.value)}
             />
           </div>
           <div>
-            <label className="block mb-1 font-semibold">Mobile</label>
+            <label className="block mb-1 font-semibold">Personal Email</label>
             <Input
-              value={form?.mobile}
-              onChange={e => handleChange("mobile", e.target.value)}
+              value={userValues.personal_email}
+              onChange={e => handleChange("personal_email", e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block mb-1 font-semibold">Mobile No</label>
+            <Input
+              value={userValues.mobile_no}
+              onChange={e => handleChange("mobile_no", e.target.value)}
             />
           </div>
           <div className="md:col-span-2">
             <label className="block mb-1 font-semibold">Address</label>
             <Input.TextArea
-              value={form?.address || ""}
+              value={userValues.address}
               onChange={e => handleChange("address", e.target.value)}
             />
           </div>
           <div>
             <label className="block mb-1 font-semibold">Role</label>
             <Select
-              value={form?.role}
-              onChange={value => handleChange("role", value)}
+              value={userValues.role_name}
+              onChange={value => handleChange("role_name", value)}
               options={[
-                { value: "Inspector", label: "Inspector" },
-                { value: "Admin", label: "Admin" },
-                { value: "Manager", label: "Manager" },
-                { value: "Transporter", label: "Transporter" },
-                { value: "Super admin", label: "Super admin" },
+                { value: "ADMIN", label: "Admin" },
+                { value: "INSPECTOR", label: "Inspector" },
+                { value: "MANAGER", label: "Manager" },
+                { value: "TRANSPORTER", label: "Transporter" },
+                { value: "SUPER_ADMIN", label: "Super Admin" },
               ]}
               className="w-full"
+              disabled={!isAddMode}
             />
           </div>
         </div>
@@ -101,16 +165,16 @@ export default function UserViewEditPage() {
           <h3 className="font-semibold mb-2">Credentials</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block mb-1 font-semibold">Email Address (Username)</label>
+              <label className="block mb-1 font-semibold">Email (Username)</label>
               <Input
-                value={form?.email}
+                value={userValues.email}
                 onChange={e => handleChange("email", e.target.value)}
               />
             </div>
             <div>
               <label className="block mb-1 font-semibold">Password</label>
               <Input.Password
-                value={form?.password || ""}
+                value={userValues.password}
                 onChange={e => handleChange("password", e.target.value)}
                 placeholder={isAddMode ? "Enter password" : "(Leave empty, if unchanged)"}
               />
@@ -120,20 +184,20 @@ export default function UserViewEditPage() {
         <div className="mb-6">
           <label className="block mb-1 font-semibold">Status</label>
           <Select
-            value={form?.status}
+            value={userValues.status}
             onChange={value => handleChange("status", value)}
             options={[
-              { value: "Active", label: "Active" },
-              { value: "Inactive", label: "In-Active" },
+              { value: "1", label: "Active" },
+              { value: "0", label: "In-Active" },
             ]}
             className="w-40"
           />
         </div>
-        <div className="flex justify-end">
-          <button className="bg-sky-600 text-white px-12 py-2 rounded-md" onClick={handleSave}>
-            {isAddMode ? "Add User" : "Save"}
+        {/* <div className="flex justify-end">
+          <button className="bg-sky-600 text-white px-12 py-2 rounded-md" onClick={handleSave} disabled={loading}>
+            {loading ? (isAddMode ? "Adding..." : "Saving...") : (isAddMode ? "Add User" : "Save")}
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

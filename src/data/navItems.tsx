@@ -43,7 +43,7 @@ export const navItemsByRole: NavItemsByRole = {
     { 
       label: "App", 
       icon: <ToolOutlined />, 
-      href: "/app",
+      
       children: [
         { key: 'users', label: "Users", icon: <UserOutlined />, href: "/app/users" },
         { key: 'roles', label: "Roles", icon: <UserOutlined />, href: "/app/roles" },
@@ -78,10 +78,10 @@ export const navItemsByRole: NavItemsByRole = {
         }
       ]
     },
-    { label: "Dealerships", icon: <ShopOutlined />, href: "/dealerships",
+    { label: "Dealerships", icon: <ShopOutlined />, 
       children: [
         {
-          key: 'Dealers', label: "Dealers", icon: <ShopOutlined />, href: "/dealerships/dealers",
+          key: 'Dealers', label: "Dealers", icon: <ShopOutlined />,
           children: [
             { key: 'Pending', label: "Pending", icon: <ClockCircleOutlined />, href: "/dealerships/dealers/pending" },
             { key: 'Approved', label: "Approved", icon: <CheckCircleOutlined />, href: "/dealerships/dealers/approved" },
@@ -92,7 +92,7 @@ export const navItemsByRole: NavItemsByRole = {
       ]
     },
     {
-      label: "Inspection", icon: <SafetyCertificateOutlined />, href: "/inspection",
+      label: "Inspection", icon: <SafetyCertificateOutlined />, 
       children: [
         { key: "pending", label: "Pending", icon: <ClockCircleOutlined />, href: "/inspection/pending" },
         { key: "requests", label: "Requests", icon: <FileSearchOutlined />, href: "/inspection/requests" },
@@ -106,7 +106,7 @@ export const navItemsByRole: NavItemsByRole = {
       ]
     },
     {
-      label: "Auctions", icon: <AppstoreOutlined />, href: "/auctions",
+      label: "Auctions", icon: <AppstoreOutlined />, 
       children: [
         { key: "live", label: "Live", icon: <HeartOutlined />, href: "/auctions/live" },
         { key: "won", label: "Won", icon: <CheckOutlined />, href: "/auctions/won" },
@@ -115,7 +115,7 @@ export const navItemsByRole: NavItemsByRole = {
     },
     { label: "Titles", icon: <FileTextOutlined />, href: "/titles" },
     {
-      label: "Transportation", icon: <CarOutlined />, href: "/transportation",
+      label: "Transportation", icon: <CarOutlined />, 
       children: [
         { key: "transporters", label: "Transporters", icon: <CarOutlined />, href: "/transportation/transporters" },
         {
@@ -129,13 +129,13 @@ export const navItemsByRole: NavItemsByRole = {
       ]
     },
     {
-      label: "Payments", icon: <CreditCardOutlined />, href: "/payments",
+      label: "Payments", icon: <CreditCardOutlined />, 
       children: [
         { key: "seller-payment", label: "Seller Payment", icon: <CreditCardOutlined />, href: "/payments/seller" },
         { key: "transporter-payment", label: "Transporter Payment", icon: <CarOutlined />, href: "/payments/transporter" }
       ]
     },
-    { label: "Tickets", icon: <IdcardOutlined />, href: "/tickets",
+    { label: "Tickets", icon: <IdcardOutlined />, 
       children: [
         { key: 'ticket-list', label: "Tickets List", icon: <UnorderedListOutlined />, href: "/tickets/list" },
         { key: 'ticket-statuses', label: "Statuses", icon: <InfoCircleOutlined />, href: "/tickets/statuses" },
@@ -143,7 +143,7 @@ export const navItemsByRole: NavItemsByRole = {
       ]
     },
     {
-      label: "Reports", icon: <ProfileOutlined />, href: "/reports",
+      label: "Reports", icon: <ProfileOutlined />, 
       children: [
         { key: "financial-report", label: "Financial Report", icon: <CreditCardOutlined />, href: "/reports/financial" }
       ]

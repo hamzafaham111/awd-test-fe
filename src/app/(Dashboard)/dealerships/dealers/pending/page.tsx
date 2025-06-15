@@ -5,11 +5,38 @@ import { EditOutlined, DeleteOutlined, SettingOutlined, DownOutlined } from "@an
 import DataTable from "@/components/common/DataTable";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import axios from "axios";
+
+const interestMap: Record<string, string> = {
+  1: "Sell a vehicle",
+  2: "Purchase a vehicle",
+  3: "Both",
+};
 
 const columns = [
-  { title: "Dealer Name", dataIndex: "name", key: "name" },
-  { title: "Dealer Interest", dataIndex: "interest", key: "interest" },
-  { title: "Contact", dataIndex: "contact", key: "contact" },
+  {
+    title: "Dealer Name",
+    dataIndex: "dealership_name",
+    key: "dealership_name",
+  },
+  {
+    title: "Dealer Interest",
+    dataIndex: "dealership_interest",
+    key: "dealership_interest",
+    render: (value: number) => interestMap[String(value)] || "-",
+  },
+  {
+    title: "Contact",
+    key: "contact",
+    render: (_: any, record: any) => (
+      <div>
+        Email : {record.email || "-"}<br />
+        Phone : {record.phone_number || "-"}
+      </div>
+    ),
+  },
   {
     title: "Approved",
     dataIndex: "approved",
@@ -22,7 +49,9 @@ const columns = [
     render: (_: any, record: any) => {
       const menu = (
         <Menu>
-          <Menu.Item key="edit" icon={<EditOutlined />}>Edit</Menu.Item>
+          <Menu.Item key="edit" icon={<EditOutlined />}>
+            <Link href={`/dealerships/dealers/${record.id}`}>Edit</Link>
+          </Menu.Item>
           <Menu.Item key="delete" icon={<DeleteOutlined />} danger>Delete</Menu.Item>
         </Menu>
       );
@@ -39,118 +68,40 @@ const columns = [
   },
 ];
 
-const data = [
-  {
-    key: "1",
-    name: "Hamza",
-    interest: "Sell a vehicle",
-    contact: (
-      <div>
-        Email : hamzafaham171@gmail.com<br />
-        Phone : +1 (678) 687-6878
-      </div>
-    ),
-  },
-  {
-    key: "2",
-    name: "Test",
-    interest: "Sell a vehicle",
-    contact: (
-      <div>
-        Email : hamzafaham111@gmail.com<br />
-        Phone : +1 (321) 111-2388
-      </div>
-    ),
-  },
-  {
-    key: "3",
-    name: "New DealerShip",
-    interest: "Sell a vehicle",
-    contact: (
-      <div>
-        Email : uhaseeb731@gmail.com<br />
-        Phone : +1 (234) 234-0340
-      </div>
-    ),
-  },
-  {
-    key: "4",
-    name: "Dd",
-    interest: "Sell a vehicle",
-    contact: (
-      <div>
-        Email : sdf@gmail.com<br />
-        Phone : +1 (321) 111-2388
-      </div>
-    ),
-  },
-  {
-    key: "5",
-    name: "Test1",
-    interest: "Both",
-    contact: (
-      <div>
-        Email : tl55@gmail.com<br />
-        Phone : +1 (121) 213-1231
-      </div>
-    ),
-  },
-  {
-    key: "6",
-    name: "Dealer Test",
-    interest: "Sell a vehicle",
-    contact: (
-      <div>
-        Email : musawarbilal@gmail.com<br />
-        Phone : +1 (234) 567-8967
-      </div>
-    ),
-  },
-  {
-    key: "7",
-    name: "Car Dealers",
-    interest: "Both",
-    contact: (
-      <div>
-        Email : projectco.marten@gmail.com<br />
-        Phone : +1 (123) 456-7890
-      </div>
-    ),
-  },
-  {
-    key: "8",
-    name: "Tanisha Townsend",
-    interest: "Sell a vehicle",
-    contact: (
-      <div>
-        Email : dokev@mailinator.com<br />
-        Phone : +1 (363) 253-4962
-      </div>
-    ),
-  },
-  {
-    key: "9",
-    name: "Axel Sweet",
-    interest: "Both",
-    contact: (
-      <div>
-        Email : zenek@mailinator.com<br />
-        Phone : +1 (532) 108-8233
-      </div>
-    ),
-  },
-];
-
 export default function DealersPendingPage() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const role = useSelector((state: RootState) => state.user.role);
+  useEffect(() => {
+    const fetchDealers = async () => {
+      setLoading(true);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      try {
+        const res = await axios.get(`${apiUrl}/users/api/v1/dealership/?approved=2`, { headers });
+        setData(res.data.results || res.data);
+      } catch (error) {
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (role !== "ds") fetchDealers();
+  }, [role]);
   if (role === "ds") return <div>Dealers Pending Page</div>;
+  const tableData = { 
+    selectableRows: true,
+    isEnableFilterInput: true,
+    showAddButton: true, 
+    addButtonLabel: "Add Dealer", 
+    addButtonHref: "/dealerships/dealers/add"
+  };
   return (
     <div>
       <Breadcrumbs items={[{ label: "Dealerships", href: "/dealerships" }, { label: "Dealers", href: "/dealerships/dealers" }, { label: "Pending" }]} />
       <div className="p-6">
-        <Card>
-          <DataTable columns={columns} data={data} tableData={{}} />
-        </Card>
+        <DataTable columns={columns} data={data} tableData={tableData} loading={loading} />
       </div>
     </div>
   );

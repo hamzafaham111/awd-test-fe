@@ -1,0 +1,304 @@
+"use client";
+import { redirect, useParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { Input, Select, Upload, Form } from "antd";
+import Breadcrumbs from "@/components/common/Breadcrumbs";
+import type { UploadFile } from "antd/es/upload/interface";
+import axios from "axios";
+import { showToast } from "@/components/common/Toaster";
+
+const { Option } = Select;
+
+const states = [
+  { value: "AL", label: "Alabama (AL)" },
+  { value: "AK", label: "Alaska (AK)" },
+  { value: "AZ", label: "Arizona (AZ)" },
+  { value: "AR", label: "Arkansas (AR)" },
+  { value: "CA", label: "California (CA)" },
+  { value: "CT", label: "Connecticut (CT)" },
+  { value: "DE", label: "Delaware (DE)" },
+  // ...add all other states as needed...
+];
+
+const defaultDealer = {
+  first_name: "",
+  last_name: "",
+  email: "",
+  mobile_no: "",
+  phone_number: "",
+  contact_preference: "",
+  dealership_name: "",
+  street_name: "",
+  tax_id: "",
+  website: "",
+  city_name: "",
+  dealer_license: undefined as UploadFile | undefined,
+  business_license: undefined as UploadFile | undefined,
+  retail_certificate: undefined as UploadFile | undefined,
+  state_name: "",
+  zipcode: "",
+  dealership_type: "",
+  dealership_interest: "",
+  no_of_locations: "",
+  cars_in_stock: "",
+  seller_fees_type_id: "",
+  approved: "",
+};
+
+export default function DealerViewEditPage() {
+  const { id } = useParams();
+  const isAddMode = id === "add";
+  const [dealerValues, setDealerValues] = useState<typeof defaultDealer>(defaultDealer);
+  const [loading, setLoading] = useState(false);
+  const [initialDealerValues, setInitialDealerValues] = useState<typeof defaultDealer | null>(null);
+
+  const handleChange = (field: keyof typeof defaultDealer, value: any) => {
+    setDealerValues({ ...dealerValues, [field]: value });
+  };
+
+  const handleFileChange = (field: keyof typeof defaultDealer, info: { fileList: UploadFile[] }) => {
+    setDealerValues({
+      ...dealerValues,
+      [field]: info.fileList[0] ? info.fileList[0] : undefined,
+    });
+  };
+
+  useEffect(() => {
+    if (!isAddMode) {
+      const fetchDealer = async () => {
+        setLoading(true);
+        try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+          const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+          const headers = token ? { Authorization: `Bearer ${token}` } : {};
+          const { data } = await axios.get(`${apiUrl}/users/api/v1/dealership/${id}/`, { headers });
+          setDealerValues(data);
+          setInitialDealerValues(data);
+        } catch (error) {
+          showToast({ type: "error", message: "Failed to fetch dealer data." });
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchDealer();
+    }
+  }, [id, isAddMode]);
+
+  const handleSave = async () => {
+    setLoading(true);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+    const headers = {
+      'Content-Type': 'multipart/form-data',
+      ...(token && { Authorization: `Bearer ${token}` }),
+    };
+    try {
+      if (isAddMode) {
+        const formData = new FormData();
+        Object.entries(dealerValues).forEach(([key, value]) => {
+          if (
+            key === "dealer_license" ||
+            key === "business_license" ||
+            key === "retail_certificate"
+          ) {
+            if (value && (value as UploadFile).originFileObj) {
+              formData.append(key, (value as UploadFile).originFileObj as File);
+            }
+          } else {
+            if (value !== undefined && value !== null) {
+              formData.append(key, value as string);
+            }
+          }
+        });
+        await axios.post(`${apiUrl}/users/api/v1/dealership/`, formData, { headers });
+        showToast({ type: "success", message: "Dealer added successfully!" });
+        redirect("/dealerships/dealers/pending")
+      } else {
+        // PATCH: Only send changed fields
+        const patchData = new FormData();
+        if (initialDealerValues) {
+          Object.entries(dealerValues).forEach(([key, value]) => {
+            if (value !== initialDealerValues[key as keyof typeof defaultDealer]) {
+              if (
+                key === "dealer_license" ||
+                key === "business_license" ||
+                key === "retail_certificate"
+              ) {
+                if (value && (value as UploadFile).originFileObj) {
+                  patchData.append(key, (value as UploadFile).originFileObj as File);
+                }
+              } else if (value !== undefined && value !== null) {
+                patchData.append(key, value as string);
+              }
+            }
+          });
+          await axios.patch(`${apiUrl}/users/api/v1/dealership/${id}/`, patchData, { headers });
+          showToast({ type: "success", message: "Dealer updated successfully!" });
+        }
+      }
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.detail || error?.message || "Something went wrong.";
+      showToast({ type: "error", message: errorMsg });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="p-6 w-full">
+      <Breadcrumbs
+        items={[
+          { label: "Dealers", href: "/dealerships/dealers/approved" },
+          { label: isAddMode ? "Add Dealer" : "Edit Dealer" }
+        ]}
+        showSaveButton={true}
+        saveButtonLabel={isAddMode ? "Add Dealer" : "Save"}
+        onSaveButtonClick={handleSave}
+      />
+      <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+        <Form layout="vertical">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Form.Item label="Dealership Type">
+              <Select
+                placeholder="Select..."
+                value={dealerValues.dealership_type}
+                onChange={v => handleChange("dealership_type", v)}
+                disabled={!isAddMode}
+              >
+                <Option value="1">Franchise</Option>
+                <Option value="2">Independent</Option>
+                <Option value="3">Wholesale</Option>
+                <Option value="4">Commercial</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item label="Dealership Interest">
+              <Select
+                placeholder="Select..."
+                value={dealerValues.dealership_interest}
+                onChange={v => handleChange("dealership_interest", v)}
+              >
+                <Option value="1">Sell a vehicle</Option>
+                <Option value="2">Purchase a vehicle</Option>
+                <Option value="3">Both</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item label="Seller Fee Type">
+              <Select
+                placeholder="Select..."
+                value={dealerValues.seller_fees_type_id}
+                onChange={v => handleChange("seller_fees_type_id", v)}
+              >
+                <Option value="Basic $10">Basic $10</Option>
+                <Option value="Basic %2">Basic %2</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item label="Dealership Name">
+              <Input value={dealerValues.dealership_name} onChange={e => handleChange("dealership_name", e.target.value)} />
+            </Form.Item>
+            <Form.Item label="Dealership Street Name">
+              <Input value={dealerValues.street_name} onChange={e => handleChange("street_name", e.target.value)} />
+            </Form.Item>
+            <Form.Item label="City">
+              <Input value={dealerValues.city_name} onChange={e => handleChange("city_name", e.target.value)} />
+            </Form.Item>
+            <Form.Item label="State">
+              <Select
+                placeholder="Select..."
+                value={dealerValues.state_name}
+                onChange={v => handleChange("state_name", v)}
+                showSearch
+                optionFilterProp="children"
+              >
+                {states.map(s => (
+                  <Option key={s.value} value={s.value}>{s.label}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item label="Zipcode">
+              <Input value={dealerValues.zipcode} onChange={e => handleChange("zipcode", e.target.value)} />
+            </Form.Item>
+            <Form.Item label="Website">
+              <Input value={dealerValues.website} onChange={e => handleChange("website", e.target.value)} />
+            </Form.Item>
+            <Form.Item label="No of locations">
+              <Input value={dealerValues.no_of_locations} onChange={e => handleChange("no_of_locations", e.target.value)} />
+            </Form.Item>
+            <Form.Item label="Cars in stock">
+              <Input value={dealerValues.cars_in_stock} onChange={e => handleChange("cars_in_stock", e.target.value)} />
+            </Form.Item>
+            <Form.Item label="First Name">
+              <Input value={dealerValues.first_name} onChange={e => handleChange("first_name", e.target.value)} />
+            </Form.Item>
+            <Form.Item label="Last Name">
+              <Input value={dealerValues.last_name} onChange={e => handleChange("last_name", e.target.value)} />
+            </Form.Item>
+            <Form.Item label="Email">
+              <Input value={dealerValues.email} onChange={e => handleChange("email", e.target.value)} />
+            </Form.Item>
+            <Form.Item label="Phone Number">
+              <Input value={dealerValues.phone_number} onChange={e => handleChange("phone_number", e.target.value)} />
+            </Form.Item>
+            <Form.Item label="Mobile Number">
+              <Input value={dealerValues.mobile_no} onChange={e => handleChange("mobile_no", e.target.value)} />
+            </Form.Item>
+            <Form.Item label="Contact Preference Options">
+              <Select
+                placeholder="Select..."
+                value={dealerValues.contact_preference}
+                onChange={v => handleChange("contact_preference", v)}
+              >
+                <Option value="Email">Email</Option>
+                <Option value="Phone">Phone</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item label="Approved">
+              <Select
+                placeholder="Select..."
+                value={dealerValues.approved}
+                onChange={v => handleChange("approved", v)}
+                disabled={!isAddMode}
+              >
+                <Option value="1">Pending</Option>
+                <Option value="2">Approved</Option>
+                <Option value="3">Not Approved</Option>
+              </Select>
+            </Form.Item>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+            <Form.Item label={<span className="font-semibold">Dealer License</span>}>
+              <Upload
+                beforeUpload={() => false}
+                maxCount={1}
+                onChange={info => handleFileChange("dealer_license", info)}
+                fileList={dealerValues.dealer_license ? [{ ...dealerValues.dealer_license, uid: "1" }] : []}
+              >
+                <div className="border border-gray-300 rounded-md p-6 text-center cursor-pointer">Drag File</div>
+              </Upload>
+            </Form.Item>
+            <Form.Item label={<span className="font-semibold">Business License</span>}>
+              <Upload
+                beforeUpload={() => false}
+                maxCount={1}
+                onChange={info => handleFileChange("business_license", info)}
+                fileList={dealerValues.business_license ? [{ ...dealerValues.business_license, uid: "2" }] : []}
+              >
+                <div className="border border-gray-300 rounded-md p-6 text-center cursor-pointer">Drag File</div>
+              </Upload>
+            </Form.Item>
+            <Form.Item label={<span className="font-semibold">Retail Certificate</span>}>
+              <Upload
+                beforeUpload={() => false}
+                maxCount={1}
+                onChange={info => handleFileChange("retail_certificate", info)}
+                fileList={dealerValues.retail_certificate ? [{ ...dealerValues.retail_certificate, uid: "3" }] : []}
+              >
+                <div className="border border-gray-300 rounded-md p-6 text-center cursor-pointer">Drag File</div>
+              </Upload>
+            </Form.Item>
+          </div>
+
+        </Form>
+      </div>
+    </div>
+  );
+} 

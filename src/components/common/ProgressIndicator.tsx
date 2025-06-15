@@ -18,10 +18,10 @@ export function ProgressIndicator({ steps, currentStep }: ProgressIndicatorProps
             key={step.id}
             className={`h-2 rounded-full transition-all duration-300 ${
               index + 1 === currentStep
-                ? "w-12 md:w-24 bg-sky-600"
+                ? "w-8 sm:w-10 md:w-14 lg:w-24 bg-sky-600"
                 : index + 1 < currentStep
-                  ? "w-12 md:w-24 bg-sky-600"
-                  : "w-12 md:w-24 bg-gray-300"
+                  ? "w-8 sm:w-10 md:w-14 lg:w-24 bg-sky-600"
+                  : "w-8 sm:w-10 md:w-14 lg:w-24 bg-gray-300"
             }`}
           />
         ))}
