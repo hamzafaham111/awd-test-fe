@@ -1,6 +1,6 @@
 "use client";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
-import { Card, Button, Dropdown, Menu, Tag } from "antd";
+import { Card, Button, Dropdown, Menu, Tag, Modal } from "antd";
 import { EditOutlined, DeleteOutlined, SettingOutlined, DownOutlined } from "@ant-design/icons";
 import DataTable from "@/components/common/DataTable";
 import { useSelector } from "react-redux";
@@ -8,70 +8,107 @@ import { RootState } from "@/store";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import axios from "axios";
-
-const interestMap: Record<string, string> = {
-  1: "Sell a vehicle",
-  2: "Purchase a vehicle",
-  3: "Both",
-};
-
-const columns = [
-  {
-    title: "Dealer Name",
-    dataIndex: "dealership_name",
-    key: "dealership_name",
-  },
-  {
-    title: "Dealer Interest",
-    dataIndex: "dealership_interest",
-    key: "dealership_interest",
-    render: (value: number) => interestMap[String(value)] || "-",
-  },
-  {
-    title: "Contact",
-    key: "contact",
-    render: (_: any, record: any) => (
-      <div>
-        Email : {record.email || "-"}<br />
-        Phone : {record.phone_number || "-"}
-      </div>
-    ),
-  },
-  {
-    title: "Approved",
-    dataIndex: "approved",
-    key: "approved",
-    render: () => <Tag color="default">Pending</Tag>,
-  },
-  {
-    title: "Action",
-    key: "action",
-    render: (_: any, record: any) => {
-      const menu = (
-        <Menu>
-          <Menu.Item key="edit" icon={<EditOutlined />}>
-            <Link href={`/dealerships/dealers/${record.id}`}>Edit</Link>
-          </Menu.Item>
-          <Menu.Item key="delete" icon={<DeleteOutlined />} danger>Delete</Menu.Item>
-        </Menu>
-      );
-      return (
-        <Dropdown overlay={menu} trigger={["click"]}>
-          <Button>
-            <span className="flex items-center gap-1">
-              <SettingOutlined /> <DownOutlined />
-            </span>
-          </Button>
-        </Dropdown>
-      );
-    },
-  },
-];
+import DeleteConfirmModal from "@/components/modals/DeleteConfirmModal";
 
 export default function DealersPendingPage() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const role = useSelector((state: RootState) => state.user.role);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [selectedDealerId, setSelectedDealerId] = useState<number | null>(null);
+
+  const handleDelete = (dealerId: number) => {
+    setSelectedDealerId(dealerId);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedDealerId) return;
+    setDeleteLoading(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      await axios.delete(`${apiUrl}/users/api/v1/dealership/${selectedDealerId}/`, { headers });
+      setData(prev => prev.filter((dealer: any) => dealer.id !== selectedDealerId));
+      Modal.success({
+        title: 'Success',
+        content: 'Dealer has been deleted successfully.',
+      });
+    } catch (err: any) {
+      Modal.error({
+        title: 'Error',
+        content: err?.response?.data?.detail || err?.message || 'Failed to delete dealer.',
+      });
+    } finally {
+      setDeleteLoading(false);
+      setDeleteModalOpen(false);
+      setSelectedDealerId(null);
+    }
+  };
+
+  const interestMap: Record<string, string> = {
+    1: "Sell a vehicle",
+    2: "Purchase a vehicle",
+    3: "Both",
+  };
+
+  const columns = [
+    {
+      title: "Dealer Name",
+      dataIndex: "dealership_name",
+      key: "dealership_name",
+    },
+    {
+      title: "Dealer Interest",
+      dataIndex: "dealership_interest",
+      key: "dealership_interest",
+      render: (value: number) => interestMap[String(value)] || "-",
+    },
+    {
+      title: "Contact",
+      key: "contact",
+      render: (_: any, record: any) => (
+        <div>
+          Email : {record.email || "-"}<br />
+          Phone : {record.phone_number || "-"}
+        </div>
+      ),
+    },
+    {
+      title: "Approved",
+      dataIndex: "approved",
+      key: "approved",
+      render: () => <Tag color="default">Pending</Tag>,
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (_: any, record: any) => {
+        const menu = (
+          <Menu>
+            <Menu.Item key="edit" icon={<EditOutlined />}>
+              <Link href={`/dealerships/dealers/${record.id}`}>Edit</Link>
+            </Menu.Item>
+            <Menu.Item key="delete" icon={<DeleteOutlined />} danger onClick={() => handleDelete(record.id)}>
+              Delete
+            </Menu.Item>
+          </Menu>
+        );
+        return (
+          <Dropdown overlay={menu} trigger={["click"]}>
+            <Button>
+              <span className="flex items-center gap-1">
+                <SettingOutlined /> <DownOutlined />
+              </span>
+            </Button>
+          </Dropdown>
+        );
+      },
+    },
+  ];
+
   useEffect(() => {
     const fetchDealers = async () => {
       setLoading(true);
@@ -103,6 +140,17 @@ export default function DealersPendingPage() {
       <div className="p-6">
         <DataTable columns={columns} data={data} tableData={tableData} loading={loading} />
       </div>
+      <DeleteConfirmModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setSelectedDealerId(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        loading={deleteLoading}
+        title={<span className="flex items-center gap-2"><DeleteOutlined className="text-red-500" /> Delete Dealer</span>}
+        description="Are you sure you want to delete this dealer? This action cannot be undone."
+      />
     </div>
   );
 } 

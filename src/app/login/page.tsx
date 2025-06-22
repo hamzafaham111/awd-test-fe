@@ -21,6 +21,7 @@ interface LoginForm {
 
 // Map backend role names to frontend role keys
 function mapBackendRoleToFrontend(roleName: string) {
+  console.log({roleName})
   switch (roleName) {
     case "SUPER_ADMIN":
       return "superadmin";
@@ -28,7 +29,7 @@ function mapBackendRoleToFrontend(roleName: string) {
     case "BUYER":
     case "SELLER/BUYER":
       return "ds";
-    case "INSPECTION":
+    case "INSPECTOR":
       return "inspector";
     default:
       return "ds";
@@ -45,19 +46,23 @@ export default function Login() {
   async function onSubmit(values: LoginForm) {
     setIsLoading(true)
     try {
+      console.log("Before API call", values);
       const formData = new FormData()
       formData.append("email", values.email)
       formData.append("password", values.password)
       const response = await axios.post(`${apiUrl}/users/api/v1/login/`, formData)
+      console.log("After API call", response.data);
       const userData = response.data
+      const user = userData.user
+      console.log("User object:", user);
       localStorage.setItem("access", userData.access)
       localStorage.setItem("refresh", userData.refresh)
-      const user = userData.user
       const frontendRole = mapBackendRoleToFrontend(user.role?.name || "")
       dispatch(setUser({
         id: user.id,
         name: `${user.first_name} ${user.last_name}`.trim(),
         role: frontendRole,
+        backendRole: user.role?.name,
         avatar: "/images/dummy-profile-logo.jpg",
       }))
       message.success("Login successful!")

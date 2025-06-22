@@ -6,7 +6,7 @@ import DsDashboard from "@/components/dashboard/DsDashboard";
 
 export default function DashboardPage() {
   const role = useSelector((state: RootState) => state.user.role);
-
+  console.log({role})
   if (role === "ds") {
     return <DsDashboard />;
   }

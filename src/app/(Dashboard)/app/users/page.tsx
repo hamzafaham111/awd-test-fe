@@ -9,7 +9,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import DeleteUserModal from "@/components/modals/DeleteUserModal";
+import DeleteConfirmModal from "@/components/modals/DeleteConfirmModal";
 
 const statusColors: Record<string, string> = {
   "Active": "bg-green-100 text-green-700 border-green-300",
@@ -186,7 +186,7 @@ export default function UsersPage() {
     <div className="p-6">
       <Breadcrumbs items={[{ label: "Users", href: "/app/users" }]} />
         <DataTable columns={columns} data={mappedUsers} tableData={tableData} loading={loading} />
-        <DeleteUserModal
+        <DeleteConfirmModal
           isOpen={deleteModalOpen}
           onClose={() => {
             setDeleteModalOpen(false);
@@ -194,6 +194,8 @@ export default function UsersPage() {
           }}
           onConfirm={handleConfirmDelete}
           loading={deleteLoading}
+          title={<span className="flex items-center gap-2"><DeleteOutlined className="text-red-500" /> Delete User</span>}
+          description="Are you sure you want to delete this user? This action cannot be undone."
         />
     </div>
   );

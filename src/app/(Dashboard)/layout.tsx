@@ -3,7 +3,7 @@ import "../globals.css";
 import ClientHeader from "@/components/layout/ClientHeader";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
-import { navItemsByRole, NavItem } from "@/data/navItems";
+import { navItemsByRole, getDsNavItems } from "@/data/navItems";
 import { Drawer, Button, Menu, Avatar, Dropdown } from "antd";
 import Image from "next/image";
 import { MenuOutlined, CloseOutlined, SettingOutlined, LogoutOutlined } from "@ant-design/icons";
@@ -14,9 +14,15 @@ import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/store/userSlice";
 
 function AppLayoutInner({ children }: { children: React.ReactNode }) {
-  const role = useSelector((state: RootState) => state.user.role) || 'superadmin';
-  const navItems = navItemsByRole[role] || [];
-  const dsMode = role === "ds";
+  const user = useSelector((state: RootState) => state.user) || { role: 'superadmin', backendRole: 'SUPER_ADMIN' };
+  let navItems = [];
+  let dsMode = false;
+  if (user.role === "ds") {
+    navItems = getDsNavItems(user.backendRole || "BOTH");
+    dsMode = true;
+  } else {
+    navItems = navItemsByRole[user.role] || [];
+  }
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openKeys, setOpenKeys] = useState<string[]>([]);
   const pathname = usePathname();

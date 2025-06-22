@@ -152,46 +152,109 @@ export const navItemsByRole: NavItemsByRole = {
   inspector: [
     { label: "Tasks", icon: <HomeOutlined />, href: "/tasks" },
   ],
-  ds: [
-    { label: "Dashboard", icon: <HomeOutlined />, href: "/" },
-    { label: "Auctions", icon: <ToolOutlined />, href: "/auctions-ds" },
-    { label: "Upcoming", icon: <ShopOutlined />, href: "/upcoming-auctions" },
-    {
-      label: "Ended Auctions",
-      icon: <SafetyCertificateOutlined />,
-      children: [
-        { label: "Offer Now", href: "/ended-auctions/offer-now" },
-        { label: "Sold (Pending offers and sold)", href: "/ended-auctions/sold" },
-      ],
-    },
-    {
-      label: "Active Buying",
-      icon: <ProfileOutlined />,
-      children: [
-        { label: "Buying (Current Bids)", href: "/active-buying/current-bids" },
-        { label: "In Negotiation", href: "/active-buying/in-negotiation" },
-        { label: "Won", href: "/active-buying/won" },
-      ],
-    },
-    {
-      label: "Selling",
-      icon: <CarOutlined />,
-      children: [
-        { label: "Selling (Current sales)", href: "/selling/current-sales" },
-        { label: "In Negotiation", href: "/selling/in-negotiation" },
-        { label: "Sold", href: "/selling/sold" },
-      ],
-    },
-    { label: "Title Center", icon: <FileTextOutlined />, href: "/titles-ds" },
-    {
-      label: "Request Inspection",
-      icon: <PlusOutlined />,
-      children: [
-        { label: "New", href: "/request-inspection/new" },
-        { label: "Requested", href: "/request-inspection/requested" },
-      ],
-    },
-    { label: "Transportation Center", icon: <FileTextOutlined />, href: "/transportation-ds" },
-    { label: "Payments", icon: <CreditCardOutlined />, href: "/payments-ds" },
-  ],
 }; 
+
+const dsNavItemsSeller: NavItem[] = [
+  { label: "Dashboard", icon: <HomeOutlined />, href: "/" },
+  {
+    label: "Selling",
+    icon: <CarOutlined />,
+    children: [
+      { label: "Selling (Current sales)", href: "/selling/current-sales" },
+      { label: "In Negotiation", href: "/selling/in-negotiation" },
+      { label: "Sold", href: "/selling/sold" },
+    ],
+  },
+  { label: "Title Center", icon: <FileTextOutlined />, href: "/titles-ds" },
+  {
+    label: "Request Inspection",
+    icon: <PlusOutlined />,
+    children: [
+      { label: "New", href: "/request-inspection/new" },
+      { label: "Requested", href: "/request-inspection/requested" },
+    ],
+  },
+  { label: "Transportation Center", icon: <FileTextOutlined />, href: "/transportation-ds" },
+  { label: "Payments", icon: <CreditCardOutlined />, href: "/payments-ds" },
+];
+
+const dsNavItemsBuyer: NavItem[] = [
+  { label: "Dashboard", icon: <HomeOutlined />, href: "/" },
+  { label: "Auctions", icon: <ToolOutlined />, href: "/auctions-ds" },
+  { label: "Upcoming", icon: <ShopOutlined />, href: "/upcoming-auctions" },
+  {
+    label: "Ended Auctions",
+    icon: <SafetyCertificateOutlined />,
+    children: [
+      { label: "Offer Now", href: "/ended-auctions/offer-now" },
+      { label: "Sold (Pending offers and sold)", href: "/ended-auctions/sold" },
+    ],
+  },
+  {
+    label: "Active Buying",
+    icon: <ProfileOutlined />,
+    children: [
+      { label: "Buying (Current Bids)", href: "/active-buying/current-bids" },
+      { label: "In Negotiation", href: "/active-buying/in-negotiation" },
+      { label: "Won", href: "/active-buying/won" },
+    ],
+  },
+  { label: "Title Center", icon: <FileTextOutlined />, href: "/titles-ds" },
+  { label: "Transportation Center", icon: <FileTextOutlined />, href: "/transportation-ds" },
+  { label: "Payments", icon: <CreditCardOutlined />, href: "/payments-ds" },
+];
+
+const dsNavItemsBoth: NavItem[] = [
+  { label: "Dashboard", icon: <HomeOutlined />, href: "/" },
+  { label: "Auctions", icon: <ToolOutlined />, href: "/auctions-ds" },
+  { label: "Upcoming", icon: <ShopOutlined />, href: "/upcoming-auctions" },
+  {
+    label: "Ended Auctions",
+    icon: <SafetyCertificateOutlined />,
+    children: [
+      { label: "Offer Now", href: "/ended-auctions/offer-now" },
+      { label: "Sold (Pending offers and sold)", href: "/ended-auctions/sold" },
+    ],
+  },
+  {
+    label: "Active Buying",
+    icon: <ProfileOutlined />,
+    children: [
+      { label: "Buying (Current Bids)", href: "/active-buying/current-bids" },
+      { label: "In Negotiation", href: "/active-buying/in-negotiation" },
+      { label: "Won", href: "/active-buying/won" },
+    ],
+  },
+  {
+    label: "Selling",
+    icon: <CarOutlined />,
+    children: [
+      { label: "Selling (Current sales)", href: "/selling/current-sales" },
+      { label: "In Negotiation", href: "/selling/in-negotiation" },
+      { label: "Sold", href: "/selling/sold" },
+    ],
+  },
+  { label: "Title Center", icon: <FileTextOutlined />, href: "/titles-ds" },
+  {
+    label: "Request Inspection",
+    icon: <PlusOutlined />,
+    children: [
+      { label: "New", href: "/request-inspection/new" },
+      { label: "Requested", href: "/request-inspection/requested" },
+    ],
+  },
+  { label: "Transportation Center", icon: <FileTextOutlined />, href: "/transportation-ds" },
+  { label: "Payments", icon: <CreditCardOutlined />, href: "/payments-ds" },
+];
+
+export function getDsNavItems(backendRole: string): NavItem[] {
+  if (backendRole === "SELLER") {
+    return dsNavItemsSeller;
+  } else if (backendRole === "BUYER") {
+    return dsNavItemsBuyer;
+  } else if (backendRole === "BOTH" || backendRole === "SELLER/BUYER") {
+    return dsNavItemsBoth;
+  }
+  // fallback to both
+  return dsNavItemsBoth;
+} 

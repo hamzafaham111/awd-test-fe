@@ -2,12 +2,23 @@
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import Header from "./Header";
-import { navItemsByRole } from "@/data/navItems";
+import { navItemsByRole, getDsNavItems } from "@/data/navItems";
 
 export default function ClientHeader() {
-  const role = useSelector((state: RootState) => state.user.role);
-  const navItems = navItemsByRole[role] || [];
-  const roleLabel = role === "inspector" ? "Inspector" : role === "ds" ? "D/S" : "Super Admin";
-  const dsMode = role === "ds";
+  const user = useSelector((state: RootState) => state.user);
+  let navItems = [];
+  let roleLabel = "Super Admin";
+  let dsMode = false;
+  if (user.role === "ds") {
+    navItems = getDsNavItems(user.backendRole || "BOTH");
+    roleLabel = user.backendRole || "D/S";
+    dsMode = true;
+  } else if (user.role === "inspector") {
+    navItems = navItemsByRole["inspector"] || [];
+    roleLabel = "Inspector";
+  } else {
+    navItems = navItemsByRole["superadmin"] || [];
+    roleLabel = "Super Admin";
+  }
   return <Header navItems={navItems} roleLabel={roleLabel} dsMode={dsMode} />;
 } 

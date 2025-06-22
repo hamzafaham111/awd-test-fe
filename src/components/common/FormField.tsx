@@ -1,12 +1,12 @@
-import { Form, Input, Select, Radio, Upload, Button } from "antd"
+import { Form, Input, Select, Radio, Upload, Button, Checkbox } from "antd"
 import { PaperClipOutlined } from "@ant-design/icons"
 import type { FormItemProps } from "antd"
 import type { UploadFile } from "antd/es/upload/interface"
 import { ReactNode } from "react"
 
 interface FormFieldProps extends Omit<FormItemProps, "children"> {
-  type?: "text" | "password" | "email" | "select" | "radio" | "upload"
-  options?: { label: string; value: string }[]
+  type?: "text" | "password" | "email" | "select" | "radio" | "upload" | "checkbox" | "textarea"
+  options?: { label: string; value: any }[]
   uploadProps?: {
     maxCount?: number
     listType?: "text" | "picture" | "picture-card"
@@ -41,6 +41,8 @@ export function FormField({
         return <Input.Password name={name} size="large" prefix={prefix} placeholder={placeholder} disabled={disabled} className={inputClassName} value={value} onChange={onChange} />
       case "email":
         return <Input name={name} type="email" size="large" prefix={prefix} placeholder={placeholder} disabled={disabled} className={inputClassName} value={value} onChange={onChange} />
+      case "textarea":
+        return <Input.TextArea name={name} size="large" placeholder={placeholder} disabled={disabled} className={inputClassName} value={value} onChange={onChange} />
       case "select":
         return (
           <Select
@@ -62,21 +64,26 @@ export function FormField({
         return (
           <Radio.Group
             name={name}
-            className={`space-y-4 ${inputClassName}`}
+            className={inputClassName}
             disabled={disabled}
             value={value}
             onChange={onChange}
           >
             {options.map((option) => (
-              <Radio
+              <Radio.Button
                 key={option.value}
                 value={option.value}
-                className="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
               >
                 {option.label}
-              </Radio>
+              </Radio.Button>
             ))}
           </Radio.Group>
+        )
+      case "checkbox":
+        return (
+          <Checkbox name={name} disabled={disabled} className={inputClassName} checked={value} onChange={onChange}>
+            {label}
+          </Checkbox>
         )
       case "upload":
         return (
@@ -106,13 +113,14 @@ export function FormField({
     <Form.Item
       name={name}
       {...props}
-      label={label ? (
+      label={type === 'checkbox' ? undefined : label ? (
         <span className={labelClassName}>
           {label}
           {/* {required && <span className="text-red-500 ml-1">*</span>} */}
         </span>
       ) : undefined}
       required={required}
+      valuePropName={type === 'checkbox' ? 'checked' : 'value'}
     >
       {renderField()}
     </Form.Item>

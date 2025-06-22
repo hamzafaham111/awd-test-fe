@@ -3,7 +3,8 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 interface UserState {
   id: number;
   name: string;
-  role: string;
+  role: string; // frontend role: 'ds', 'superadmin', 'inspector'
+  backendRole?: string; // backend role: 'SELLER', 'BUYER', 'BOTH', etc.
   avatar: string;
 }
 
@@ -11,6 +12,7 @@ const initialState: UserState = {
   id: 1,
   name: "Hamza Faham",
   role: "ds", // or "inspector" - "ds" - "superadmin"
+  backendRole: "BOTH", // default fallback
   avatar: "/images/dummy-profile-logo.jpg",
 };
 
@@ -39,6 +41,9 @@ const userSlice = createSlice({
     setRole(state, action: PayloadAction<string>) {
       state.role = action.payload;
     },
+    setBackendRole(state, action: PayloadAction<string>) {
+      state.backendRole = action.payload;
+    },
     logout() {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('user');
@@ -48,5 +53,5 @@ const userSlice = createSlice({
   },
 });
 
-export const { setUser, setRole, logout } = userSlice.actions;
+export const { setUser, setRole, setBackendRole, logout } = userSlice.actions;
 export default userSlice.reducer; 

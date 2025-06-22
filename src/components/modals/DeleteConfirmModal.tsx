@@ -1,22 +1,31 @@
 import { Modal } from 'antd';
 import { ExclamationCircleFilled } from '@ant-design/icons';
 
-interface DeleteUserModalProps {
+interface DeleteConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
   loading?: boolean;
+  title?: React.ReactNode;
+  description?: React.ReactNode;
 }
 
-const DeleteUserModal = ({ isOpen, onClose, onConfirm, loading = false }: DeleteUserModalProps) => {
+const DeleteConfirmModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  loading = false,
+  title = (
+    <div className="flex items-center gap-2">
+      <ExclamationCircleFilled className="text-red-500 text-xl" />
+      <span>Delete</span>
+    </div>
+  ),
+  description = "Are you sure you want to delete this item? This action cannot be undone.",
+}: DeleteConfirmModalProps) => {
   return (
     <Modal
-      title={
-        <div className="flex items-center gap-2">
-          <ExclamationCircleFilled className="text-red-500 text-xl" />
-          <span>Delete User</span>
-        </div>
-      }
+      title={title}
       open={isOpen}
       onCancel={onClose}
       onOk={onConfirm}
@@ -32,10 +41,10 @@ const DeleteUserModal = ({ isOpen, onClose, onConfirm, loading = false }: Delete
       }}
     >
       <div className="py-4">
-        <p className="text-gray-700">Are you sure you want to delete this user? This action cannot be undone.</p>
+        <p className="text-gray-700">{description}</p>
       </div>
     </Modal>
   );
 };
 
-export default DeleteUserModal; 
+export default DeleteConfirmModal; 
