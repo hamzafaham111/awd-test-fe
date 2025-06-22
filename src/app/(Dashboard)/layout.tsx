@@ -13,6 +13,14 @@ import Header from "@/components/layout/Header";
 import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/store/userSlice";
 
+interface NavItem {
+  key?: string;
+  label: string;
+  href?: string;
+  icon?: React.ReactNode;
+  children?: NavItem[];
+}
+
 function AppLayoutInner({ children }: { children: React.ReactNode }) {
   const user = useSelector((state: RootState) => state.user) || { role: 'superadmin', backendRole: 'SUPER_ADMIN' };
   let navItems = [];

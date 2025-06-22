@@ -14,6 +14,7 @@ interface FormFieldProps extends Omit<FormItemProps, "children"> {
   prefix?: ReactNode
   placeholder?: string
   disabled?: boolean
+  loading?: boolean
   inputClassName?: string
   labelClassName?: string
 }
@@ -25,6 +26,7 @@ export function FormField({
   prefix,
   placeholder,
   disabled,
+  loading,
   inputClassName = "",
   labelClassName = "",
   label,
@@ -49,6 +51,7 @@ export function FormField({
             size="large"
             placeholder={placeholder}
             disabled={disabled}
+            loading={loading}
             className={inputClassName}
             value={value}
             onChange={onChange}
