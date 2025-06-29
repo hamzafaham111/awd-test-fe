@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import DeleteConfirmModal from "@/components/modals/DeleteConfirmModal";
+import { showErrorToast, COMMON_ERROR_MESSAGES } from "@/utils/errorHandler";
 
 export default function DealersPendingPage() {
   const [data, setData] = useState([]);
@@ -37,10 +38,7 @@ export default function DealersPendingPage() {
         content: 'Dealer has been deleted successfully.',
       });
     } catch (err: any) {
-      Modal.error({
-        title: 'Error',
-        content: err?.response?.data?.detail || err?.message || 'Failed to delete dealer.',
-      });
+      showErrorToast(err, "Dealer deletion");
     } finally {
       setDeleteLoading(false);
       setDeleteModalOpen(false);
@@ -119,6 +117,7 @@ export default function DealersPendingPage() {
         const res = await axios.get(`${apiUrl}/users/api/v1/dealership/?approved=2`, { headers });
         setData(res.data.results || res.data);
       } catch (error) {
+        showErrorToast(error, "Pending dealers");
         setData([]);
       } finally {
         setLoading(false);

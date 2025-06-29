@@ -5,20 +5,9 @@ import { Input, Select, Upload, Form } from "antd";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
 import type { UploadFile } from "antd/es/upload/interface";
 import axios from "axios";
-import { showToast } from "@/components/common/Toaster";
+import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
 
 const { Option } = Select;
-
-const states = [
-  { value: "AL", label: "Alabama (AL)" },
-  { value: "AK", label: "Alaska (AK)" },
-  { value: "AZ", label: "Arizona (AZ)" },
-  { value: "AR", label: "Arkansas (AR)" },
-  { value: "CA", label: "California (CA)" },
-  { value: "CT", label: "Connecticut (CT)" },
-  { value: "DE", label: "Delaware (DE)" },
-  // ...add all other states as needed...
-];
 
 const defaultDealer = {
   first_name: "",
@@ -35,7 +24,7 @@ const defaultDealer = {
   dealer_license: undefined as UploadFile | undefined,
   business_license: undefined as UploadFile | undefined,
   retail_certificate: undefined as UploadFile | undefined,
-  state_name: "",
+  state_id: undefined as number | undefined,
   zipcode: "",
   dealership_type: "",
   dealership_interest: "",
@@ -51,6 +40,7 @@ export default function DealerViewEditPage() {
   const [dealerValues, setDealerValues] = useState<typeof defaultDealer>(defaultDealer);
   const [loading, setLoading] = useState(false);
   const [initialDealerValues, setInitialDealerValues] = useState<typeof defaultDealer | null>(null);
+  const [states, setStates] = useState<{ id: number; name: string; code: string }[]>([]);
 
   const handleChange = (field: keyof typeof defaultDealer, value: any) => {
     setDealerValues({ ...dealerValues, [field]: value });
@@ -64,6 +54,21 @@ export default function DealerViewEditPage() {
   };
 
   useEffect(() => {
+    const fetchStates = async () => {
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const res = await axios.get(`${apiUrl}/utils/api/v1/states/`, { headers });
+        setStates(res.data || []);
+      } catch (err) {
+        showErrorToast(err, "States");
+      }
+    };
+    fetchStates();
+  }, []);
+
+  useEffect(() => {
     if (!isAddMode) {
       const fetchDealer = async () => {
         setLoading(true);
@@ -75,7 +80,7 @@ export default function DealerViewEditPage() {
           setDealerValues(data);
           setInitialDealerValues(data);
         } catch (error) {
-          showToast({ type: "error", message: "Failed to fetch dealer data." });
+          showErrorToast(error, "Dealer data");
         } finally {
           setLoading(false);
         }
@@ -111,7 +116,7 @@ export default function DealerViewEditPage() {
           }
         });
         await axios.post(`${apiUrl}/users/api/v1/dealership/`, formData, { headers });
-        showToast({ type: "success", message: "Dealer added successfully!" });
+        showSuccessToast(COMMON_SUCCESS_MESSAGES.CREATED, "Dealer");
         redirect("/dealerships/dealers/pending")
       } else {
         // PATCH: Only send changed fields
@@ -133,12 +138,11 @@ export default function DealerViewEditPage() {
             }
           });
           await axios.patch(`${apiUrl}/users/api/v1/dealership/${id}/`, patchData, { headers });
-          showToast({ type: "success", message: "Dealer updated successfully!" });
+          showSuccessToast(COMMON_SUCCESS_MESSAGES.UPDATED, "Dealer");
         }
       }
     } catch (error: any) {
-      const errorMsg = error?.response?.data?.detail || error?.message || "Something went wrong.";
-      showToast({ type: "error", message: errorMsg });
+      showErrorToast(error, "Dealer");
     } finally {
       setLoading(false);
     }
@@ -198,19 +202,19 @@ export default function DealerViewEditPage() {
             <Form.Item label="Dealership Street Name">
               <Input value={dealerValues.street_name} onChange={e => handleChange("street_name", e.target.value)} />
             </Form.Item>
-            <Form.Item label="City">
+            <Form.Item label="City_name">
               <Input value={dealerValues.city_name} onChange={e => handleChange("city_name", e.target.value)} />
             </Form.Item>
             <Form.Item label="State">
               <Select
                 placeholder="Select..."
-                value={dealerValues.state_name}
-                onChange={v => handleChange("state_name", v)}
+                value={dealerValues.state_id}
+                onChange={v => handleChange("state_id", v)}
                 showSearch
                 optionFilterProp="children"
               >
-                {states.map(s => (
-                  <Option key={s.value} value={s.value}>{s.label}</Option>
+                {states.map(state => (
+                  <Option key={state.id} value={state.id}>{state.name} ({state.code})</Option>
                 ))}
               </Select>
             </Form.Item>

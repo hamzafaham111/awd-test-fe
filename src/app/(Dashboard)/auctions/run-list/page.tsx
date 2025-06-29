@@ -5,6 +5,8 @@ import DataTable from "@/components/common/DataTable";
 import ConfirmModal from "@/components/modals/ConfirmModal";
 import { showToast } from "@/components/common/Toaster";
 import { useState } from "react";
+import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
+import axios from "axios";
 
 const columns = [
   { title: "Auction ID", dataIndex: "auctionId", key: "auctionId" },
@@ -65,13 +67,28 @@ const data = [
 export default function AuctionsRunListPage() {
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSendToAuction = () => {
+  const handleSendToAuction = async () => {
     if (selectedRowKeys.length === 0) {
-      showToast({ type: "error", message: "Please make selection before sending to auction" });
+      showErrorToast({ message: "Please make selection before sending to auction" });
       return;
     }
-    setShowModal(true);
+
+    setLoading(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      await axios.post(`${apiUrl}/auctions/api/v1/send-to-auction/`, { ids: selectedRowKeys }, { headers });
+      showSuccessToast(COMMON_SUCCESS_MESSAGES.SENT, "Items to auction");
+      setSelectedRowKeys([]);
+      // Here you can add your logic to actually send to auction
+    } catch (error) {
+      showErrorToast(error, "Sending to auction");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleConfirm = () => {
@@ -85,7 +102,7 @@ export default function AuctionsRunListPage() {
       <Breadcrumbs items={[{ label: "Auctions", href: "/auctions" }, { label: "Run List" }]} />
       <div className="p-6">
         <div className="flex justify-end mb-2">
-          <button className="bg-sky-600 text-white px-4 py-2 rounded" onClick={handleSendToAuction}>Send To Auction</button>
+          <button className="bg-sky-600 text-white px-4 py-2 rounded" onClick={handleSendToAuction} disabled={loading}>Send To Auction</button>
         </div>
         <DataTable
           columns={columns}

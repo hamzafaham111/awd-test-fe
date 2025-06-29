@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import axios from "axios";
 import { Card, Spin, Tag } from "antd";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
+import { showErrorToast, COMMON_ERROR_MESSAGES } from "@/utils/errorHandler";
 
 const DetailItem = ({ title, content, className }: { title: string, content: React.ReactNode, className?: string }) => (
   <div className={className}>
@@ -32,6 +33,7 @@ export default function InspectionRequestDetailsPage() {
           setData(response.data);
         } catch (err: any) {
           setError(err?.response?.data?.detail || err?.message || "Failed to fetch inspection request details.");
+          showErrorToast(err, "Inspection request details");
         } finally {
           setLoading(false);
         }

@@ -5,18 +5,25 @@ import { Form, Input, Button, message } from "antd";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
+import axios from "axios";
 
 export default function ForgotPassword() {
   const [form] = Form.useForm();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const onFinish = (values: { email: string }) => {
+  const onFinish = async (values: any) => {
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      await axios.post(`${apiUrl}/users/api/v1/forgot-password/`, values);
+      showSuccessToast("Password reset link sent to your email.");
+    } catch (error) {
+      showErrorToast(error, "Password reset");
+    } finally {
       setLoading(false);
-      message.success("Password reset link sent to your email.");
-    }, 1200);
+    }
   };
 
   return (

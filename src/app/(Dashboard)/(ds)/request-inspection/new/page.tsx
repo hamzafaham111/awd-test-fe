@@ -1,8 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Form, Steps, Row, Col, Card, Typography, Space, ConfigProvider, message } from 'antd';
+import { Form, Steps, Row, Col, Card, Typography, Space, ConfigProvider } from 'antd';
 import { FormField } from "@/components/common/FormField";
 import axios from "axios";
+import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
 
 const { Title, Text } = Typography;
 
@@ -63,7 +64,7 @@ const DsRequestInspectionNew = () => {
                 setLocations(response.data);
             } catch (error) {
                 console.error('Failed to fetch locations:', error);
-                message.error('Could not load inspection locations.');
+                showErrorToast(error, "Inspection locations");
             } finally {
                 setLocationsLoading(false);
             }
@@ -116,10 +117,10 @@ const DsRequestInspectionNew = () => {
                         Authorization: `Bearer ${token}`
                     }
                 });
-                message.success('Inspection request created successfully!');
+                showSuccessToast(COMMON_SUCCESS_MESSAGES.CREATED, "Inspection request");
             } catch (error) {
                 console.error('API Error:', error);
-                message.error('Failed to create inspection request.');
+                showErrorToast(error, "Inspection request");
             } finally {
                 setLoading(false);
             }

@@ -12,6 +12,7 @@ import Image from "next/image"
 import axios from "axios"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler"
 
 interface RegistrationFormData {
   // Step 1
@@ -157,7 +158,7 @@ export default function Registration() {
         setShowErrors(false); // Reset for next step
       }
     } catch (error) {
-      message.error("Please fill in all required fields");
+      showErrorToast({ message: COMMON_ERROR_MESSAGES.VALIDATION_ERROR });
     }
   };
 
@@ -201,12 +202,11 @@ export default function Registration() {
     try {
       console.log(apiData);
       await axios.post(`${apiUrl}/users/api/v1/register/`, apiData);
-      message.success("Registration successful!");
+      showSuccessToast(COMMON_SUCCESS_MESSAGES.REGISTERED);
       // Redirect to login page after successful registration
       router.push("/login");
     } catch (error: any) {
-      const errorMsg = error?.response?.data?.detail || error?.message || "Registration failed. Please try again.";
-      message.error(errorMsg);
+      showErrorToast(error, "Registration");
     } finally {
       setSubmitting(false);
     }

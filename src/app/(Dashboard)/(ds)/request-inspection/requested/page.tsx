@@ -3,27 +3,31 @@ import { useState, useEffect } from "react";
 import DataTable from "@/components/common/DataTable";
 import { Tag, Typography, Row, Col, message } from "antd";
 import axios from "axios";
+import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
 
 const { Title, Text } = Typography;
 
-const getStatusTag = (status: any) => {
-    // Safely convert status to a string to prevent runtime errors.
-    const statusString = status ? String(status) : '';
+// Status code to label and color mapping
+const STATUS_MAP: Record<number, { label: string; color: string }> = {
+    0: { label: 'Pending', color: 'default' },
+    1: { label: 'Waiting for speciality approval', color: 'gold' },
+    2: { label: 'Inspector Assigned', color: 'blue' },
+    3: { label: 'Inspection started', color: 'orange' },
+    4: { label: 'Inspection Completed', color: 'green' },
+    5: { label: 'On Auction', color: 'cyan' },
+    6: { label: 'Waiting for buyer confirmation', color: 'purple' },
+    7: { label: 'Payment pending', color: 'magenta' },
+    8: { label: 'Delivered', color: 'lime' },
+};
 
-    if (!statusString) {
+const getStatusTag = (status: any) => {
+    // Convert status to a number if possible
+    const statusNum = typeof status === 'number' ? status : Number(status);
+    const statusObj = STATUS_MAP[statusNum];
+    if (!statusObj) {
         return <Tag>N/A</Tag>;
     }
-    
-    switch (statusString.toLowerCase()) {
-        case 'inspection started':
-            return <Tag color="orange">Inspection Started</Tag>;
-        case 'pending':
-            return <Tag color="default">Pending</Tag>;
-        case 'inspection completed':
-            return <Tag color="green">Inspection Completed</Tag>;
-        default:
-            return <Tag>{statusString}</Tag>;
-    }
+    return <Tag color={statusObj.color}>{statusObj.label}</Tag>;
 };
 
 const ExpandedRowRender = ({ record }: { record: any }) => {
@@ -32,6 +36,54 @@ const ExpandedRowRender = ({ record }: { record: any }) => {
     const street = location?.address || '';
     const zip = location?.zip || '';
     const inspectionAddressTitle = location ? `${location.title}` : 'N/A';
+    const statusNum = typeof record.status === 'number' ? record.status : Number(record.status);
+    const statusObj = STATUS_MAP[statusNum];
+
+    // Right column content based on status
+    let rightContent;
+    if (statusNum === 2) { // Inspector Assigned
+        rightContent = (
+            <>
+                <Title level={5}>Expected Price</Title>
+                <p className="font-bold text-2xl">${Number(record.expected_price).toLocaleString()}</p>
+                <p className="mt-2"><strong>Auction Fee:</strong> $10</p>
+                <p className="mt-2">Pending</p>
+            </>
+        );
+    } else if (statusNum === 3) { // Inspection started
+        rightContent = (
+            <>
+                <Title level={5}>Expected Price</Title>
+                <p className="font-bold text-2xl">${Number(record.expected_price).toLocaleString()}</p>
+                <p className="mt-2"><strong>Auction Fee:</strong> $10</p>
+                <p className="mt-2">Inspection Started</p>
+            </>
+        );
+    } else if (statusNum === 4) { // Inspection Completed
+        rightContent = (
+            <>
+                <Title level={5}>Expected Price</Title>
+                <p className="font-bold text-2xl">${Number(record.expected_price).toLocaleString()}</p>
+                <p className="mt-2"><strong>Auction Fee:</strong> $10</p>
+                <div className="flex gap-2 mt-2">
+                    <span className="w-4 h-4 rounded-full bg-green-500 inline-block"></span>
+                    <span className="w-4 h-4 rounded-full bg-yellow-500 inline-block"></span>
+                    <span className="w-4 h-4 rounded-full bg-purple-500 inline-block"></span>
+                    <span className="w-4 h-4 rounded-full bg-pink-500 inline-block"></span>
+                </div>
+                <button className="mt-2 px-4 py-2 bg-blue-600 text-white rounded">Send to auction</button>
+            </>
+        );
+    } else {
+        rightContent = (
+            <>
+                <Title level={5}>Expected Price</Title>
+                <p className="font-bold text-2xl">${Number(record.expected_price).toLocaleString()}</p>
+                <p className="mt-2"><strong>Auction Fee:</strong> $10</p>
+                <p className="mt-2">{statusObj?.label || record.status || 'N/A'}</p>
+            </>
+        );
+    }
 
     return (
         <div className="p-4 bg-white grid grid-cols-1 md:grid-cols-12 gap-4 border-t">
@@ -56,10 +108,7 @@ const ExpandedRowRender = ({ record }: { record: any }) => {
                 <div className="flex justify-between items-start">
                     {getStatusTag(record.status)}
                     <div className="text-right">
-                        <Title level={5}>Expected Price</Title>
-                        <p className="font-bold text-2xl">${Number(record.expected_price).toLocaleString()}</p>
-                        <p className="mt-2"><strong>Auction Fee:</strong> $10</p>
-                        <p className="mt-2">{record.status || 'N/A'}</p>
+                        {rightContent}
                     </div>
                 </div>
             </div>
@@ -85,9 +134,10 @@ const DsRequestInspectionPage = () => {
                 });
                 const data = response.data?.results || response.data?.data || (Array.isArray(response.data) ? response.data : []);
                 setRequests(data);
+                showSuccessToast('Inspection requests fetched successfully!', 'Inspection requests');
             } catch (error) {
                 console.error("Failed to fetch inspection requests:", error);
-                message.error("Failed to fetch inspection requests.");
+                showErrorToast(error, "Inspection requests");
             } finally {
                 setLoading(false);
             }

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Modal, Form, Select, Input, Button, Spin, message } from "antd";
+import { Modal, Form, Select, Input, Button, Spin } from "antd";
 import axios from "axios";
+import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
 
 interface AssignCarAttributesModalProps {
   isOpen: boolean;
@@ -35,7 +36,7 @@ const AssignCarAttributesModal = ({ isOpen, onClose, requestId }: AssignCarAttri
           form.setFieldsValue(initialValues);
 
         } catch (error) {
-          message.error("Failed to load existing car attributes.");
+          showErrorToast(error, "Car attributes");
         } finally {
           setLoading(false);
         }
@@ -63,10 +64,10 @@ const AssignCarAttributesModal = ({ isOpen, onClose, requestId }: AssignCarAttri
       const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       await axios.patch(`${apiUrl}/inspections/api/v1/assign-car-attributes/${requestId}/`, payload, { headers });
-      message.success("Car attributes submitted successfully!");
+      showSuccessToast(COMMON_SUCCESS_MESSAGES.SAVED, "Car attributes");
       onClose();
     } catch (err: any) {
-      message.error(err?.response?.data?.detail || "Failed to submit car attributes.");
+      showErrorToast(err, "Car attributes submission");
     } finally {
       setSaving(false);
     }

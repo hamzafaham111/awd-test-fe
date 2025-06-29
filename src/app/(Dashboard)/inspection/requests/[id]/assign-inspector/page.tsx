@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import axios from "axios";
 import { Card, Spin, Select, Button, message } from "antd";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
+import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
 
 const InfoPair = ({ label, value }: { label: string, value: React.ReactNode }) => (
   <div className="flex justify-between py-2 border-b">
@@ -46,6 +47,7 @@ export default function AssignInspectorPage() {
 
       } catch (err: any) {
         setError(err?.response?.data?.detail || err?.message || "Failed to fetch data.");
+        showErrorToast(err, "Inspector assignment data");
       } finally {
         setLoading(false);
       }
@@ -55,7 +57,7 @@ export default function AssignInspectorPage() {
 
   const handleSave = async () => {
     if (!selectedInspector) {
-      message.error("Please select an inspector.");
+      showErrorToast({ message: "Please select an inspector." });
       return;
     }
     setSaving(true);
@@ -68,10 +70,10 @@ export default function AssignInspectorPage() {
         inspector_assigned: selectedInspector
       }, { headers });
 
-      message.success("Inspector assigned successfully!");
+      showSuccessToast(COMMON_SUCCESS_MESSAGES.ASSIGNED, "Inspector");
       router.push("/inspection/requests");
     } catch (err: any) {
-      message.error(err?.response?.data?.detail || err?.message || "Failed to assign inspector.");
+      showErrorToast(err, "Inspector assignment");
     } finally {
       setSaving(false);
     }

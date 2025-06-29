@@ -2,9 +2,12 @@
 
 import { Table, Card, Button, Input, Space, Tag, Modal, Form, Select, Dropdown, Menu } from "antd";
 import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined, DownOutlined } from "@ant-design/icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DataTable from "@/components/common/DataTable";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
+import axios from "axios";
+import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
+import Link from "next/link";
 
 const columns = [
   {
@@ -22,13 +25,16 @@ const columns = [
     title: "Country",
     dataIndex: "country",
     key: "country",
+    render: (country: any) => country?.name || 'N/A',
   },
   {
     title: "Status",
     dataIndex: "status",
     key: "status",
-    render: (status: string) => (
-      <Tag color={status === "Active" ? "green" : "red"}>{status}</Tag>
+    render: (status: number) => (
+      <Tag color={status === 1 ? "green" : "red"}>
+        {status === 1 ? "Active" : "Inactive"}
+      </Tag>
     ),
   },
   {
@@ -37,9 +43,11 @@ const columns = [
     render: (_: any, record: any) => {
       const menu = (
         <Menu>
-          <Menu.Item key="edit" icon={<EditOutlined />}>
-            Edit
-          </Menu.Item>
+          <Link href={`/app/states/${record.id}`}>
+            <Menu.Item key="edit" icon={<EditOutlined />}>
+              Edit
+            </Menu.Item>
+          </Link>
           <Menu.Item key="delete" icon={<DeleteOutlined />} danger>
             Delete
           </Menu.Item>
@@ -56,41 +64,44 @@ const columns = [
   },
 ];
 
-const data = [
-  {
-    key: "1",
-    name: "California",
-    code: "CA",
-    country: "United States",
-    status: "Active",
-  },
-  {
-    key: "2",
-    name: "New York",
-    code: "NY",
-    country: "United States",
-    status: "Active",
-  },
-  {
-    key: "3",
-    name: "Ontario",
-    code: "ON",
-    country: "Canada",
-    status: "Active",
-  },
-];
-
 const countries = [
   { value: "US", label: "United States" },
   { value: "CA", label: "Canada" },
   { value: "GB", label: "United Kingdom" },
 ];
 
-const tableData = {};
+const tableData = {
+  selectableRows: true,
+  isEnableFilterInput: true,
+  showAddButton: true, 
+  addButtonLabel: "Add New State", 
+  addButtonHref: "/app/states/add"
+};
 
 export default function StatesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
+  const [states, setStates] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStates = async () => {
+      setLoading(true);
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const res = await axios.get(`${apiUrl}/utils/api/v1/states/`, { headers });
+        setStates(res.data || []);
+        showSuccessToast('States fetched successfully!', 'States');
+      } catch (err) {
+        showErrorToast(err, "States");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStates();
+  }, []);
 
   const handleAddState = () => {
     setIsModalOpen(true);
@@ -109,26 +120,20 @@ export default function StatesPage() {
     form.resetFields();
   };
 
+  const mappedStates = states.map((state, index) => ({
+    key: state.id || index,
+    id: state.id,
+    name: state.name,
+    code: state.code,
+    country: state.country,
+    status: state.status,
+  }));
+
   return (
     <div>
       <Breadcrumbs items={[{ label: "States", href: "/app/states" }]} />
       <div className="p-6">
-        <Card>
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-semibold">States Management</h1>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddState}>
-              Add New State
-            </Button>
-          </div>
-          <div className="mb-4">
-            <Input
-              placeholder="Search states..."
-              prefix={<SearchOutlined />}
-              className="max-w-xs"
-            />
-          </div>
-          <DataTable columns={columns} data={data} tableData={tableData} />
-
+          <DataTable columns={columns} data={mappedStates} tableData={tableData} loading={loading} />
           <Modal
             title="Add New State"
             open={isModalOpen}
@@ -171,7 +176,6 @@ export default function StatesPage() {
               </Form.Item>
             </Form>
           </Modal>
-        </Card>
       </div>
     </div>
   );

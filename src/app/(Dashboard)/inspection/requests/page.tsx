@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import AssignCarAttributesModal from "@/components/modals/AssignCarAttributesModal";
+import { showErrorToast, COMMON_ERROR_MESSAGES } from "@/utils/errorHandler";
 
 export default function Page() {
   const router = useRouter();
@@ -131,6 +132,7 @@ export default function Page() {
         setData(transformedData);
       } catch (err: any) {
         setError(err?.response?.data?.detail || err?.message || "Failed to fetch inspection requests.");
+        showErrorToast(err, "Inspection requests");
         setData([]);
       } finally {
         setLoading(false);

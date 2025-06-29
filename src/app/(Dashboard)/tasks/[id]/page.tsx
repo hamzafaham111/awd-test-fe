@@ -5,7 +5,7 @@ import Breadcrumbs from "@/components/common/Breadcrumbs";
 
 export default function TaskDetailsPage() {
   const params = useParams();
-  const id = Number(params.id);
+  const id = 1;
   const task = tasks.find(t => t.id === id);
 
   if (!task) return <div className="p-6">Task not found</div>;

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import DeleteConfirmModal from "@/components/modals/DeleteConfirmModal";
+import { showErrorToast, COMMON_ERROR_MESSAGES } from "@/utils/errorHandler";
 
 const interestMap: Record<string, string> = {
   1: "Sell a vehicle",
@@ -31,6 +32,7 @@ export default function DealersApprovedPage() {
         const res = await axios.get(`${apiUrl}/users/api/v1/dealership/?approved=1`, { headers });
         setData(res.data.results || res.data);
       } catch (error) {
+        showErrorToast(error, "Approved dealers");
         setData([]);
       } finally {
         setLoading(false);
@@ -58,10 +60,7 @@ export default function DealersApprovedPage() {
         content: 'Dealer has been deleted successfully.',
       });
     } catch (err: any) {
-      Modal.error({
-        title: 'Error',
-        content: err?.response?.data?.detail || err?.message || 'Failed to delete dealer.',
-      });
+      showErrorToast(err, "Dealer deletion");
     } finally {
       setDeleteLoading(false);
       setDeleteModalOpen(false);

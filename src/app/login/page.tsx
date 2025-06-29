@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Form, Button, Checkbox, message } from "antd"
+import { Form, Button, Checkbox } from "antd"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { UserOutlined, LockOutlined } from "@ant-design/icons"
@@ -12,6 +12,7 @@ import Image from "next/image"
 import { useDispatch } from "react-redux"
 import { setUser } from "@/store/userSlice"
 import axios from "axios"
+import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler"
 
 interface LoginForm {
   email: string
@@ -65,7 +66,7 @@ export default function Login() {
         backendRole: user.role?.name,
         avatar: "/images/dummy-profile-logo.jpg",
       }))
-      message.success("Login successful!")
+      showSuccessToast(COMMON_SUCCESS_MESSAGES.LOGGED_IN);
       if (frontendRole === "superadmin") {
         router.push("/")
       } else if (frontendRole === "inspector") {
@@ -74,8 +75,8 @@ export default function Login() {
         router.push("/")
       }
     } catch (error: any) {
-      const errorMsg = error?.response?.data?.detail || error?.message || "Login failed. Please try again."
-      message.error(errorMsg)
+      console.error("Login error:", error);
+      showErrorToast(error, "Login");
     } finally {
       setIsLoading(false)
     }

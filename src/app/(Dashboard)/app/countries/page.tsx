@@ -1,10 +1,13 @@
 "use client";
 
-import { Table, Card, Button, Input, Space, Tag, Modal, Form } from "antd";
-import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import { useState } from "react";
+import { Table, Card, Button, Input, Space, Tag, Modal, Form, Select, Dropdown, Menu } from "antd";
+import { SearchOutlined, PlusOutlined, EditOutlined, DeleteOutlined, DownOutlined } from "@ant-design/icons";
+import { useState, useEffect } from "react";
 import DataTable from "@/components/common/DataTable";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
+import axios from "axios";
+import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
+import Link from "next/link";
 
 const columns = [
   {
@@ -27,43 +30,36 @@ const columns = [
     title: "Status",
     dataIndex: "status",
     key: "status",
-    render: (status: string) => (
-      <Tag color={status === "Active" ? "green" : "red"}>{status}</Tag>
+    render: (status: number) => (
+      <Tag color={status === 1 ? "green" : "red"}>
+        {status === 1 ? "Active" : "Inactive"}
+      </Tag>
     ),
   },
   {
     title: "Actions",
     key: "actions",
-    render: () => (
-      <Space>
-        <Button type="link" icon={<EditOutlined />}>Edit</Button>
-        <Button type="link" danger icon={<DeleteOutlined />}>Delete</Button>
-      </Space>
-    ),
-  },
-];
-
-const data = [
-  {
-    key: "1",
-    name: "United States",
-    code: "US",
-    currency: "USD",
-    status: "Active",
-  },
-  {
-    key: "2",
-    name: "Canada",
-    code: "CA",
-    currency: "CAD",
-    status: "Active",
-  },
-  {
-    key: "3",
-    name: "United Kingdom",
-    code: "GB",
-    currency: "GBP",
-    status: "Active",
+    render: (_: any, record: any) => {
+      const menu = (
+        <Menu>
+          <Link href={`/app/countries/${record.id}`}>
+            <Menu.Item key="edit" icon={<EditOutlined />}>
+              Edit
+            </Menu.Item>
+          </Link>
+          <Menu.Item key="delete" icon={<DeleteOutlined />} danger>
+            Delete
+          </Menu.Item>
+        </Menu>
+      );
+      return (
+        <Dropdown overlay={menu} trigger={["click"]}>
+          <Button>
+            Action <DownOutlined />
+          </Button>
+        </Dropdown>
+      );
+    },
   },
 ];
 
@@ -72,6 +68,28 @@ const tableData = {};
 export default function CountriesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
+  const [countries, setCountries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchCountries = async () => {
+    setLoading(true);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const res = await axios.get(`${apiUrl}/utils/api/v1/countries/`, { headers });
+      setCountries(res.data || []);
+      showSuccessToast('Countries fetched successfully!', 'Countries');
+    } catch (err) {
+      showErrorToast(err, "Countries");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    fetchCountries();
+  }, []);
 
   const handleAddCountry = () => {
     setIsModalOpen(true);
@@ -90,25 +108,29 @@ export default function CountriesPage() {
     form.resetFields();
   };
 
+  const mappedCountries = countries.map((country, index) => ({
+    key: country.id || index,
+    id: country.id,
+    name: country.name,
+    code: country.code,
+    currency: country.currency || 'N/A',
+    status: country.status,
+  }));
+
+const tableData = {
+  selectableRows: true,
+  isEnableFilterInput: true,
+  showAddButton: true, 
+  addButtonLabel: "Add New Country", 
+  addButtonHref: "/app/countries/add"
+};
+
   return (
     <div>
       <Breadcrumbs items={[{ label: "Countries", href: "/app/countries" }]} />
       <div className="p-6">
-        <Card>
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-semibold">Countries</h1>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleAddCountry}>
-              Add New Country
-            </Button>
-          </div>
-          <div className="mb-4">
-            <Input
-              placeholder="Search countries..."
-              prefix={<SearchOutlined />}
-              className="max-w-xs"
-            />
-          </div>
-          <DataTable columns={columns} data={data} tableData={tableData} />
+
+          <DataTable columns={columns} data={mappedCountries} tableData={tableData} loading={loading} />
 
           <Modal
             title="Add New Country"
@@ -149,7 +171,7 @@ export default function CountriesPage() {
               </Form.Item>
             </Form>
           </Modal>
-        </Card>
+
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import { RootState } from "@/store";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import DeleteConfirmModal from "@/components/modals/DeleteConfirmModal";
+import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
 
 const statusColors: Record<string, string> = {
   "Active": "bg-green-100 text-green-700 border-green-300",
@@ -137,15 +138,9 @@ export default function UsersPage() {
       setUsersData(prevUsers => prevUsers.filter(user => user.id !== selectedUserId));
       
       // Show success message
-      Modal.success({
-        title: 'Success',
-        content: 'User has been deleted successfully.',
-      });
+      showSuccessToast(COMMON_SUCCESS_MESSAGES.DELETED, 'User');
     } catch (err: any) {
-      Modal.error({
-        title: 'Error',
-        content: err?.response?.data?.detail || err?.message || 'Failed to delete user.',
-      });
+      showErrorToast(err, "User deletion");
     } finally {
       setDeleteLoading(false);
       setDeleteModalOpen(false);
@@ -163,8 +158,10 @@ export default function UsersPage() {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
         const res = await axios.get(`${apiUrl}/users/api/v1/admin/users-list/`, { headers });
         setUsersData(res.data);
+        showSuccessToast('Users fetched successfully!', 'Users');
       } catch (err: any) {
         setError(err?.response?.data?.detail || err?.message || "Failed to fetch users.");
+        showErrorToast(err, "Users");
       } finally {
         setLoading(false);
       }

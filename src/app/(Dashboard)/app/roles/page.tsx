@@ -9,6 +9,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { showErrorToast, COMMON_ERROR_MESSAGES } from "@/utils/errorHandler";
 
 const statusColors: Record<string, string> = {
   "Active": "bg-green-100 text-green-700 border-green-300",
@@ -109,6 +110,7 @@ export default function RolesPage() {
         setRolesData(res.data);
       } catch (err: any) {
         setError(err?.response?.data?.detail || err?.message || "Failed to fetch roles.");
+        showErrorToast(err, "Roles");
       } finally {
         setLoading(false);
       }

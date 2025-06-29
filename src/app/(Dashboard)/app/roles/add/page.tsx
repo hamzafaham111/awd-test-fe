@@ -3,26 +3,38 @@
 import { useState } from "react";
 import { Input, Select, Button, Card, message } from "antd";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
+import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function AddRolePage() {
   const [form, setForm] = useState({
     name: "",
     type: "Fixed",
-    status: "Active",
+    status: 1,
   });
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: string, value: string | number) => {
     setForm({ ...form, [field]: value });
   };
 
-  const handleSave = () => {
+  const onFinish = async () => {
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      console.log(form);
+      await axios.post(`${apiUrl}/users/api/v1/role/`, form, { headers });
+      showSuccessToast(COMMON_SUCCESS_MESSAGES.CREATED, "Role");
+      router.push("/app/roles");
+    } catch (error) {
+      showErrorToast(error, "Role creation");
+    } finally {
       setLoading(false);
-      message.success("Role added successfully!");
-      // In a real app, redirect or update state here
-    }, 1000);
+    }
   };
 
   return (
@@ -56,15 +68,15 @@ export default function AddRolePage() {
               value={form.status}
               onChange={value => handleChange("status", value)}
               options={[
-                { value: "Active", label: "Active" },
-                { value: "Inactive", label: "Inactive" },
+                { value: 1, label: "Active" },
+                { value: 0, label: "Inactive" },
               ]}
               className="w-full"
             />
           </div>
         </div>
         <div className="flex justify-end">
-          <button onClick={handleSave} className="px-8 text-white py-2 bg-sky-600 hover:bg-sky-700 rounded-md">
+          <button onClick={onFinish} className="px-8 text-white py-2 bg-sky-600 hover:bg-sky-700 rounded-md">
             Save
             {loading && <span className="ml-2">Saving...</span>}
           </button>
