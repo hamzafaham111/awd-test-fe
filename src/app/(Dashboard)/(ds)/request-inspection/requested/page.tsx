@@ -4,6 +4,7 @@ import DataTable from "@/components/common/DataTable";
 import { Tag, Typography, Row, Col, message } from "antd";
 import axios from "axios";
 import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
+import SendToAuctionModal from '@/components/modals/SendToAuctionModal';
 
 const { Title, Text } = Typography;
 
@@ -38,6 +39,7 @@ const ExpandedRowRender = ({ record }: { record: any }) => {
     const inspectionAddressTitle = location ? `${location.title}` : 'N/A';
     const statusNum = typeof record.status === 'number' ? record.status : Number(record.status);
     const statusObj = STATUS_MAP[statusNum];
+    const [auctionModalOpen, setAuctionModalOpen] = useState(false);
 
     // Right column content based on status
     let rightContent;
@@ -56,7 +58,20 @@ const ExpandedRowRender = ({ record }: { record: any }) => {
                 <Title level={5}>Expected Price</Title>
                 <p className="font-bold text-2xl">${Number(record.expected_price).toLocaleString()}</p>
                 <p className="mt-2"><strong>Auction Fee:</strong> $10</p>
-                <p className="mt-2">Inspection Started</p>
+                <div className="flex gap-2 mt-2">
+                    <span className="w-4 h-4 rounded-full bg-green-500 inline-block"></span>
+                    <span className="w-4 h-4 rounded-full bg-yellow-500 inline-block"></span>
+                    <span className="w-4 h-4 rounded-full bg-purple-500 inline-block"></span>
+                    <span className="w-4 h-4 rounded-full bg-pink-500 inline-block"></span>
+                </div>
+                <button className="mt-2 px-4 py-2 bg-blue-600 text-white rounded" onClick={() => setAuctionModalOpen(true)}>
+                    Send to auction
+                </button>
+                <SendToAuctionModal
+                    open={auctionModalOpen}
+                    onOk={() => setAuctionModalOpen(false)}
+                    onCancel={() => setAuctionModalOpen(false)}
+                />
             </>
         );
     } else if (statusNum === 4) { // Inspection Completed
@@ -71,7 +86,14 @@ const ExpandedRowRender = ({ record }: { record: any }) => {
                     <span className="w-4 h-4 rounded-full bg-purple-500 inline-block"></span>
                     <span className="w-4 h-4 rounded-full bg-pink-500 inline-block"></span>
                 </div>
-                <button className="mt-2 px-4 py-2 bg-blue-600 text-white rounded">Send to auction</button>
+                <button className="mt-2 px-4 py-2 bg-blue-600 text-white rounded" onClick={() => setAuctionModalOpen(true)}>
+                    Send to auction
+                </button>
+                <SendToAuctionModal
+                    open={auctionModalOpen}
+                    onOk={() => setAuctionModalOpen(false)}
+                    onCancel={() => setAuctionModalOpen(false)}
+                />
             </>
         );
     } else {
@@ -121,6 +143,7 @@ const DsRequestInspectionPage = () => {
     const [requests, setRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
+    const [auctionModalOpen, setAuctionModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchRequests = async () => {

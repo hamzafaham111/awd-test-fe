@@ -5,7 +5,7 @@ import type { UploadFile } from "antd/es/upload/interface"
 import { ReactNode } from "react"
 
 interface FormFieldProps extends Omit<FormItemProps, "children"> {
-  type?: "text" | "password" | "email" | "select" | "radio" | "upload" | "checkbox" | "textarea"
+  type?: "text" | "password" | "email" | "select" | "radio" | "upload" | "checkbox" | "textarea" | "link" | "button-group"
   options?: { label: string; value: any }[]
   uploadProps?: {
     maxCount?: number
@@ -107,6 +107,36 @@ export function FormField({
             </div>
           </Upload>
         )
+      case "link":
+        return (
+          <div>
+            <label className="block text-sky-700 font-medium mb-1" htmlFor={name}>{label}</label>
+            <input
+              type="file"
+              name={name}
+              id={name}
+              className="block w-full border rounded-md px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-500 file:mr-4 file:py-2 file:px-4 file:rounded-l-md file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-sky-700"
+              onChange={onChange}
+              disabled={disabled}
+            />
+          </div>
+        );
+      case "button-group":
+        return (
+          <div className="flex flex-wrap gap-2">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`px-4 py-1 rounded-md border ${value === option.value ? 'bg-sky-700 text-white' : 'bg-gray-100 text-sky-700'} transition-colors`}
+                onClick={() => onChange({ target: { value: option.value, name } })}
+                disabled={disabled}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        );
       default:
         return <Input name={name} size="large" prefix={prefix} placeholder={placeholder} disabled={disabled} className={inputClassName} value={value} onChange={onChange} />
     }
