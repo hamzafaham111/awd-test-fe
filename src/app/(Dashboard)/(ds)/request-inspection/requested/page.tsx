@@ -43,16 +43,7 @@ const ExpandedRowRender = ({ record }: { record: any }) => {
 
     // Right column content based on status
     let rightContent;
-    if (statusNum === 2) { // Inspector Assigned
-        rightContent = (
-            <>
-                <Title level={5}>Expected Price</Title>
-                <p className="font-bold text-2xl">${Number(record.expected_price).toLocaleString()}</p>
-                <p className="mt-2"><strong>Auction Fee:</strong> $10</p>
-                <p className="mt-2">Pending</p>
-            </>
-        );
-    } else if (statusNum === 3) { // Inspection started
+    if (statusNum === 4) { // Inspection Completed
         rightContent = (
             <>
                 <Title level={5}>Expected Price</Title>
@@ -71,28 +62,10 @@ const ExpandedRowRender = ({ record }: { record: any }) => {
                     open={auctionModalOpen}
                     onOk={() => setAuctionModalOpen(false)}
                     onCancel={() => setAuctionModalOpen(false)}
-                />
-            </>
-        );
-    } else if (statusNum === 4) { // Inspection Completed
-        rightContent = (
-            <>
-                <Title level={5}>Expected Price</Title>
-                <p className="font-bold text-2xl">${Number(record.expected_price).toLocaleString()}</p>
-                <p className="mt-2"><strong>Auction Fee:</strong> $10</p>
-                <div className="flex gap-2 mt-2">
-                    <span className="w-4 h-4 rounded-full bg-green-500 inline-block"></span>
-                    <span className="w-4 h-4 rounded-full bg-yellow-500 inline-block"></span>
-                    <span className="w-4 h-4 rounded-full bg-purple-500 inline-block"></span>
-                    <span className="w-4 h-4 rounded-full bg-pink-500 inline-block"></span>
-                </div>
-                <button className="mt-2 px-4 py-2 bg-blue-600 text-white rounded" onClick={() => setAuctionModalOpen(true)}>
-                    Send to auction
-                </button>
-                <SendToAuctionModal
-                    open={auctionModalOpen}
-                    onOk={() => setAuctionModalOpen(false)}
-                    onCancel={() => setAuctionModalOpen(false)}
+                    vehicleTitle={record.vehicle || record.vehicle_name || ''}
+                    vin={record.vin || ''}
+                    mileage={record.odometer || record.mileage || ''}
+                    estimatedPrice={record.expected_price}
                 />
             </>
         );

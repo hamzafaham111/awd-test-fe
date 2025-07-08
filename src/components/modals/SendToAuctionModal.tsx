@@ -1,7 +1,5 @@
-import { Modal, Typography, Radio, Button } from "antd";
+import { Modal } from "antd";
 import React, { useState } from "react";
-
-const { Title, Text } = Typography;
 
 interface SendToAuctionModalProps {
   open: boolean;
@@ -21,11 +19,11 @@ export default function SendToAuctionModal({
   vehicleTitle = "Volkwage Jetta 2021",
   vin = "3VWC57BUXMM031277",
   mileage = "17,854 Miles",
-  estimatedPrice = 18540,
+  estimatedPrice = 0,
   credit = 0,
 }: SendToAuctionModalProps) {
   const [auctionType, setAuctionType] = useState("bring_money");
-  const [auctionTiming, setAuctionTiming] = useState("10min");
+  const [auctionTiming, setAuctionTiming] = useState("10_minutes");
   const [creditUse, setCreditUse] = useState("inspection");
 
   const handleSend = () => {
@@ -36,83 +34,100 @@ export default function SendToAuctionModal({
     <Modal
       open={open}
       onCancel={onCancel}
-      title={<span className="text-xl font-bold">Send To Auction</span>}
       footer={null}
       centered
-      width={520}
-      closeIcon={<span className="text-2xl">×</span>}
+      width={500}
+      closeIcon={
+        <div className="w-8 h-8 flex items-center justify-center bg-sky-500 rounded-full text-white text-lg cursor-pointer">
+          ×
+        </div>
+      }
+      className="p-0"
+      bodyStyle={{ padding: 0 }}
     >
-      {/* Vehicle Info */}
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <div className="font-bold text-lg">{vehicleTitle}</div>
-          <div className="text-gray-500 text-sm mt-1">{vin}</div>
-          <div className="text-gray-500 text-sm">{mileage}</div>
-        </div>
-        <div className="text-right">
-          <div className="text-xs text-gray-500">Estimated Price</div>
-          <div className="font-bold text-2xl">${estimatedPrice.toLocaleString()}</div>
+      {/* Header */}
+      <div className="px-8 pt-8 pb-4 border-b">
+        <div className="text-2xl font-bold text-sky-800 mb-1">Send To Auction</div>
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="font-bold text-lg mb-0">{vehicleTitle}</div>
+            <div className="text-gray-500 text-sm leading-tight">{vin}</div>
+            <div className="text-gray-500 text-sm leading-tight">{mileage} {mileage && !String(mileage).toLowerCase().includes('mile') ? 'Miles' : ''}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-gray-500 font-semibold">Estimated Price</div>
+            <div className="text-3xl font-extrabold text-sky-900">${Number(estimatedPrice).toLocaleString()}</div>
+          </div>
         </div>
       </div>
-      <hr className="my-2" />
-      {/* Reserve Price */}
-      <div className="font-bold text-xs text-gray-700 mb-2 mt-4">RESERVE PRICE</div>
-      {/* Auction Type */}
-      <div className="mb-4">
-        <div className="font-semibold mb-2">Auction Type</div>
-        <Radio.Group
-          value={auctionType}
-          onChange={e => setAuctionType(e.target.value)}
-          className="w-full flex flex-col gap-2"
-        >
-          <Radio.Button value="bring_money" className="w-full flex flex-col items-start border rounded p-3">
-            <span className="font-semibold">Bring the money</span>
-            <span className="text-xs text-gray-500">This option will start bidding $0</span>
-          </Radio.Button>
-          <Radio.Button value="less_than_reserve" className="w-full flex flex-col items-start border rounded p-3 mt-2">
-            <span className="font-semibold">$3,000 less than reserve</span>
-            <span className="text-xs text-gray-500">Start the bid at $3,000 less than reserve</span>
-          </Radio.Button>
-        </Radio.Group>
-      </div>
-      {/* Auction Timing */}
-      <div className="mb-4">
-        <div className="font-semibold mb-2">Auction Timing</div>
-        <Radio.Group
-          value={auctionTiming}
-          onChange={e => setAuctionTiming(e.target.value)}
-          className="w-full"
-        >
-          <Radio.Button value="10min" className="w-full border rounded p-3">10 Minutes</Radio.Button>
-        </Radio.Group>
-      </div>
-      {/* Credit Use */}
-      <div className="mb-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="font-semibold">Credit Use</span>
-          <span className="font-bold">${credit.toFixed(2)}</span>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            type={creditUse === "inspection" ? "primary" : "default"}
-            className="flex-1"
-            onClick={() => setCreditUse("inspection")}
+      {/* Body */}
+      <div className="px-8 pt-6 pb-0 bg-white">
+        {/* Reserve Price */}
+        <div className="font-bold text-xs text-gray-700 mb-2 mt-2 tracking-wider">RESERVE PRICE</div>
+        <hr className="mb-6" />
+        {/* Auction Type */}
+        <div className="font-semibold text-gray-700 mb-2">Auction Type</div>
+        <div className="flex flex-col gap-3 mb-6">
+          <div
+            className={`border rounded-lg px-4 py-3 flex items-center justify-between cursor-pointer ${auctionType === "bring_money" ? "border-sky-500 bg-sky-50" : "border-gray-300 bg-white"}`}
+            onClick={() => setAuctionType("bring_money")}
           >
-            For Inspection Fee
-          </Button>
-          <Button
-            type={creditUse === "selling" ? "primary" : "default"}
-            className="flex-1"
-            onClick={() => setCreditUse("selling")}
+            <div>
+              <div className={`font-bold text-base ${auctionType === "bring_money" ? "text-sky-700" : "text-gray-900"}`}>Bring the money</div>
+              <div className="text-gray-400 text-xs">This option will start bidding $0</div>
+            </div>
+            {auctionType === "bring_money" && (
+              <span className="w-6 h-6 flex items-center justify-center border-2 border-sky-500 rounded-full">
+                <span className="w-3 h-3 bg-sky-500 rounded-full block"></span>
+              </span>
+            )}
+          </div>
+          <div
+            className={`border rounded-lg px-4 py-3 flex items-center justify-between cursor-pointer ${auctionType === "less_reserve" ? "border-sky-500 bg-sky-50" : "border-gray-300 bg-white"}`}
+            onClick={() => setAuctionType("less_reserve")}
           >
-            For Selling Fee
-          </Button>
+            <div>
+              <div className={`font-bold text-base ${auctionType === "less_reserve" ? "text-sky-700" : "text-gray-900"}`}>$3,000 less than reserve</div>
+              <div className="text-gray-400 text-xs">Start the bid at $3,000 less than reserve</div>
+            </div>
+            {auctionType === "less_reserve" && (
+              <span className="w-6 h-6 flex items-center justify-center border-2 border-sky-500 rounded-full">
+                <span className="w-3 h-3 bg-sky-500 rounded-full block"></span>
+              </span>
+            )}
+          </div>
         </div>
-      </div>
-      {/* Footer */}
-      <div className="flex justify-end gap-2 mt-6">
-        <Button onClick={onCancel}>Close</Button>
-        <Button type="primary" onClick={handleSend}>Send Now</Button>
+        {/* Auction Timing */}
+        <div className="font-semibold text-gray-700 mb-2">Auction Timing</div>
+        <div className="flex flex-col gap-3 mb-6">
+          <div
+            className={`border rounded-lg px-4 py-3 flex items-center justify-between cursor-pointer ${auctionTiming === "10_minutes" ? "border-sky-500 bg-blue-50" : "border-gray-300 bg-white"}`}
+            onClick={() => setAuctionTiming("10_minutes")}
+          >
+            <div className={`font-bold text-base ${auctionTiming === "10_minutes" ? "text-sky-700" : "text-gray-900"}`}>10 Minutes</div>
+            {auctionTiming === "10_minutes" && (
+              <span className="w-6 h-6 flex items-center justify-center border-2 border-sky-500 rounded-full">
+                <span className="w-3 h-3 bg-sky-500 rounded-full block"></span>
+              </span>
+            )}
+          </div>
+        </div>
+        {/* Credit Use */}
+        <div className="mt-2 mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-bold text-gray-700 text-base">Credit Use</span>
+            <span className="font-bold text-gray-700 text-base">${credit?.toFixed(2) || "0.00"}</span>
+          </div>
+          <div className="flex gap-4">
+            <span className="flex-1 border border-gray-300 rounded-lg px-4 py-3 font-bold text-gray-900 bg-white select-none cursor-default text-center">For Inspection Fee</span>
+            <span className="flex-1 border border-gray-300 rounded-lg px-4 py-3 font-bold text-gray-900 bg-white select-none cursor-default text-center">For Selling Fee</span>
+          </div>
+        </div>
+        {/* Footer */}
+        <div className="flex justify-end gap-3 pt-2 pb-6 border-t mt-8">
+          <button className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold bg-white" onClick={onCancel}>Close</button>
+          <button className="px-6 py-2 rounded-lg text-white font-semibold bg-sky-600 hover:bg-sky-700" onClick={handleSend}>Send Now</button>
+        </div>
       </div>
     </Modal>
   );

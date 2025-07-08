@@ -11,15 +11,9 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import DeleteConfirmModal from "@/components/modals/DeleteConfirmModal";
 import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
+import { getUserColumns } from "@/components/common/userColumns";
 
-const statusColors: Record<string, string> = {
-  "Active": "bg-green-100 text-green-700 border-green-300",
-  "Inactive": "bg-gray-100 text-gray-700 border-gray-300",
-};
-
-
-
-export default function UsersPage() {
+const UsersPage = () => {
   const [usersData, setUsersData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,101 +21,20 @@ export default function UsersPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const role = useSelector((state: RootState) => state.user.role);
-  const columns = [
-    {
-      title: "#",
-      dataIndex: "key",
-      key: "key",
-      render: (key: number, _: any, idx: number) => idx + 1,
-    },
-    {
-      title: "Name",
-      dataIndex: "name",
-      key: "name",
-      render: (name: string, record: any) => (
-        <Link href={`/app/users/${record.key}`}>
-          <span className="text-blue-700 font-semibold cursor-pointer hover:underline">{name}</span>
-        </Link>
-      ),
-    },
-    {
-      title: "Username",
-      dataIndex: "email",
-      key: "email",
-      render: (email: string) => <span className="text-blue-700 cursor-pointer hover:underline">{email}</span>,
-    },
-    {
-      title: "Mobile",
-      dataIndex: "mobile",
-      key: "mobile",
-    },
-    {
-      title: "Role",
-      dataIndex: "role",
-      key: "role",
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status: string) => (
-        <span className={`inline-block px-3 py-1 rounded-full border text-xs font-semibold ${statusColors[status] || "bg-gray-100 text-gray-700 border-gray-300"}`}>
-          {status}
-        </span>
-      ),
-    },
-    {
-      title: "Action",
-      key: "action",
-      render: (_: any, record: any) => {
-        const menuItems = [
-          {
-            key: "edit",
-            icon: <EditOutlined />,
-            label: <Link href={`/app/users/${record.key}`}>
-              <span className="cursor-pointer hover:underline">Edit</span>
-            </Link>
-          },
-          {
-            key: "delete",
-            icon: <DeleteOutlined />,
-            label: <span 
-              className="cursor-pointer hover:underline"
-              onClick={(e) => {
-                e.preventDefault();
-                handleDelete(record.key);
-              }}
-            >
-              Delete
-            </span>,
-          },
-          {
-            key: "logs",
-            icon: <FileSearchOutlined />,
-            label: <span>Logs</span>,
-          },
-        ];
-        return (
-          <Dropdown menu={{ items: menuItems }} trigger={["click"]}>
-            <span className="inline-flex items-center gap-1 px-3 py-1 border rounded cursor-pointer hover:bg-gray-50">
-              <span className="text-blue-700"><DownOutlined /></span>
-            </span>
-          </Dropdown>
-        );
-      },
-    },
-  ];
-  
+
+  const handleDelete = (userId: number) => {
+    setSelectedUserId(userId);
+    setDeleteModalOpen(true);
+  };
+
+  const columns = getUserColumns(handleDelete);
+
   const tableData = { 
     selectableRows: true,
     isEnableFilterInput: true,
     showAddButton: true, 
     addButtonLabel: "Add New User", 
     addButtonHref: "/app/users/add"
-  };
-  const handleDelete = async (userId: number) => {
-    setSelectedUserId(userId);
-    setDeleteModalOpen(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -183,6 +96,15 @@ export default function UsersPage() {
     <div className="p-6">
       <Breadcrumbs items={[{ label: "Users", href: "/app/users" }]} />
         <DataTable columns={columns} data={mappedUsers} tableData={tableData} loading={loading} />
+        <div className="flex gap-4 mt-4">
+          <Link href="/app/users/trash" className="text-blue-700 hover:underline">
+            View Trash Records
+          </Link>
+          <span>|</span>
+          <Link href="/app/users" className="text-blue-700 hover:underline">
+            View Active Records
+          </Link>
+        </div>
         <DeleteConfirmModal
           isOpen={deleteModalOpen}
           onClose={() => {
@@ -196,4 +118,6 @@ export default function UsersPage() {
         />
     </div>
   );
-} 
+};
+
+export default UsersPage; 

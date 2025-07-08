@@ -3,10 +3,9 @@ import { useParams, useRouter } from "next/navigation";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
 import axios from "axios";
 import { useState, useEffect } from "react";
-import { showErrorToast, showSuccessToast, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
+import { showErrorToast } from "@/utils/errorHandler";
 import { Button, Tag } from "antd";
 
-// Status code to label and color mapping
 const STATUS_MAP: Record<number, { label: string; color: string }> = {
   0: { label: 'Pending', color: 'default' },
   1: { label: 'Waiting for speciality approval', color: 'gold' },
@@ -19,13 +18,12 @@ const STATUS_MAP: Record<number, { label: string; color: string }> = {
   8: { label: 'Delivered', color: 'lime' },
 };
 
-export default function TaskDetailsPage() {
+export default function SpecialityApprovalDetailPage() {
   const params = useParams();
   const id = Number(params.id);
   const [task, setTask] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [markingComplete, setMarkingComplete] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -39,8 +37,8 @@ export default function TaskDetailsPage() {
         const res = await axios.get(`${apiUrl}/inspections/api/v1/inspector-task/${id}/`, { headers });
         setTask(res.data);
       } catch (err: any) {
-        setError(err?.response?.data?.detail || err?.message || "Failed to fetch task data.");
-        showErrorToast(err, "Task data");
+        setError(err?.response?.data?.detail || err?.message || "Failed to fetch data.");
+        showErrorToast(err, "Speciality Approval details");
       } finally {
         setLoading(false);
       }
@@ -48,64 +46,21 @@ export default function TaskDetailsPage() {
     if (id) fetchTask();
   }, [id]);
 
-  const handleMarkAsComplete = async () => {
-    setMarkingComplete(true);
-    try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      
-      await axios.patch(`${apiUrl}/inspections/api/v1/inspection-report/${id}/mark-complete/`, {
-        inspection_status: 1
-      }, { headers });
-      
-      showSuccessToast(COMMON_SUCCESS_MESSAGES.UPDATED, "Inspection status");
-      // Refresh task data to show updated status
-      const res = await axios.get(`${apiUrl}/inspections/api/v1/inspector-task/${id}/`, { headers });
-      setTask(res.data);
-    } catch (err: any) {
-      showErrorToast(err, "Marking inspection as complete");
-    } finally {
-      setMarkingComplete(false);
-    }
-  };
-
-  if (loading) return <div className="p-6">Loading task data...</div>;
+  if (loading) return <div className="p-6">Loading data...</div>;
   if (error) return <div className="p-6 text-red-500">{error}</div>;
-  if (!task) return <div className="p-6">Task not found</div>;
+  if (!task) return <div className="p-6">Record not found</div>;
 
-  // Status logic
   const statusNum = typeof task.status === 'number' ? task.status : Number(task.status);
   const statusObj = STATUS_MAP[statusNum] || { label: task.status_label || task.status || 'N/A', color: 'default' };
-
-  // Button logic
-  let actionButtons = null;
-  if (statusNum === 2) { // Inspector Assigned
-    actionButtons = <button className="bg-sky-700 text-white px-4 py-1 rounded-md" onClick={() => router.push(`/tasks/${id}/inspection`)}>Start Inspection</button>;
-  } else if (statusNum === 3) { // Inspection started
-    actionButtons = <div className="flex gap-2">
-      <button 
-        className="bg-sky-700 text-white px-4 py-1 rounded-md disabled:opacity-50" 
-        onClick={handleMarkAsComplete}
-        disabled={markingComplete}
-      >
-        {markingComplete ? 'Marking...' : 'Mark As Completed'}
-      </button>
-      <button className="bg-sky-700 text-white px-4 py-1 rounded-md" onClick={() => router.push(`/tasks/${id}/inspection?resume=1`)}>Resume Inspection</button>
-    </div>;
-  }
-
-  // Valuation values (example fields, adjust as needed)
   const valuation = task.valuation || {};
 
   return (
     <div className="p-6">
-      <Breadcrumbs items={[{ label: "Tasks", href: "/tasks" }, { label: "Details" }]} />
+      <Breadcrumbs items={[{ label: "Speciality Approval", href: "/inspection/speciality-approval" }, { label: "Details" }]} />
       <div className="bg-white rounded-xl shadow-md px-6 mb-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <div className="text-lg font-semibold text-gray-800 mb-1">Request ID {task.id}</div>
-          <div> {actionButtons}</div>
         </div>
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
           <div className="">

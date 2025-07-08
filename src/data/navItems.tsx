@@ -102,7 +102,8 @@ export const navItemsByRole: NavItemsByRole = {
             { key: "denied", label: "Denied", icon: <CloseCircleOutlined />, href: "/inspection/completed/denied" }
           ]
         },
-        { key: "inspectors", label: "Inspectors", icon: <UserOutlined />, href: "/inspection/inspectors" }
+        { key: "inspectors", label: "Inspectors", icon: <UserOutlined />, href: "/inspection/inspectors" },
+        { key: "speciality-approval", label: "Speciality Approval", icon: <CheckOutlined />, href: "/inspection/speciality-approval" },
       ]
     },
     {
