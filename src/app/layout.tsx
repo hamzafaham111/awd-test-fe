@@ -1,8 +1,9 @@
 import "./globals.css";
 import Providers from "./Providers";
-import { ConfigProvider } from "antd";
+import { ConfigProvider, message } from "antd";
 import StyledComponentsRegistry from "@/lib/AntdRegistry";
 import { PageTitleProvider } from "@/context/PageTitleContext";
+import MessageConfig from "@/components/common/MessageConfig";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 },
               }}
             >
+              <MessageConfig />
               <PageTitleProvider>
                 {children}
               </PageTitleProvider>

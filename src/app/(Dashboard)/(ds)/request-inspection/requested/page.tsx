@@ -5,6 +5,7 @@ import { Tag, Typography, Row, Col, message } from "antd";
 import axios from "axios";
 import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
 import SendToAuctionModal from '@/components/modals/SendToAuctionModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 
 const { Title, Text } = Typography;
 
@@ -31,7 +32,7 @@ const getStatusTag = (status: any) => {
     return <Tag color={statusObj.color}>{statusObj.label}</Tag>;
 };
 
-const ExpandedRowRender = ({ record }: { record: any }) => {
+const ExpandedRowRender = ({ record, onOpenAuctionModal, auctionModalOpen, onAuctionModalOk, onAuctionModalCancel, selectedVehicle, confirmModalOpen, onConfirmAuction, onCancelConfirm, sendingAuction }: any) => {
     const location = record.inspection_location;
     const dealershipName = location?.dealership?.dealership_name || 'N/A';
     const street = location?.address || '';
@@ -39,7 +40,6 @@ const ExpandedRowRender = ({ record }: { record: any }) => {
     const inspectionAddressTitle = location ? `${location.title}` : 'N/A';
     const statusNum = typeof record.status === 'number' ? record.status : Number(record.status);
     const statusObj = STATUS_MAP[statusNum];
-    const [auctionModalOpen, setAuctionModalOpen] = useState(false);
 
     // Right column content based on status
     let rightContent;
@@ -55,17 +55,23 @@ const ExpandedRowRender = ({ record }: { record: any }) => {
                     <span className="w-4 h-4 rounded-full bg-purple-500 inline-block"></span>
                     <span className="w-4 h-4 rounded-full bg-pink-500 inline-block"></span>
                 </div>
-                <button className="mt-2 px-4 py-2 bg-blue-600 text-white rounded" onClick={() => setAuctionModalOpen(true)}>
+                <button className="mt-2 px-4 py-2 bg-blue-600 text-white rounded" onClick={() => onOpenAuctionModal(record)}>
                     Send to auction
                 </button>
                 <SendToAuctionModal
                     open={auctionModalOpen}
-                    onOk={() => setAuctionModalOpen(false)}
-                    onCancel={() => setAuctionModalOpen(false)}
-                    vehicleTitle={record.vehicle || record.vehicle_name || ''}
-                    vin={record.vin || ''}
-                    mileage={record.odometer || record.mileage || ''}
-                    estimatedPrice={record.expected_price}
+                    onOk={onAuctionModalOk}
+                    onCancel={onAuctionModalCancel}
+                    vehicleData={selectedVehicle}
+                />
+                <ConfirmModal
+                    open={confirmModalOpen}
+                    onOk={onConfirmAuction}
+                    onCancel={onCancelConfirm}
+                    title="Send to Auction"
+                    content="Are you sure you want to send this vehicle to auction?"
+                    okText={sendingAuction ? "Sending..." : "Yes, auction it"}
+                    cancelText="Cancel"
                 />
             </>
         );
@@ -117,6 +123,10 @@ const DsRequestInspectionPage = () => {
     const [loading, setLoading] = useState(true);
     const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
     const [auctionModalOpen, setAuctionModalOpen] = useState(false);
+    const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+    const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+    const [auctionPayload, setAuctionPayload] = useState<any>(null);
+    const [sendingAuction, setSendingAuction] = useState(false);
 
     useEffect(() => {
         const fetchRequests = async () => {
@@ -145,6 +155,54 @@ const DsRequestInspectionPage = () => {
     const handleExpand = (expanded: boolean, record: any) => {
         const keys = expanded ? [record.id] : [];
         setExpandedRowKeys(keys);
+    };
+
+    // Handler for opening the auction modal with the selected vehicle
+    const handleOpenAuctionModal = (vehicle: any) => {
+      setSelectedVehicle(vehicle);
+      setAuctionModalOpen(true);
+    };
+
+    // Handler for SendToAuctionModal's onOk
+    const handleSendToAuction = (auctionData: any) => {
+      // Build the payload from auctionData and selected vehicle
+      const payload = {
+        request_id: auctionData.vehicleData.id,
+        reserve_price: auctionData.vehicleData.reserve_price || 0,
+        auction_type: auctionData.auctionType === "bring_money" ? 1 : 2,
+        credit_use_for_inspection_fee: auctionData.creditUse === "inspection" ? 1 : 0,
+        credit_use_for_selling_fee: auctionData.creditUse === "selling" ? 1 : 0,
+      };
+      setAuctionPayload(payload);
+      setAuctionModalOpen(false);
+      setConfirmModalOpen(true);
+    };
+
+    // Handler for confirming auction
+    const handleConfirmAuction = async () => {
+      setSendingAuction(true);
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+        const headers = {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        };
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        await axios.patch(`${apiUrl}/inspections/api/v1/send-to-auctions/`, auctionPayload, { headers });
+        showSuccessToast("Vehicle sent to auction!", "Auction");
+        setConfirmModalOpen(false);
+        // Optionally refresh data or close modals
+      } catch (err: any) {
+        // Show a clear error message
+        const errorMsg =
+          err?.response?.data?.detail ||
+          err?.response?.data?.message ||
+          err?.message ||
+          "Failed to send vehicle to auction.";
+        showErrorToast(errorMsg, "Send to auction");
+      } finally {
+        setSendingAuction(false);
+      }
     };
 
     const columns = [
@@ -205,9 +263,21 @@ const DsRequestInspectionPage = () => {
                         isEnableFilterInput: true,
                     }}
                     expandable={{
-                        expandedRowRender: (record: any) => <ExpandedRowRender record={record} />,
-                        rowExpandable: (record: any) => record.id !== null,
-                        expandedRowKeys: expandedRowKeys,
+                        expandedRowRender: (record: any) => (
+                            <ExpandedRowRender
+                                record={record}
+                                onOpenAuctionModal={handleOpenAuctionModal}
+                                auctionModalOpen={auctionModalOpen && selectedVehicle?.id === record.id}
+                                onAuctionModalOk={handleSendToAuction}
+                                onAuctionModalCancel={() => setAuctionModalOpen(false)}
+                                selectedVehicle={selectedVehicle}
+                                confirmModalOpen={confirmModalOpen && selectedVehicle?.id === record.id}
+                                onConfirmAuction={handleConfirmAuction}
+                                onCancelConfirm={() => setConfirmModalOpen(false)}
+                                sendingAuction={sendingAuction}
+                            />
+                        ),
+                        expandedRowKeys,
                         onExpand: handleExpand,
                     }}
                 />

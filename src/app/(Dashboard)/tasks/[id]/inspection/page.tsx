@@ -2141,19 +2141,19 @@ export default function InspectionFormPage() {
         </Button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-8">
-        <div className="w-full md:w-64">
-          <VerticalTabs
-            items={TABS.map(tab => ({ key: tab.key, label: tab.label }))}
-            activeKey={activeTab}
-            onChange={setActiveTab}
-            variant="sidebar"
-          />
-        </div>
-        <div className="flex-1 bg-white rounded-xl shadow-md p-8">
+    <div className="flex flex-col md:flex-row gap-8">
+      <div className="w-full md:w-64">
+        <VerticalTabs
+          items={TABS.map(tab => ({ key: tab.key, label: tab.label }))}
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          variant="sidebar"
+        />
+      </div>
+      <div className="flex-1 bg-white rounded-xl shadow-md p-8">
           <Form form={form} layout="vertical" className="space-y-8" onFinish={handleSubmit}>
-            {renderTabContent()}
-          </Form>
+          {renderTabContent()}
+        </Form>
         </div>
       </div>
     </div>

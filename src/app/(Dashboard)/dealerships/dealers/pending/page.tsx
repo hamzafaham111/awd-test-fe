@@ -114,7 +114,7 @@ export default function DealersPendingPage() {
       const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       try {
-        const res = await axios.get(`${apiUrl}/users/api/v1/dealership/?approved=2`, { headers });
+        const res = await axios.get(`${apiUrl}/users/api/v1/dealership/?approved=0`, { headers });
         setData(res.data.results || res.data);
       } catch (error) {
         showErrorToast(error, "Pending dealers");
@@ -150,6 +150,11 @@ export default function DealersPendingPage() {
         title={<span className="flex items-center gap-2"><DeleteOutlined className="text-red-500" /> Delete Dealer</span>}
         description="Are you sure you want to delete this dealer? This action cannot be undone."
       />
+      <div className="flex gap-4 mt-4">
+        <Link href="/dealerships/dealers/trash" className="text-blue-700 hover:underline">View Trashed Dealers</Link>
+        <span>|</span>
+        <Link href="/dealerships/dealers/pending" className="text-blue-700 hover:underline">View Active Dealers</Link>
+      </div>
     </div>
   );
 } 

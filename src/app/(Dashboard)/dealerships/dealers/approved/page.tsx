@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import DeleteConfirmModal from "@/components/modals/DeleteConfirmModal";
-import { showErrorToast, COMMON_ERROR_MESSAGES } from "@/utils/errorHandler";
+import { showErrorToast, COMMON_ERROR_MESSAGES, showSuccessToast } from "@/utils/errorHandler";
 
 const interestMap: Record<string, string> = {
   1: "Sell a vehicle",
@@ -55,10 +55,7 @@ export default function DealersApprovedPage() {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       await axios.delete(`${apiUrl}/users/api/v1/dealership/${selectedDealerId}/`, { headers });
       setData(prev => prev.filter((dealer: any) => dealer.id !== selectedDealerId));
-      Modal.success({
-        title: 'Success',
-        content: 'Dealer has been deleted successfully.',
-      });
+      showSuccessToast("Dealer deleted successfully!", "Dealer");
     } catch (err: any) {
       showErrorToast(err, "Dealer deletion");
     } finally {
@@ -152,6 +149,11 @@ export default function DealersApprovedPage() {
           title={<span className="flex items-center gap-2"><DeleteOutlined className="text-red-500" /> Delete Dealer</span>}
           description="Are you sure you want to delete this dealer? This action cannot be undone."
         />
+      </div>
+      <div className="flex gap-4 mt-4">
+        <Link href="/dealerships/dealers/trash" className="text-blue-700 hover:underline">View Trashed Dealers</Link>
+        <span>|</span>
+        <Link href="/dealerships/dealers/approved" className="text-blue-700 hover:underline">View Active Dealers</Link>
       </div>
     </div>
   );

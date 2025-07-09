@@ -4,19 +4,32 @@ import { Card, Button, Dropdown, Menu } from "antd";
 import { EditOutlined, DeleteOutlined, SettingOutlined, DownOutlined, PlusOutlined } from "@ant-design/icons";
 import DataTable from "@/components/common/DataTable";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { showErrorToast } from "@/utils/errorHandler";
 
 const columns = [
-  { title: "Name", dataIndex: "name", key: "name" },
+  { 
+    title: "Name", 
+    key: "name", 
+    render: (_: any, record: any) => `${record.first_name} ${record.last_name}` 
+  },
   { title: "Email", dataIndex: "email", key: "email" },
-  { title: "Phone", dataIndex: "phone", key: "phone" },
-  { title: "State Name", dataIndex: "state", key: "state" },
+  { title: "Phone", dataIndex: "phone_number", key: "phone_number" },
+  { 
+    title: "State Name", 
+    key: "state", 
+    render: (_: any, record: any) => record.state || "-" 
+  },
   {
     title: "Action",
     key: "action",
     render: (_: any, record: any) => {
       const menu = (
         <Menu>
-          <Menu.Item key="edit" icon={<EditOutlined />}>Edit</Menu.Item>
+          <Menu.Item key="edit" icon={<EditOutlined />}>
+            <Link href={`/inspection/inspectors/${record.id}`}>Edit</Link>
+          </Menu.Item>
           <Menu.Item key="delete" icon={<DeleteOutlined />} danger>Delete</Menu.Item>
         </Menu>
       );
@@ -33,20 +46,29 @@ const columns = [
   },
 ];
 
-const data = [
-  { key: "1", name: "Moin Ahsan", email: "moinahsan1999@gmail.com", phone: "03442223433", state: "Alaska" },
-  { key: "2", name: "Darab Tester", email: "darabestate0330@gmail.com", phone: "03122345678", state: "Alabama" },
-  { key: "3", name: "Gloria Bash", email: "Gloriabash6789@gmail.com", phone: "03122263610", state: "Arizona" },
-  { key: "4", name: "Cole Odam", email: "Coleodam1234@gmail.com", phone: "+923122263610", state: "Arizona" },
-  { key: "5", name: "Ana Richard", email: "ana_inspector@gmail.com", phone: "0123456789", state: "Illinois" },
-  { key: "6", name: "Mike Angel", email: "MikeAngel@gmail.com", phone: "0312 2263610", state: "Florida" },
-  { key: "7", name: "Hilda Rice", email: "mahe@mailinator.com", phone: "+1 (525) 261-4463", state: "Alaska" },
-  { key: "8", name: "Test Inspector 2", email: "test2@gmail.com", phone: "+1 (227) 462-4603", state: "Alabama" },
-  { key: "9", name: "Test Inspector", email: "testinspect@gmail.com", phone: "313 2500948", state: "Tennessee" },
-  { key: "10", name: "Cole Odom", email: "kifemeg@mailinator.com", phone: "+1 (738) 898-8378", state: "Arizona" },
-];
-
 export default function InspectorsListPage() {
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchInspectors = async () => {
+      setLoading(true);
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const res = await axios.get(`${apiUrl}/inspections/api/v1/inspectors/`, { headers });
+        setData(res.data.results || res.data);
+      } catch (error) {
+        showErrorToast(error, "Inspectors");
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInspectors();
+  }, []);
+
   const tableData = { 
     selectableRows: true,
     isEnableFilterInput: true,
@@ -58,7 +80,7 @@ export default function InspectorsListPage() {
     <div>
       <Breadcrumbs items={[{ label: "Inspection", href: "/inspection" }, { label: "Inspectors" }]} />
       <div className="p-6">
-          <DataTable columns={columns} data={data} tableData={tableData} />
+          <DataTable columns={columns} data={data} tableData={tableData} loading={loading} />
       </div>
     </div>
   );

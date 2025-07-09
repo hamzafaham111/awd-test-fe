@@ -5,29 +5,42 @@ interface SendToAuctionModalProps {
   open: boolean;
   onOk: (auctionData: any) => void;
   onCancel: () => void;
-  vehicleTitle?: string;
-  vin?: string;
-  mileage?: string;
-  estimatedPrice?: number;
-  credit?: number;
+  vehicleData?: any; // Accept the full object
 }
 
 export default function SendToAuctionModal({
   open,
   onOk,
   onCancel,
-  vehicleTitle = "Volkwage Jetta 2021",
-  vin = "3VWC57BUXMM031277",
-  mileage = "17,854 Miles",
-  estimatedPrice = 0,
-  credit = 0,
+  vehicleData = {},
 }: SendToAuctionModalProps) {
+  if (!vehicleData) return null;
   const [auctionType, setAuctionType] = useState("bring_money");
   const [auctionTiming, setAuctionTiming] = useState("10_minutes");
   const [creditUse, setCreditUse] = useState("inspection");
 
+  // Destructure and fallback
+  const {
+    make,
+    model,
+    year,
+    vin,
+    odometer,
+    expected_price,
+    credit,
+    reserve_price,
+    // add more fields as needed
+  } = vehicleData;
+
+  const vehicleTitle = `${make || ""} ${model || ""} ${year || ""}`.trim() || "Vehicle";
+  const mileage = odometer ? `${odometer} Miles` : "";
+  const estimatedPrice = expected_price || 0;
+  const reservePrice = reserve_price || 0;
+  const vehicleVin = vin || "-";
+  const vehicleCredit = credit || 0;
+
   const handleSend = () => {
-    onOk({ auctionType, auctionTiming, creditUse });
+    onOk({ auctionType, auctionTiming, creditUse, vehicleData });
   };
 
   return (
@@ -51,8 +64,8 @@ export default function SendToAuctionModal({
         <div className="flex justify-between items-start">
           <div>
             <div className="font-bold text-lg mb-0">{vehicleTitle}</div>
-            <div className="text-gray-500 text-sm leading-tight">{vin}</div>
-            <div className="text-gray-500 text-sm leading-tight">{mileage} {mileage && !String(mileage).toLowerCase().includes('mile') ? 'Miles' : ''}</div>
+            <div className="text-gray-500 text-sm leading-tight">{vehicleVin}</div>
+            <div className="text-gray-500 text-sm leading-tight">{mileage}</div>
           </div>
           <div className="text-right">
             <div className="text-xs text-gray-500 font-semibold">Estimated Price</div>
@@ -64,6 +77,7 @@ export default function SendToAuctionModal({
       <div className="px-8 pt-6 pb-0 bg-white">
         {/* Reserve Price */}
         <div className="font-bold text-xs text-gray-700 mb-2 mt-2 tracking-wider">RESERVE PRICE</div>
+        <div className="mb-2 text-lg font-bold text-sky-700">${Number(reservePrice).toLocaleString()}</div>
         <hr className="mb-6" />
         {/* Auction Type */}
         <div className="font-semibold text-gray-700 mb-2">Auction Type</div>
@@ -116,7 +130,7 @@ export default function SendToAuctionModal({
         <div className="mt-2 mb-6">
           <div className="flex justify-between items-center mb-2">
             <span className="font-bold text-gray-700 text-base">Credit Use</span>
-            <span className="font-bold text-gray-700 text-base">${credit?.toFixed(2) || "0.00"}</span>
+            <span className="font-bold text-gray-700 text-base">${vehicleCredit?.toFixed(2) || "0.00"}</span>
           </div>
           <div className="flex gap-4">
             <span className="flex-1 border border-gray-300 rounded-lg px-4 py-3 font-bold text-gray-900 bg-white select-none cursor-default text-center">For Inspection Fee</span>

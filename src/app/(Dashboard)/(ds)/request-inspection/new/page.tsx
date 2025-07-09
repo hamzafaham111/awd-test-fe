@@ -22,7 +22,7 @@ const initialFormData = {
   factoryEmissionsModified: false,
   driveabilityIssues: false,
   expectedReservePrice: undefined,
-  specialVehicle: false,
+  specialVehicle: 0,
   specialityDescription: "",
 };
 
@@ -168,7 +168,7 @@ const DsRequestInspectionNew = () => {
                                 <FormField name="vin" label="VIN" rules={[{ required: true, message: 'VIN is required' }]} placeholder="123423" />
                                 <FormField name="odometer" label="ODOMETER" rules={[{ required: true, message: 'Odometer is required' }]} placeholder="3444" />
                                 <FormField name="daysOnLot" label="DAYS ON LOT (Optional)" placeholder="33" />
-                                 <FormField name="description" type="textarea" label="Description" rules={[{ required: true, message: 'Description is required' }]} placeholder="this is good one" />
+                                 <FormField name="description" type="textarea" label="Seller Disclosure" rules={[{ required: true, message: 'Seller Disclosure is required' }]} placeholder="this is good one" />
                                 <FormField
                                     name="inspectionLocation"
                                     type="select"
@@ -211,7 +211,7 @@ const DsRequestInspectionNew = () => {
                 
                 <div style={{ display: current === 2 ? 'block' : 'none' }}>
                     <Card>
-                        <Title level={4}>VEHICLE ISSUES (OPTIONAL)</Title>
+                        <Title level={4}>VEHICLE ISSUES</Title>
                         <FormField
                             name="mechanicalIssues"
                             type="radio"
