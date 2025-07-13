@@ -188,18 +188,12 @@ const DsRequestInspectionPage = () => {
           ...(token && { Authorization: `Bearer ${token}` }),
         };
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        await axios.patch(`${apiUrl}/inspections/api/v1/send-to-auctions/`, auctionPayload, { headers });
+        await axios.post(`${apiUrl}/inspections/api/v1/send-to-auctions/`, auctionPayload, { headers });
         showSuccessToast("Vehicle sent to auction!", "Auction");
         setConfirmModalOpen(false);
         // Optionally refresh data or close modals
       } catch (err: any) {
-        // Show a clear error message
-        const errorMsg =
-          err?.response?.data?.detail ||
-          err?.response?.data?.message ||
-          err?.message ||
-          "Failed to send vehicle to auction.";
-        showErrorToast(errorMsg, "Send to auction");
+        showErrorToast(err, "Send to auction");
       } finally {
         setSendingAuction(false);
       }

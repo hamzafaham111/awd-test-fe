@@ -1,79 +1,12 @@
 'use client'
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import AuctionSearchBar from "@/components/ds/AuctionSearchBar";
 import AuctionFiltersSidebar from "@/components/ds/AuctionFiltersSidebar";
 import AuctionCard from "@/components/ds/AuctionCard";
 import AuctionListPagination from "@/components/ds/AuctionListPagination";
 import AuctionListEmptyState from "@/components/ds/AuctionListEmptyState";
-
-// Mock data for auctions
-const mockAuctions = [
-  {
-    image: "/images/auth-background.jpg",
-    title: "2016 Ford F150 Supercrew 4WD",
-    vin: "JN8AZ2NF1F9572710",
-    colors: [
-      { color: "#22c55e", label: "Green" },
-      { color: "#eab308", label: "Yellow" },
-      { color: "#f43f5e", label: "Red" },
-      { color: "#2563eb", label: "Blue" },
-    ],
-    specs: [
-      { label: "Miles", value: "114,324" },
-      { label: "ENG", value: "2.7L" },
-      { label: "Cyl", value: "6" },
-      { label: "4WD", value: "" },
-    ],
-    status: "Coming Soon",
-  },
-  {
-    image: "/images/auth-background.jpg",
-    title: "2020 BMW X5 xDrive40i",
-    vin: "5UXCR6C08L9B12345",
-    colors: [
-      { color: "#2563eb", label: "Blue" },
-    ],
-    specs: [
-      { label: "Miles", value: "45,000" },
-      { label: "ENG", value: "3.0L" },
-      { label: "Cyl", value: "6" },
-    ],
-    status: "Live",
-  },
-  {
-    image: "/images/auth-background.jpg",
-    title: "2018 Toyota Camry SE",
-    vin: "4T1B11HK5JU123456",
-    colors: [
-      { color: "#f43f5e", label: "Red" },
-    ],
-    specs: [
-      { label: "Miles", value: "60,000" },
-      { label: "ENG", value: "2.5L" },
-    ],
-    status: "In Negotiation",
-  },
-  {
-    image: "/images/auth-background.jpg",
-    title: "2017 Honda Accord LX",
-    vin: "1HGCR2F3XHA123456",
-    colors: [],
-    specs: [
-      { label: "Miles", value: "80,000" },
-    ],
-    status: "Ended",
-  },
-  {
-    image: "/images/auth-background.jpg",
-    title: "2019 Chevrolet Silverado",
-    vin: "3GCUKREC1FG123456",
-    colors: [
-      { color: "#eab308", label: "Yellow" },
-    ],
-    specs: [],
-    status: "Live",
-  },
-];
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 // Mock filter options
 const filterOptions = {
@@ -113,10 +46,56 @@ export default function DsUpcomingAuctions() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(3);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [auctions, setAuctions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchAuctions = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const response = await axios.get(`${apiUrl}/auctions/api/v1/upcoming/`, { headers });
+        // Map API response to UI shape
+        const mapped = (response.data || []).map((item: any) => {
+          const req = item.request_id || {};
+          // Map lights array to colors
+          const colors = Array.isArray(req.lights)
+            ? req.lights.map((color: string) => ({ color, label: color.charAt(0).toUpperCase() + color.slice(1) }))
+            : [];
+          return {
+            image: "/images/auth-background.jpg", // Placeholder, replace if you have real image
+            title: `${req.year || ''} ${req.make || ''} ${req.model || ''}`.trim(),
+            vin: req.vin || '',
+            colors,
+            specs: [
+              { label: "Miles", value: req.odometer || '' },
+              { label: "ENG", value: req.engine || '' },
+              { label: "Cyl", value: req.cylinders || '' },
+              { label: "Transmission", value: req.transmission || '' },
+            ],
+            status: item.status === 0 ? "Coming Soon" : item.status === 1 ? "Live" : item.status === 2 ? "In Negotiation" : item.status === 3 ? "Ended" : "Unknown",
+            id: item.id, // Assuming item.id is available from the API
+          };
+        });
+        setAuctions(mapped);
+      } catch (err: any) {
+        setError(err?.response?.data?.detail || err?.message || "Failed to fetch auctions.");
+        setAuctions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAuctions();
+  }, []);
 
   // Filtering logic
   const filteredAuctions = useMemo(() => {
-    let data = mockAuctions;
+    let data = auctions;
     if (search.trim()) {
       data = data.filter(a => a.title.toLowerCase().includes(search.toLowerCase()));
     }
@@ -125,7 +104,7 @@ export default function DsUpcomingAuctions() {
     }
     // (Add more filter logic as needed)
     return data;
-  }, [search, filters]);
+  }, [search, filters, auctions]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredAuctions.length / pageSize);
@@ -158,11 +137,32 @@ export default function DsUpcomingAuctions() {
       <div className="flex flex-col md:flex-row gap-6 w-full">
         {/* Auction List */}
         <div className="flex-1 flex flex-col gap-4">
-          {pagedAuctions.length === 0 ? (
+          {loading ? (
+            <>
+              <div className="text-center text-gray-500">Loading upcoming auctions...</div>
+              <AuctionListEmptyState />
+            </>
+          ) : error ? (
+            <>
+              <div className="text-center text-red-500">{error}</div>
+              <AuctionListEmptyState />
+            </>
+          ) : pagedAuctions.length === 0 ? (
             <AuctionListEmptyState />
           ) : (
             pagedAuctions.map((auction, idx) => (
-              <AuctionCard key={idx} {...auction} />
+              <AuctionCard
+                key={idx}
+                {...auction}
+                titleElement={
+                  <span
+                    className="cursor-pointer text-sky-700 hover:underline"
+                    onClick={() => router.push(`/upcoming-auctions/${auction.id}`)}
+                  >
+                    {auction.title}
+                  </span>
+                }
+              />
             ))
           )}
           <AuctionListPagination

@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface AuctionCardProps {
     image: string;
@@ -12,6 +13,7 @@ interface AuctionCardProps {
     labelText?: string;
     labelColor?: string;
     price?: string | number;
+    id?: string | number;
 }
 
 const statusColors: Record<string, string> = {
@@ -21,8 +23,9 @@ const statusColors: Record<string, string> = {
     "Ended": "bg-red-100 text-red-700",
 };
 
-export default function AuctionCard({ image, title, vin, colors = [], specs = [], status, onBuyNow, labelText, labelColor, price }: AuctionCardProps) {
+export default function AuctionCard({ image, title, vin, colors = [], specs = [], status, onBuyNow, labelText, labelColor, price, id }: AuctionCardProps) {
     const miles = specs.find(s => s.label.toLowerCase().includes('mile'))?.value;
+    const router = useRouter();
     return (
         <div className="flex flex-col md:flex-row bg-white rounded-xl shadow-md p-4 gap-4 w-full max-w-3xl min-h-[160px] relative">
             <div className="w-full md:w-32 h-32 md:h-24 flex-shrink-0 relative rounded-lg overflow-hidden mx-auto md:mx-0">
@@ -30,7 +33,18 @@ export default function AuctionCard({ image, title, vin, colors = [], specs = []
             </div>
             <div className="flex-1 flex flex-col gap-1">
                 <div className="flex flex-row justify-between items-start">
-                    <div className="font-bold text-lg text-gray-900 truncate">{title}</div>
+                    <div className="font-bold text-lg text-gray-900 truncate">
+                        {id ? (
+                            <span
+                                className="cursor-pointer text-sky-700 hover:underline"
+                                onClick={() => router.push(`/upcoming-auctions/${id}`)}
+                            >
+                                {title}
+                            </span>
+                        ) : (
+                            title
+                        )}
+                    </div>
                     <div className="flex flex-col items-end min-w-[90px]">
                         {labelText ? (
                             <span className="text-xs font-bold px-2 py-1 rounded" style={{ color: labelColor || '#ef4444' }}>{labelText}</span>

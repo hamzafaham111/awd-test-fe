@@ -1,222 +1,221 @@
 "use client";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
-import { Card, Button, Dropdown, Menu, Tag } from "antd";
-import { EditOutlined, DeleteOutlined, SettingOutlined, DownOutlined } from "@ant-design/icons";
+import { Card, Button, Dropdown, Menu, Tag, message } from "antd";
+import { EditOutlined, FileSearchOutlined, SettingOutlined, DownOutlined } from "@ant-design/icons";
 import DataTable from "@/components/common/DataTable";
-
-const statusColor = (status: string) => {
-  switch (status) {
-    case "Payment Pending":
-      return "default";
-    case "Inspection Completed":
-      return "blue";
-    case "Delivered":
-      return "green";
-    case "On Auction":
-      return "green";
-    default:
-      return "default";
-  }
-};
-
-const columns = [
-  { title: "VIN", dataIndex: "vin", key: "vin" },
-  { title: "Inspection Location", dataIndex: "location", key: "location" },
-  { title: "Vehicle", dataIndex: "vehicle", key: "vehicle" },
-  { title: "Expected Price", dataIndex: "price", key: "price", render: (v: number) => `$${v}` },
-  {
-    title: "Status",
-    dataIndex: "status",
-    key: "status",
-    render: (status: string) => <Tag color={statusColor(status)}>{status}</Tag>,
-  },
-  {
-    title: "Action",
-    key: "action",
-    render: (_: any, record: any) => {
-      const menu = (
-        <Menu>
-          <Menu.Item key="edit" icon={<EditOutlined />}>Edit</Menu.Item>
-          <Menu.Item key="delete" icon={<DeleteOutlined />} danger>Delete</Menu.Item>
-        </Menu>
-      );
-      return (
-        <Dropdown overlay={menu} trigger={["click"]}>
-          <Button>
-            <span className="flex items-center gap-1">
-              <SettingOutlined /> <DownOutlined />
-            </span>
-          </Button>
-        </Dropdown>
-      );
-    },
-  },
-];
-
-const data = [
-  {
-    key: "1",
-    vin: "2025",
-    location: (
-      <div>
-        <b>Broadway</b><br />
-        838 Broadway, New York, NY 10003, USA<br />
-        +1 (618) 887-4887
-      </div>
-    ),
-    vehicle: (
-      <div>
-        Year : 2025<br />
-        Make : Toyata<br />
-        Model : 2025
-      </div>
-    ),
-    price: 5000,
-    status: "Payment Pending",
-  },
-  {
-    key: "2",
-    vin: "123344455",
-    location: (
-      <div>
-        <b>testing dealer streamwood</b><br />
-        123 main st<br />
-        224-855-4565
-      </div>
-    ),
-    vehicle: (
-      <div>
-        Year : 2021<br />
-        Make : Cadillac<br />
-        Model : 1010
-      </div>
-    ),
-    price: 13000,
-    status: "Inspection Completed",
-  },
-  {
-    key: "3",
-    vin: "3VWCS57BUXMM031277",
-    location: (
-      <div>
-        <b>testing dealer streamwood</b><br />
-        123 main st<br />
-        224-855-4565
-      </div>
-    ),
-    vehicle: (
-      <div>
-        Year : 2021<br />
-        Make : Volkwage<br />
-        Model : Jetta
-      </div>
-    ),
-    price: 18540,
-    status: "Inspection Completed",
-  },
-  {
-    key: "4",
-    vin: "JA4J4UA86NZ065825",
-    location: (
-      <div>
-        <b>Archienoah San Tan Valley</b><br />
-        247 E Gold Dust Way<br />
-        +1 (928) 453-6555
-      </div>
-    ),
-    vehicle: (
-      <div>
-        Year : 2024<br />
-        Make : for testing<br />
-        Model : 1010
-      </div>
-    ),
-    price: 0,
-    status: "Delivered",
-  },
-  {
-    key: "5",
-    vin: "23456",
-    location: (
-      <div>
-        <b>South Dakota</b><br />
-        34021 N US-45, Grayslake, IL 60030,<br />
-        605-371-7629
-      </div>
-    ),
-    vehicle: (
-      <div>
-        Year : 887<br />
-        Make : othermake<br />
-        Model : testmodel2
-      </div>
-    ),
-    price: 223,
-    status: "Delivered",
-  },
-  {
-    key: "6",
-    vin: "JN8A55MV5CW392335",
-    location: (
-      <div>
-        <b>Archienoah San Tan Valley</b><br />
-        247 E Gold Dust Way<br />
-        +1 (928) 453-6555
-      </div>
-    ),
-    vehicle: (
-      <div>
-        Year : 2<br />
-        Make : 2<br />
-        Model : 2
-      </div>
-    ),
-    price: 500,
-    status: "Delivered",
-  },
-  {
-    key: "7",
-    vin: "TestingVIN",
-    location: (
-      <div>
-        <b>South Dakota</b><br />
-        34021 N US-45, Grayslake, IL 60030,<br />
-        605-371-7629
-      </div>
-    ),
-    vehicle: (
-      <div>
-        Year : 2016<br />
-        Make : Ford<br />
-        Model : F150
-      </div>
-    ),
-    price: 17925,
-    status: "On Auction",
-  },
-  {
-    key: "8",
-    vin: "MAJ6S3GL9NC462106",
-    location: (
-      <div>
-        <b>Arjun Boynton Beach</b><br />
-        4905 Park Ridge Blvd<br />
-        +1 (263) 994-9064
-      </div>
-    ),
-    vehicle: (
-      <div>
-        Year : 2016<br />
-        Make : Ford<br />
-        Model : F150
-      </div>
-    ),
-    price: 17925,
-    status: "Payment Pending",
-  },
-];
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import AssignCarAttributesModal from "@/components/modals/AssignCarAttributesModal";
+import { showErrorToast, COMMON_ERROR_MESSAGES } from "@/utils/errorHandler";
+import { getInspectionStatusLabel, getInspectionStatusColor } from "@/utils/inspectionStatusMapping";
 
 export default function Page() {
+  const router = useRouter();
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
+
+  const openModal = (requestId: number) => {
+    setSelectedRequestId(requestId);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setSelectedRequestId(null);
+    setIsModalOpen(false);
+  };
+
+  const handleUnassignInspector = async (requestId: string) => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    try {
+      setLoading(true);
+      await axios.patch(`${apiUrl}/inspections/api/v1/request/${requestId}/unassign-inspector/`, {}, { headers });
+      message.success("Inspector unassigned successfully.");
+      // Refresh the list
+      const response = await axios.get(`${apiUrl}/inspections/api/v1/admin-requests/?status=Approved`, { headers });
+      const transformedData = response.data.map((item: any) => ({
+        key: item.id.toString(),
+        vin: item.vin || "N/A",
+        location: (
+          <div>
+            <b>{item.inspection_location?.title || "N/A"}</b><br />
+            {item.inspection_location?.address || "N/A"}<br />
+            {item.inspection_location?.phone || "N/A"}
+          </div>
+        ),
+        vehicle: (
+          <div>
+            Year : {item.year || "N/A"}<br />
+            Make : {item.make || "N/A"}<br />
+            Model : {item.model || "N/A"}
+          </div>
+        ),
+        price: item.expected_price || 0,
+        status: item.status || 0,
+      }));
+      setData(transformedData);
+    } catch (err: any) {
+      showErrorToast(err, "Unassign Inspector");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const columns = [
+    { title: "VIN", dataIndex: "vin", key: "vin" },
+    { title: "Inspection Location", dataIndex: "location", key: "location" },
+    { title: "Vehicle", dataIndex: "vehicle", key: "vehicle" },
+    { title: "Expected Price", dataIndex: "price", key: "price", render: (v: number) => `$${v}` },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status: number | string) => (
+        <Tag color={getInspectionStatusColor(status)}>{getInspectionStatusLabel(status)}</Tag>
+      ),
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (_: any, record: any) => {
+        const baseMenuItems = [
+          {
+            key: "view",
+            label: "View",
+            icon: <EditOutlined />,
+          },
+          {
+            key: "assign-car-attributes",
+            label: "Assign Car Attributes",
+            icon: <EditOutlined />,
+          },
+        ];
+
+        let menuItems;
+        if (record.status === 2) { // Inspector Assigned
+          menuItems = [
+            ...baseMenuItems.slice(0, 1),
+            {
+              key: "change-inspector",
+              label: "Change Inspector",
+              icon: <FileSearchOutlined />,
+            },
+            {
+              key: "unassign-inspector",
+              label: "Unassign Inspector",
+              icon: <FileSearchOutlined />,
+            },
+            ...baseMenuItems.slice(1),
+          ];
+        } else {
+          menuItems = [
+            ...baseMenuItems.slice(0, 1),
+            {
+              key: "assign-inspector",
+              label: "Assign Inspector",
+              icon: <FileSearchOutlined />,
+            },
+            ...baseMenuItems.slice(1),
+          ];
+        }
+
+        const handleMenuClick = (e: { key: string }) => {
+          if (e.key === 'view') {
+            router.push(`/inspection/requests/${record.key}`);
+          }
+          if (e.key === 'assign-inspector' || e.key === 'change-inspector') {
+            router.push(`/inspection/requests/${record.key}/assign-inspector`);
+          }
+          if (e.key === 'assign-car-attributes') {
+            openModal(record.key);
+          }
+          if (e.key === 'unassign-inspector') {
+            handleUnassignInspector(record.key);
+          }
+        };
+
+        const menu = <Menu onClick={handleMenuClick} items={menuItems} />;
+
+        return (
+          <Dropdown overlay={menu} trigger={["click"]}>
+            <Button>
+              <span className="flex items-center gap-1">
+                <SettingOutlined /> <DownOutlined />
+              </span>
+            </Button>
+          </Dropdown>
+        );
+      },
+    },
+  ];
+
+  useEffect(() => {
+    const fetchInspectionRequests = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        
+        const response = await axios.get(`${apiUrl}/inspections/api/v1/admin-requests/?status=Approved`, { headers });
+        
+        const transformedData = response.data.map((item: any) => ({
+          key: item.id.toString(),
+          vin: item.vin || "N/A",
+          location: (
+            <div>
+              <b>{item.inspection_location?.title || "N/A"}</b><br />
+              {item.inspection_location?.address || "N/A"}<br />
+              {item.inspection_location?.phone || "N/A"}
+            </div>
+          ),
+          vehicle: (
+            <div>
+              Year : {item.year || "N/A"}<br />
+              Make : {item.make || "N/A"}<br />
+              Model : {item.model || "N/A"}
+            </div>
+          ),
+          price: item.expected_price || 0,
+          status: item.status || 0, // Use the status from API response
+        }));
+
+        setData(transformedData);
+      } catch (err: any) {
+        setError(err?.response?.data?.detail || err?.message || "Failed to fetch approved inspections.");
+        showErrorToast(err, "Approved inspections");
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInspectionRequests();
+  }, []);
+
+  if (error) {
+    return (
+      <main>
+        <Breadcrumbs items={[
+          { label: "Inspection", href: "/inspection" },
+          { label: "Completed", href: "/inspection/completed" },
+          { label: "Approved" }
+        ]} />
+        <div className="p-6">
+          <Card>
+            <div className="text-red-500 text-center py-8">{error}</div>
+          </Card>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main>
       <Breadcrumbs items={[
@@ -225,10 +224,13 @@ export default function Page() {
         { label: "Approved" }
       ]} />
       <div className="p-6">
-        <Card>
-          <DataTable columns={columns} data={data} tableData={{}} />
-        </Card>
+          <DataTable columns={columns} data={data} tableData={{}} loading={loading} />
       </div>
+      <AssignCarAttributesModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        requestId={selectedRequestId}
+      />
     </main>
   );
 } 

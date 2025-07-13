@@ -22,6 +22,7 @@ export const getErrorMessage = (error: unknown, context?: string): string => {
   console.log('Error handler - Status:', status);
   console.log('Error handler - Error data:', errorData);
   console.log('Error handler - Context:', context);
+  console.log('Error handler - Full error:', apiError);
   
   // Handle specific HTTP status codes
   switch (status) {
@@ -31,6 +32,11 @@ export const getErrorMessage = (error: unknown, context?: string): string => {
       }
       if (errorData?.message) {
         return errorData.message;
+      }
+      if (errorData?.error) {
+        // Handle the specific error format: {"error":["message"]}
+        const errorArray = errorData.error;
+        return Array.isArray(errorArray) ? errorArray.join(', ') : errorArray;
       }
       if (errorData?.errors) {
         // Handle validation errors
@@ -43,6 +49,10 @@ export const getErrorMessage = (error: unknown, context?: string): string => {
         if (fieldErrors.length) {
           return fieldErrors.flat().join(', ');
         }
+      }
+      // Handle string error responses
+      if (typeof errorData === 'string') {
+        return errorData;
       }
       return 'Invalid request. Please check your input and try again.';
     

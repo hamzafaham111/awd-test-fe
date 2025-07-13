@@ -1,6 +1,6 @@
 "use client";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
-import { Card, Button, Dropdown, Menu, Tag } from "antd";
+import { Card, Button, Dropdown, Menu, Tag, message } from "antd";
 import { EditOutlined, FileSearchOutlined, SettingOutlined, DownOutlined } from "@ant-design/icons";
 import DataTable from "@/components/common/DataTable";
 import { useEffect, useState } from "react";
@@ -8,6 +8,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import AssignCarAttributesModal from "@/components/modals/AssignCarAttributesModal";
 import { showErrorToast, COMMON_ERROR_MESSAGES } from "@/utils/errorHandler";
+import { getInspectionStatusLabel, getInspectionStatusColor } from "@/utils/inspectionStatusMapping";
 
 export default function Page() {
   const router = useRouter();
@@ -27,6 +28,44 @@ export default function Page() {
     setIsModalOpen(false);
   };
 
+  const handleUnassignInspector = async (requestId: string) => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    try {
+      setLoading(true);
+      await axios.post(`${apiUrl}/inspections/api/v1/request/${requestId}/unassign-inspector/`, {}, { headers });
+      message.success("Inspector unassigned successfully.");
+      // Refresh the list
+      const response = await axios.get(`${apiUrl}/inspections/api/v1/admin-requests/?status=Requests`, { headers });
+      const transformedData = response.data.map((item: any) => ({
+        key: item.id.toString(),
+        vin: item.vin || "N/A",
+        location: (
+          <div>
+            <b>{item.inspection_location?.title || "N/A"}</b><br />
+            {item.inspection_location?.address || "N/A"}<br />
+            {item.inspection_location?.phone || "N/A"}
+          </div>
+        ),
+        vehicle: (
+          <div>
+            Year : {item.year || "N/A"}<br />
+            Make : {item.make || "N/A"}<br />
+            Model : {item.model || "N/A"}
+          </div>
+        ),
+        price: item.expected_price || 0,
+        status: item.status || 0,
+      }));
+      setData(transformedData);
+    } catch (err: any) {
+      showErrorToast(err, "Unassign Inspector");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const columns = [
     { title: "VIN", dataIndex: "vin", key: "vin" },
     { title: "Inspection Location", dataIndex: "location", key: "location" },
@@ -36,8 +75,8 @@ export default function Page() {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status: string) => (
-        <Tag color={status === "Inspector Assigned" ? "blue" : "default"}>{status}</Tag>
+      render: (status: number | string) => (
+        <Tag color={getInspectionStatusColor(status)}>{getInspectionStatusLabel(status)}</Tag>
       ),
     },
     {
@@ -57,28 +96,46 @@ export default function Page() {
           },
         ];
 
-        const menuItems =
-          record.status !== "Inspector Assigned"
-            ? [
-                ...baseMenuItems.slice(0, 1),
-                {
-                  key: "assign-inspector",
-                  label: "Assign Inspector",
-                  icon: <FileSearchOutlined />,
-                },
-                ...baseMenuItems.slice(1),
-              ]
-            : baseMenuItems;
+        let menuItems;
+        if (record.status === 2) { // Inspector Assigned
+          menuItems = [
+            ...baseMenuItems.slice(0, 1),
+            {
+              key: "change-inspector",
+              label: "Change Inspector",
+              icon: <FileSearchOutlined />,
+            },
+            {
+              key: "unassign-inspector",
+              label: "Unassign Inspector",
+              icon: <FileSearchOutlined />,
+            },
+            ...baseMenuItems.slice(1),
+          ];
+        } else {
+          menuItems = [
+            ...baseMenuItems.slice(0, 1),
+            {
+              key: "assign-inspector",
+              label: "Assign Inspector",
+              icon: <FileSearchOutlined />,
+            },
+            ...baseMenuItems.slice(1),
+          ];
+        }
 
         const handleMenuClick = (e: { key: string }) => {
           if (e.key === 'view') {
             router.push(`/inspection/requests/${record.key}`);
           }
-          if (e.key === 'assign-inspector') {
+          if (e.key === 'assign-inspector' || e.key === 'change-inspector') {
             router.push(`/inspection/requests/${record.key}/assign-inspector`);
           }
           if (e.key === 'assign-car-attributes') {
             openModal(record.key);
+          }
+          if (e.key === 'unassign-inspector') {
+            handleUnassignInspector(record.key);
           }
         };
 
@@ -106,7 +163,7 @@ export default function Page() {
         const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
         
-        const response = await axios.get(`${apiUrl}/inspections/api/v1/admin-requests/`, { headers });
+        const response = await axios.get(`${apiUrl}/inspections/api/v1/admin-requests/?status=Requests`, { headers });
         
         const transformedData = response.data.map((item: any) => ({
           key: item.id.toString(),
@@ -126,7 +183,7 @@ export default function Page() {
             </div>
           ),
           price: item.expected_price || 0,
-          status: item.inspector_assigned ? "Inspector Assigned" : "Pending",
+          status: item.status || 0, // Use the status from API response
         }));
 
         setData(transformedData);

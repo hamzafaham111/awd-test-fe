@@ -262,9 +262,9 @@ export default function DealerViewEditPage() {
                 onChange={v => handleChange("approved", v)}
                 disabled={!isAddMode}
               >
-                <Option value="1">Pending</Option>
-                <Option value="2">Approved</Option>
-                <Option value="3">Not Approved</Option>
+                <Option value="0">Pending</Option>
+                <Option value="1">Approved</Option>
+                <Option value="2">Not Approved</Option>
               </Select>
             </Form.Item>
           </div>
