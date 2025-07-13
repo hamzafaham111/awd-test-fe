@@ -4,7 +4,7 @@ import { Tag, Button } from "antd";
 import DataTable from "@/components/common/DataTable";
 import ConfirmModal from "@/components/modals/ConfirmModal";
 import { showToast } from "@/components/common/Toaster";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
 import axios from "axios";
 
@@ -53,21 +53,53 @@ const columns = [
   },
 ];
 
-const data = [
-  {
-    key: 1,
-    auctionId: "1902408462",
-    vehicleDetails: { vin: "JN8AZ2NF1F9572710", name: "2016 Ford F150 Supercrew 4WD" },
-    seller: { name: "Arjun", address: "Arjun Boynton Beach, 4905 Park Ridge Blvd, 33426", phone: "+1 (263) 994-9064" },
-    buyer: { name: "", address: "", phone: "" },
-    status: "In a Run List",
-  },
-];
-
 export default function AuctionsRunListPage() {
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<any[]>([]);
+  const [tableLoading, setTableLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setTableLoading(true);
+      setError(null);
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const response = await axios.get(`${apiUrl}/auctions/api/v1/on-run-list/`, { headers });
+        // Map API response to table data shape
+        const mapped = (response.data || []).map((item: any) => ({
+          key: item.id || item.auctionId || item.request_id || Math.random(),
+          auctionId: item.auctionId || item.id || '',
+          vehicleDetails: {
+            vin: item.vin || (item.request_id && item.request_id.vin) || '',
+            name: `${(item.request_id && item.request_id.year) || ''} ${(item.request_id && item.request_id.make) || ''} ${(item.request_id && item.request_id.model) || ''}`.trim(),
+          },
+          seller: {
+            name: (item.seller && item.seller.name) || '',
+            address: (item.seller && item.seller.address) || '',
+            phone: (item.seller && item.seller.phone) || '',
+          },
+          buyer: {
+            name: (item.buyer && item.buyer.name) || '',
+            address: (item.buyer && item.buyer.address) || '',
+            phone: (item.buyer && item.buyer.phone) || '',
+          },
+          status: 'In a Run List',
+        }));
+        setData(mapped);
+      } catch (err: any) {
+        setError(err?.response?.data?.detail || err?.message || "Failed to fetch run list.");
+        setData([]);
+      } finally {
+        setTableLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleSendToAuction = async () => {
     if (selectedRowKeys.length === 0) {
@@ -104,6 +136,7 @@ export default function AuctionsRunListPage() {
         <div className="flex justify-end mb-2">
           <button className="bg-sky-600 text-white px-4 py-2 rounded" onClick={handleSendToAuction} disabled={loading}>Send To Auction</button>
         </div>
+        {error && <div className="text-red-500 mb-2">{error}</div>}
         <DataTable
           columns={columns}
           data={data}
@@ -115,6 +148,7 @@ export default function AuctionsRunListPage() {
             selectedRowKeys,
             onChange: setSelectedRowKeys,
           }}
+          loading={tableLoading}
         />
         <ConfirmModal
           open={showModal}
