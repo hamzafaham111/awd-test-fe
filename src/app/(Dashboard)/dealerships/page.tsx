@@ -8,7 +8,7 @@ import { EditOutlined, DeleteOutlined, SettingOutlined, DownOutlined } from "@an
 import DeleteConfirmModal from "@/components/modals/DeleteConfirmModal";
 import { showSuccessToast, showErrorToast } from "@/utils/errorHandler";
 
-const interestMap = {
+const interestMap: { [key: number]: string } = {
   1: "Sell a vehicle",
   2: "Purchase a vehicle",
   3: "Both",
