@@ -37,7 +37,7 @@ const formSteps = [
     },
     {
       title: 'Vehicle Issues',
-      fields: ['mechanicalIssues', 'frameDamage', 'factoryEmissionsModified', 'driveabilityIssues']
+      fields: ['mechanicalIssues', 'frameDamage', 'factoryEmissionsModified', 'driveabilityIssues', 'colorTagIndication']
     },
     {
       title: 'Review & Submit'
@@ -246,8 +246,16 @@ const DsRequestInspectionNew = () => {
                             className="mt-4"
                         />
                         <Text type="secondary">Does the vehicle have issues with starting, running, shifting, etc</Text>
+                        <Title level={4}>COLOR TAG</Title>
+                        <FormField
+                            name="colorTagIndication"
+                            type="radio"
+                            label="Color Tag Indication"
+                            options={[{ label: 'Green', value: 'green' }, { label: 'Red', value: 'red' }]}
+                        />
                     </Card>
                 </div>
+
 
                 <div style={{ display: current === 3 ? 'block' : 'none' }}>
                     <Title level={4} className="mb-6">Review & Submit</Title>

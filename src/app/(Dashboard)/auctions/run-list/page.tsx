@@ -79,9 +79,14 @@ export default function AuctionsRunListPage() {
             name: `${(item.request_id && item.request_id.year) || ''} ${(item.request_id && item.request_id.make) || ''} ${(item.request_id && item.request_id.model) || ''}`.trim(),
           },
           seller: {
-            name: (item.seller && item.seller.name) || '',
-            address: (item.seller && item.seller.address) || '',
-            phone: (item.seller && item.seller.phone) || '',
+            name: (item.dealer && item.dealer.dealership_name) || '',
+            address: [
+              item.dealer?.street_name,
+              item.dealer?.city?.name,
+              item.dealer?.state?.name,
+              item.dealer?.zipcode
+            ].filter(Boolean).join(', '),
+            phone: (item.dealer && item.dealer.phone_number) || '',
           },
           buyer: {
             name: (item.buyer && item.buyer.name) || '',
@@ -112,10 +117,44 @@ export default function AuctionsRunListPage() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      await axios.post(`${apiUrl}/auctions/api/v1/send-to-auction/`, { ids: selectedRowKeys }, { headers });
+      await axios.post(`${apiUrl}/auctions/api/v1/admin/send-to-auctions/`, { ids: selectedRowKeys }, { headers });
       showSuccessToast(COMMON_SUCCESS_MESSAGES.SENT, "Items to auction");
       setSelectedRowKeys([]);
-      // Here you can add your logic to actually send to auction
+      // Refresh the table after successful send
+      setTableLoading(true);
+      try {
+        const response = await axios.get(`${apiUrl}/auctions/api/v1/on-run-list/`, { headers });
+        const mapped = (response.data || []).map((item: any) => ({
+          key: item.id || item.auctionId || item.request_id || Math.random(),
+          auctionId: item.auctionId || item.id || '',
+          vehicleDetails: {
+            vin: item.vin || (item.request_id && item.request_id.vin) || '',
+            name: `${(item.request_id && item.request_id.year) || ''} ${(item.request_id && item.request_id.make) || ''} ${(item.request_id && item.request_id.model) || ''}`.trim(),
+          },
+          seller: {
+            name: (item.dealer && item.dealer.dealership_name) || '',
+            address: [
+              item.dealer?.street_name,
+              item.dealer?.city?.name,
+              item.dealer?.state?.name,
+              item.dealer?.zipcode
+            ].filter(Boolean).join(', '),
+            phone: (item.dealer && item.dealer.phone_number) || '',
+          },
+          buyer: {
+            name: (item.buyer && item.buyer.name) || '',
+            address: (item.buyer && item.buyer.address) || '',
+            phone: (item.buyer && item.buyer.phone) || '',
+          },
+          status: 'In a Run List',
+        }));
+        setData(mapped);
+      } catch (err: any) {
+        setError(err?.response?.data?.detail || err?.message || "Failed to fetch run list.");
+        setData([]);
+      } finally {
+        setTableLoading(false);
+      }
     } catch (error) {
       showErrorToast(error, "Sending to auction");
     } finally {

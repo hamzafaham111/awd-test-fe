@@ -5,7 +5,7 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { showErrorToast, showSuccessToast } from "@/utils/errorHandler";
 import { Button, Tag, Dropdown, Menu, Card } from "antd";
-import { CheckOutlined, DeleteOutlined, DownOutlined, SettingOutlined } from "@ant-design/icons";
+import { CheckOutlined, DeleteOutlined, DownOutlined, SettingOutlined, EyeOutlined } from "@ant-design/icons";
 import ConfirmModal from "@/components/modals/ConfirmModal";
 import DataTable from "@/components/common/DataTable";
 import { getInspectionStatusLabel, getInspectionStatusColor } from "@/utils/inspectionStatusMapping";
@@ -103,6 +103,11 @@ export default function SpecialityApprovalPage() {
       render: (_: any, record: any) => {
         const menuItems = [
           {
+            key: "view",
+            label: "View",
+            icon: <EyeOutlined className="text-blue-600" />,
+          },
+          {
             key: "approve",
             label: "Approve",
             icon: <CheckOutlined className="text-green-600" />,
@@ -115,6 +120,9 @@ export default function SpecialityApprovalPage() {
         ];
 
         const handleMenuClick = (e: { key: string }) => {
+          if (e.key === 'view') {
+            router.push(`/inspection/speciality-approval/${record.id}`);
+          }
           if (e.key === 'approve') {
             setSelectedTask(record);
             setConfirmModalOpen(true);

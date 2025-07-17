@@ -4,7 +4,8 @@ import Breadcrumbs from "@/components/common/Breadcrumbs";
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { showErrorToast } from "@/utils/errorHandler";
-import { Button, Tag } from "antd";
+import { Button, Tag, Modal, Input } from "antd";
+import { EditOutlined } from "@ant-design/icons";
 
 const STATUS_MAP: Record<number, { label: string; color: string }> = {
   0: { label: 'Pending', color: 'default' },
@@ -25,6 +26,37 @@ export default function SpecialityApprovalDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const [priceModalOpen, setPriceModalOpen] = useState(false);
+  const [expectedPriceInput, setExpectedPriceInput] = useState("");
+  const [priceLoading, setPriceLoading] = useState(false);
+
+  const openPriceModal = () => {
+    setExpectedPriceInput(task.expected_price ? String(task.expected_price) : "");
+    setPriceModalOpen(true);
+  };
+  const closePriceModal = () => setPriceModalOpen(false);
+
+  const handleChangeExpectedPrice = async () => {
+    setPriceLoading(true);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      await axios.patch(
+        `${apiUrl}/inspections/api/v1/speciality-vehicle/${id}/approve/`,
+        { expected_price: expectedPriceInput },
+        { headers }
+      );
+      setPriceModalOpen(false);
+      // Refresh data
+      const res = await axios.get(`${apiUrl}/inspections/api/v1/requests/${id}/`, { headers });
+      setTask(res.data);
+    } catch (err: any) {
+      showErrorToast(err, "Change Expected Price");
+    } finally {
+      setPriceLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchTask = async () => {
@@ -34,7 +66,7 @@ export default function SpecialityApprovalDetailPage() {
         const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        const res = await axios.get(`${apiUrl}/inspections/api/v1/inspector-task/${id}/`, { headers });
+        const res = await axios.get(`${apiUrl}/inspections/api/v1/requests/${id}/`, { headers });
         setTask(res.data);
       } catch (err: any) {
         setError(err?.response?.data?.detail || err?.message || "Failed to fetch data.");
@@ -100,8 +132,54 @@ export default function SpecialityApprovalDetailPage() {
             <div className="text-gray-700">Expected reserve price</div>
             <div className="text-gray-700">Description: <span className="font-semibold">{task.description || 'N/A'}</span></div>
           </div>
-          <div className="text-3xl font-bold text-blue-900">{task.expected_price ? `$${Number(task.expected_price).toLocaleString()}` : 'N/A'}</div>
+          <div className="flex items-center gap-2">
+            <span className="text-3xl font-bold text-blue-900">{task.expected_price ? `$${Number(task.expected_price).toLocaleString()}` : 'N/A'}</span>
+            <button
+              className="ml-2 px-3 py-1 bg-sky-500 hover:bg-orange-600 text-white rounded font-semibold text-sm"
+              onClick={openPriceModal}
+            >
+              <EditOutlined />{" "}
+              Change
+            </button>
+          </div>
         </div>
+        {/* Change Expected Price Modal */}
+        <Modal
+          open={priceModalOpen}
+          onCancel={closePriceModal}
+          footer={null}
+          centered
+          title={<span className="font-bold text-lg">Change Expected Price</span>}
+          width={480}
+        >
+          <div className="flex flex-col gap-6 py-4">
+            <Input
+              type="number"
+              value={expectedPriceInput}
+              onChange={e => setExpectedPriceInput(e.target.value)}
+              className="text-2xl font-bold w-full px-4 py-3 text-center"
+              min={0}
+              prefix="$"
+              style={{ border: '1px solid #d1d5db' }}
+            />
+            <div className="flex justify-end gap-4 mt-2">
+              <button
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-8 rounded"
+                onClick={handleChangeExpectedPrice}
+                disabled={priceLoading}
+              >
+                {priceLoading ? 'Changing...' : 'Change'}
+              </button>
+              <button
+                className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-8 rounded"
+                onClick={closePriceModal}
+                disabled={priceLoading}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </Modal>
         {/* Three Columns */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* VIN/Dealership Card */}

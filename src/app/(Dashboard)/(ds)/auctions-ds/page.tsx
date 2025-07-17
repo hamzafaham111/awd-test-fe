@@ -5,202 +5,7 @@ import AuctionFiltersSidebar from "@/components/ds/AuctionFiltersSidebar";
 import AuctionCard from "@/components/ds/AuctionCard";
 import AuctionListPagination from "@/components/ds/AuctionListPagination";
 import AuctionListEmptyState from "@/components/ds/AuctionListEmptyState";
-
-const mockAuctions = [
-  {
-    image: "/images/auth-background.jpg",
-    title: "1975 Mazda Aerostar 4D SUV AWD",
-    vin: "BC5RYuHWoZtGREDT2",
-    colors: [{ color: "#eab308", label: "Yellow" }],
-    specs: [
-      { label: "Miles", value: "1,548" },
-      { label: "ENG", value: "" },
-      { label: "Cyl", value: "" },
-    ],
-    status: "Ended",
-    labelText: "Ended",
-    labelColor: "#ef4444",
-    price: 1800,
-  },
-  {
-    image: "/images/auth-background.jpg",
-    title: "1977 Hummer Millenia 4D SUV",
-    vin: "AqvPvMVGgkKVdCSw8",
-    colors: [{ color: "#eab308", label: "Yellow" }],
-    specs: [
-      { label: "Miles", value: "8,415" },
-      { label: "ENG", value: "" },
-      { label: "Cyl", value: "" },
-    ],
-    status: "Ended",
-    labelText: "Ended",
-    labelColor: "#ef4444",
-    price: 100,
-  },
-  {
-    image: "/images/auth-background.jpg",
-    title: "2017 Ford Accent 4D SUV RWD",
-    vin: "QxU0RFYnezo4s1RG",
-    colors: [{ color: "#eab308", label: "Yellow" }],
-    specs: [
-      { label: "Miles", value: "2,203" },
-      { label: "ENG", value: "" },
-      { label: "Cyl", value: "" },
-    ],
-    status: "Ended",
-    labelText: "Ended",
-    labelColor: "#ef4444",
-    price: 5000,
-  },
-  {
-    image: "/images/auth-background.jpg",
-    title: "2018 Toyota Camry SE",
-    vin: "4T1B11HK5JU123456",
-    colors: [{ color: "#f43f5e", label: "Red" }],
-    specs: [
-      { label: "Miles", value: "60,000" },
-      { label: "ENG", value: "2.5L" },
-    ],
-    status: "In Negotiation",
-    labelText: "In Negotiation",
-    labelColor: "#eab308",
-    price: 12000,
-  },
-  {
-    image: "/images/auth-background.jpg",
-    title: "2019 Chevrolet Silverado",
-    vin: "3GCUKREC1FG123456",
-    colors: [{ color: "#eab308", label: "Yellow" }],
-    specs: [
-      { label: "Miles", value: "12,000" },
-      { label: "ENG", value: "5.3L" },
-      { label: "Cyl", value: "8" },
-    ],
-    status: "Live",
-    labelText: "Active",
-    labelColor: "#22c55e",
-    price: 25000,
-  },
-  {
-    image: "/images/auth-background.jpg",
-    title: "2020 BMW X5 xDrive40i",
-    vin: "5UXCR6C08L9B12345",
-    colors: [{ color: "#2563eb", label: "Blue" }],
-    specs: [
-      { label: "Miles", value: "45,000" },
-      { label: "ENG", value: "3.0L" },
-      { label: "Cyl", value: "6" },
-    ],
-    status: "Live",
-    labelText: "Live",
-    labelColor: "#22c55e",
-    price: 32000,
-  },
-  {
-    image: "/images/auth-background.jpg",
-    title: "2016 Ford F150 Supercrew 4WD",
-    vin: "JN8AZ2NF1F9572710",
-    colors: [
-      { color: "#22c55e", label: "Green" },
-      { color: "#eab308", label: "Yellow" },
-      { color: "#f43f5e", label: "Red" },
-      { color: "#2563eb", label: "Blue" },
-    ],
-    specs: [
-      { label: "Miles", value: "114,324" },
-      { label: "ENG", value: "2.7L" },
-      { label: "Cyl", value: "6" },
-      { label: "4WD", value: "" },
-    ],
-    status: "Coming Soon",
-    labelText: "Coming Soon",
-    labelColor: "#64748b",
-    price: 18000,
-  },
-  {
-    image: "/images/auth-background.jpg",
-    title: "2017 Honda Accord LX",
-    vin: "1HGCR2F3XHA123456",
-    colors: [],
-    specs: [
-      { label: "Miles", value: "80,000" },
-    ],
-    status: "Ended",
-    labelText: "Ended",
-    labelColor: "#ef4444",
-    price: 9000,
-  },
-  {
-    image: "/images/auth-background.jpg",
-    title: "2015 Nissan Altima S",
-    vin: "1N4AL3AP7FC123456",
-    colors: [{ color: "#2563eb", label: "Blue" }],
-    specs: [
-      { label: "Miles", value: "70,000" },
-      { label: "ENG", value: "2.5L" },
-    ],
-    status: "In Negotiation",
-    labelText: "Sale Pending",
-    labelColor: "#38bdf8",
-    price: 11000,
-  },
-  {
-    image: "/images/auth-background.jpg",
-    title: "2018 Kia Sorento LX",
-    vin: "5XYPGDA30JG123456",
-    colors: [{ color: "#eab308", label: "Yellow" }],
-    specs: [
-      { label: "Miles", value: "50,000" },
-      { label: "ENG", value: "2.4L" },
-    ],
-    status: "Live",
-    labelText: "Live",
-    labelColor: "#22c55e",
-    price: 21000,
-  },
-  {
-    image: "/images/auth-background.jpg",
-    title: "2019 Audi Q5 Premium",
-    vin: "WA1BNAFY7K2123456",
-    colors: [{ color: "#f43f5e", label: "Red" }],
-    specs: [
-      { label: "Miles", value: "30,000" },
-      { label: "ENG", value: "2.0L" },
-    ],
-    status: "Ended",
-    labelText: "Ended",
-    labelColor: "#ef4444",
-    price: 27000,
-  },
-  {
-    image: "/images/auth-background.jpg",
-    title: "2016 Hyundai Elantra SE",
-    vin: "5NPDH4AE0GH123456",
-    colors: [{ color: "#22c55e", label: "Green" }],
-    specs: [
-      { label: "Miles", value: "40,000" },
-      { label: "ENG", value: "1.8L" },
-    ],
-    status: "Coming Soon",
-    labelText: "Coming Soon",
-    labelColor: "#64748b",
-    price: 13000,
-  },
-  {
-    image: "/images/auth-background.jpg",
-    title: "2017 Chevrolet Malibu LT",
-    vin: "1G1ZE5ST5HF123456",
-    colors: [{ color: "#eab308", label: "Yellow" }],
-    specs: [
-      { label: "Miles", value: "55,000" },
-      { label: "ENG", value: "1.5L" },
-    ],
-    status: "Live",
-    labelText: "Active",
-    labelColor: "#22c55e",
-    price: 19500,
-  },
-];
+import axios from "axios";
 
 const filterOptions = {
   makeModel: [
@@ -245,10 +50,95 @@ export default function DsAuctions() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [auctions, setAuctions] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    const fetchAuctions = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const response = await axios.get(`${apiUrl}/auctions/api/v1/marketplace/`, { headers });
+        // Robust mapping as in upcoming-auctions
+        const mapped = (response.data || []).map((item: any) => {
+          const req = item.request_id || item; // fallback to item if no request_id
+          const colors = Array.isArray(req.lights)
+            ? req.lights.map((color: string) => ({ color, label: color.charAt(0).toUpperCase() + color.slice(1) }))
+            : [];
+          // Map status number to label and color
+          let labelText = '';
+          let labelColor = '';
+          let statusLabel = '';
+          if (typeof item.status === 'number') {
+            switch (item.status) {
+              case 0:
+                labelText = 'Coming Soon';
+                labelColor = '#64748b';
+                statusLabel = 'Coming Soon';
+                break;
+              case 1:
+                labelText = 'Live';
+                labelColor = '#22c55e';
+                statusLabel = 'Live';
+                break;
+              case 2:
+                labelText = 'In Negotiation';
+                labelColor = '#eab308';
+                statusLabel = 'In Negotiation';
+                break;
+              case 3:
+                labelText = 'Ended';
+                labelColor = '#ef4444';
+                statusLabel = 'Ended';
+                break;
+              default:
+                labelText = 'Unknown';
+                labelColor = '#64748b';
+                statusLabel = 'Unknown';
+            }
+          } else if (typeof item.status === 'string') {
+            labelText = item.status;
+            labelColor = '#64748b';
+            statusLabel = item.status;
+          }
+          // Helper to replace empty/undefined/null with '-'
+          const safe = (v: any) => v === undefined || v === null || v === '' ? '-' : v;
+          return {
+            image: req.image || "/images/auth-background.jpg",
+            title: safe(`${req.year || ''} ${req.make || ''} ${req.model || ''}`.trim()),
+            vin: safe(req.vin),
+            colors,
+            specs: [
+              { label: "Miles", value: safe(req.odometer) },
+              { label: "ENG", value: safe(req.engine) },
+              { label: "Cyl", value: safe(req.cylinders) },
+              { label: "Transmission", value: safe(req.transmission) },
+            ],
+            status: safe(statusLabel),
+            labelText: safe(labelText),
+            labelColor: labelColor || '#64748b',
+            price: safe(req.expected_price),
+            id: item.id || req.id,
+          };
+        });
+        setAuctions(mapped);
+      } catch (err: any) {
+        setError(err?.response?.data?.detail || err?.message || "Failed to fetch auctions.");
+        setAuctions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAuctions();
+  }, []);
 
   // Filtering logic
   const filteredAuctions = useMemo(() => {
-    let data = mockAuctions;
+    let data = auctions;
     if (search.trim()) {
       data = data.filter(a => a.title.toLowerCase().includes(search.toLowerCase()));
     }
@@ -257,7 +147,7 @@ export default function DsAuctions() {
     }
     // (Add more filter logic as needed)
     return data;
-  }, [search, filters]);
+  }, [search, filters, auctions]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredAuctions.length / pageSize);
@@ -292,11 +182,15 @@ export default function DsAuctions() {
        
         {/* Auction List */}
         <div className="flex-1 flex flex-col gap-4">
-          {pagedAuctions.length === 0 ? (
+          {loading ? (
+            <p>Loading auctions...</p>
+          ) : error ? (
+            <p className="text-red-500">{error}</p>
+          ) : pagedAuctions.length === 0 ? (
             <AuctionListEmptyState />
           ) : (
             pagedAuctions.map((auction, idx) => (
-              <AuctionCard key={idx} {...auction} />
+              <AuctionCard key={idx} {...auction} routePath={`/auctions-ds/${auction.id}`} />
             ))
           )}
           <AuctionListPagination

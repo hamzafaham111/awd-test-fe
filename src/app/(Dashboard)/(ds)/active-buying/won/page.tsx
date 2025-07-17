@@ -1,10 +1,11 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DataTable from "@/components/common/DataTable";
 import AuctionSearchBar from "@/components/ds/AuctionSearchBar";
 import { Tabs } from "antd";
 import { motion } from "framer-motion";
 import { CheckCircleTwoTone, DownOutlined, RightOutlined } from "@ant-design/icons";
+import axios from "axios";
 
 // --- Types ---
 type WonBid = {
@@ -17,21 +18,6 @@ type WonBid = {
   reserved: boolean;
   status: string;
 };
-
-// --- Mock Data ---
-const initialData: WonBid[] = [
-  {
-    key: "1",
-    vin: "ngVIN",
-    auctionId: "1501193135",
-    vehicle: "Ford F150 Supercrew 4WD",
-    wonDate: "03/06/2025",
-    bidPrice: 876,
-    reserved: true,
-    status: "Waiting for Buyer Confirmation",
-  },
-  // ...add more rows as needed
-];
 
 // --- Tab Components ---
 function ConfirmationTab() {
@@ -172,8 +158,45 @@ function ExpandableRowContent({ bid }: { bid: WonBid }) {
 // --- Main Page ---
 export default function DsActiveBuyingWon() {
   const [search, setSearch] = useState("");
-  const [data] = useState(initialData);
+  const [data, setData] = useState<WonBid[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const response = await axios.get(`${apiUrl}/auctions/api/v1/buying-won/`, { headers });
+        
+        // Map API response to table data shape
+        const mapped = (response.data || []).map((item: any, index: number) => {
+          const req = item.request_id || {};
+          return {
+            key: item.id || index + 1,
+            vin: req.vin ? req.vin.slice(-6) : '-',
+            auctionId: item.auction_id || item.id || '',
+            vehicle: `${req.year || ''} ${req.make || ''} ${req.model || ''}`.trim() || 'Vehicle',
+            wonDate: item.won_date ? new Date(item.won_date).toLocaleDateString() : item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A',
+            bidPrice: item.bid_price || item.winning_bid || 0,
+            reserved: item.reserved_price ? true : false,
+            status: item.status === 1 ? 'Waiting for Buyer Confirmation' : item.status === 2 ? 'Payment Pending' : item.status === 3 ? 'Completed' : 'Pending',
+          };
+        });
+        setData(mapped);
+      } catch (err: any) {
+        setError(err?.response?.data?.detail || err?.message || "Failed to fetch won buying data.");
+        setData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const filteredData = data.filter(row =>
     row.vin.toLowerCase().includes(search.toLowerCase()) ||
@@ -235,6 +258,24 @@ export default function DsActiveBuyingWon() {
       render: (val: string) => <span className="font-semibold text-gray-500 whitespace-pre-line">{val}</span>,
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <AuctionSearchBar value={search} onChange={setSearch} onSearch={() => {}} />
+        <div className="text-center py-8 text-gray-500">Loading won buying data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <AuctionSearchBar value={search} onChange={setSearch} onSearch={() => {}} />
+        <div className="text-center py-8 text-red-500">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">

@@ -14,6 +14,7 @@ interface AuctionCardProps {
     labelColor?: string;
     price?: string | number;
     id?: string | number;
+    routePath?: string;
 }
 
 const statusColors: Record<string, string> = {
@@ -23,7 +24,7 @@ const statusColors: Record<string, string> = {
     "Ended": "bg-red-100 text-red-700",
 };
 
-export default function AuctionCard({ image, title, vin, colors = [], specs = [], status, onBuyNow, labelText, labelColor, price, id }: AuctionCardProps) {
+export default function AuctionCard({ image, title, vin, colors = [], specs = [], status, onBuyNow, labelText, labelColor, price, id, routePath }: AuctionCardProps) {
     const miles = specs.find(s => s.label.toLowerCase().includes('mile'))?.value;
     const router = useRouter();
     return (
@@ -37,7 +38,7 @@ export default function AuctionCard({ image, title, vin, colors = [], specs = []
                         {id ? (
                             <span
                                 className="cursor-pointer text-sky-700 hover:underline"
-                                onClick={() => router.push(`/upcoming-auctions/${id}`)}
+                                onClick={() => router.push(routePath || `/upcoming-auctions/${id}`)}
                             >
                                 {title}
                             </span>
