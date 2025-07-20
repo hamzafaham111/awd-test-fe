@@ -78,7 +78,8 @@ export default function DsUpcomingAuctions() {
               { label: "Cyl", value: req.cylinders || '' },
               { label: "Transmission", value: req.transmission || '' },
             ],
-            status: item.status === 0 ? "Coming Soon" : item.status === 1 ? "Live" : item.status === 2 ? "In Negotiation" : item.status === 3 ? "Ended" : "Unknown",
+            status: "Coming Soon",
+            labelText: "Coming Soon",
             id: item.id, // Assuming item.id is available from the API
           };
         });
@@ -154,14 +155,7 @@ export default function DsUpcomingAuctions() {
               <AuctionCard
                 key={idx}
                 {...auction}
-                titleElement={
-                  <span
-                    className="cursor-pointer text-sky-700 hover:underline"
-                    onClick={() => router.push(`/upcoming-auctions/${auction.id}`)}
-                  >
-                    {auction.title}
-                  </span>
-                }
+                routePath={`/upcoming-auctions/${auction.id}`}
               />
             ))
           )}

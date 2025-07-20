@@ -5,9 +5,10 @@ interface OfferNowModalProps {
   open: boolean;
   onCancel: () => void;
   onSubmit: (amount: number) => void;
+  loading?: boolean;
 }
 
-const OfferNowModal: React.FC<OfferNowModalProps> = ({ open, onCancel, onSubmit }) => {
+const OfferNowModal: React.FC<OfferNowModalProps> = ({ open, onCancel, onSubmit, loading = false }) => {
   const [amount, setAmount] = useState(100);
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -16,7 +17,7 @@ const OfferNowModal: React.FC<OfferNowModalProps> = ({ open, onCancel, onSubmit 
   };
 
   const handleSubmit = () => {
-    if (amount > 0) onSubmit(amount);
+    if (amount > 0 && !loading) onSubmit(amount);
   };
 
   return (
@@ -45,13 +46,16 @@ const OfferNowModal: React.FC<OfferNowModalProps> = ({ open, onCancel, onSubmit 
             onChange={handleInput}
             className="text-3xl font-bold border-b-2 border-blue-500 outline-none w-32 text-center bg-transparent"
             style={{ appearance: 'textfield' }}
+            disabled={loading}
           />
         </div>
         <button
-          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-8 py-2 rounded text-lg"
+          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-8 py-2 rounded text-lg flex items-center justify-center"
           onClick={handleSubmit}
+          disabled={loading}
         >
-          Place Offer
+          {loading ? <span className="loader mr-2"></span> : null}
+          {loading ? 'Placing...' : 'Place Offer'}
         </button>
       </div>
     </Modal>

@@ -27,6 +27,13 @@ const statusColors: Record<string, string> = {
 export default function AuctionCard({ image, title, vin, colors = [], specs = [], status, onBuyNow, labelText, labelColor, price, id, routePath }: AuctionCardProps) {
     const miles = specs.find(s => s.label.toLowerCase().includes('mile'))?.value;
     const router = useRouter();
+    
+    const handleTitleClick = () => {
+        if (routePath && id) {
+            router.push(`${routePath}`);
+        }
+    };
+    
     return (
         <div className="flex flex-col md:flex-row bg-white rounded-xl shadow-md p-4 gap-4 w-full max-w-3xl min-h-[160px] relative">
             <div className="w-full md:w-32 h-32 md:h-24 flex-shrink-0 relative rounded-lg overflow-hidden mx-auto md:mx-0">
@@ -34,17 +41,11 @@ export default function AuctionCard({ image, title, vin, colors = [], specs = []
             </div>
             <div className="flex-1 flex flex-col gap-1">
                 <div className="flex flex-row justify-between items-start">
-                    <div className="font-bold text-lg text-gray-900 truncate">
-                        {id ? (
-                            <span
-                                className="cursor-pointer text-sky-700 hover:underline"
-                                onClick={() => router.push(routePath || `/upcoming-auctions/${id}`)}
-                            >
-                                {title}
-                            </span>
-                        ) : (
-                            title
-                        )}
+                    <div 
+                        className={`font-bold text-lg truncate ${routePath && id ? 'text-blue-600 cursor-pointer hover:text-blue-800' : 'text-gray-900'}`}
+                        onClick={handleTitleClick}
+                    >
+                        {title}
                     </div>
                     <div className="flex flex-col items-end min-w-[90px]">
                         {labelText ? (
@@ -78,9 +79,6 @@ export default function AuctionCard({ image, title, vin, colors = [], specs = []
                     {price && <div className="text-lg font-bold text-gray-800">$ {price}</div>}
                     {status && (
                         <div className={`rounded-lg px-4 py-1 text-sm font-semibold ${statusColors[status] || 'bg-gray-100 text-gray-500'}`}>{labelText || status}</div>
-                    )}
-                    {status === 'Live' && (
-                        <button onClick={onBuyNow} className="bg-green-600 hover:bg-green-700 text-white rounded px-4 py-1 text-sm font-semibold shadow">Buy Now</button>
                     )}
                 </div>
             </div>

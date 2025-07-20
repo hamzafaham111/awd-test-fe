@@ -207,17 +207,6 @@ export default function DsActiveBuyingWon() {
   // Columns moved inside the component to access expandedRowKeys
   const columns = [
     {
-      title: "",
-      dataIndex: "expand",
-      key: "expand",
-      width: 40,
-      render: (_: any, record: WonBid) => (
-        <span className="flex items-center justify-center">
-          {expandedRowKeys.includes(record.key) ? <DownOutlined /> : <RightOutlined />}
-        </span>
-      ),
-    },
-    {
       title: "VIN(last six)",
       dataIndex: "vin",
       key: "vin",

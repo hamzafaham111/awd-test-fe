@@ -1,130 +1,8 @@
 "use client"
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import DataTable from "@/components/common/DataTable";
 import AuctionSearchBar from "@/components/ds/AuctionSearchBar";
-
-const soldAuctions = [
-  {
-    key: 1,
-    vin: "2000",
-    auctionId: "2842947922",
-    vehicle: "Honda 2000 2",
-    yourBid: 1000,
-    soldFor: 0,
-    status: "Pending",
-    image: "/images/auth-background.jpg",
-  },
-  {
-    key: 2,
-    vin: "31108",
-    auctionId: "3046438778",
-    vehicle: "1234 2023 trimnghghg",
-    yourBid: 800,
-    soldFor: 0,
-    status: "Pending",
-    image: "/images/auth-background.jpg",
-  },
-  {
-    key: 3,
-    vin: "X4uL8",
-    auctionId: "1909846778",
-    vehicle: "Honda Enzo Ferrari 4D SAV 3.0i",
-    yourBid: 850,
-    soldFor: 0,
-    status: "Pending",
-    image: "/images/auth-background.jpg",
-  },
-  {
-    key: 4,
-    vin: "A1B2C3",
-    auctionId: "1234567890",
-    vehicle: "Toyota Camry 2021 SE",
-    yourBid: 1200,
-    soldFor: 1200,
-    status: "Sold",
-    image: "/images/auth-background.jpg",
-  },
-  {
-    key: 5,
-    vin: "D4E5F6",
-    auctionId: "2345678901",
-    vehicle: "Ford Mustang 2019 GT",
-    yourBid: 1500,
-    soldFor: 1500,
-    status: "Sold",
-    image: "/images/auth-background.jpg",
-  },
-  {
-    key: 6,
-    vin: "G7H8I9",
-    auctionId: "3456789012",
-    vehicle: "Chevrolet Malibu 2018 LT",
-    yourBid: 900,
-    soldFor: 0,
-    status: "Pending",
-    image: "/images/auth-background.jpg",
-  },
-  {
-    key: 7,
-    vin: "J1K2L3",
-    auctionId: "4567890123",
-    vehicle: "BMW X5 2020 xDrive",
-    yourBid: 2000,
-    soldFor: 2000,
-    status: "Sold",
-    image: "/images/auth-background.jpg",
-  },
-  {
-    key: 8,
-    vin: "M4N5O6",
-    auctionId: "5678901234",
-    vehicle: "Audi Q7 2017 Premium",
-    yourBid: 1700,
-    soldFor: 0,
-    status: "Pending",
-    image: "/images/auth-background.jpg",
-  },
-  {
-    key: 9,
-    vin: "P7Q8R9",
-    auctionId: "6789012345",
-    vehicle: "Mercedes C300 2016",
-    yourBid: 1100,
-    soldFor: 0,
-    status: "Pending",
-    image: "/images/auth-background.jpg",
-  },
-  {
-    key: 10,
-    vin: "S1T2U3",
-    auctionId: "7890123456",
-    vehicle: "Hyundai Sonata 2015 GLS",
-    yourBid: 800,
-    soldFor: 0,
-    status: "Pending",
-    image: "/images/auth-background.jpg",
-  },
-  {
-    key: 11,
-    vin: "V4W5X6",
-    auctionId: "8901234567",
-    vehicle: "Kia Optima 2014 LX",
-    yourBid: 700,
-    soldFor: 0,
-    status: "Pending",
-    image: "/images/auth-background.jpg",
-  },
-  {
-    key: 12,
-    vin: "Y7Z8A9",
-    auctionId: "9012345678",
-    vehicle: "Nissan Altima 2013 S",
-    yourBid: 600,
-    soldFor: 0,
-    status: "Pending",
-    image: "/images/auth-background.jpg",
-  },
-];
+import axios from "axios";
 
 const columns = [
   {
@@ -159,28 +37,125 @@ const columns = [
     title: "Your Bid/Offer",
     dataIndex: "yourBid",
     key: "yourBid",
-    render: (val: number) => <span className="font-bold">$ {val.toLocaleString()}</span>,
+    render: (val: number) => <span className="font-bold">$ {val ? val.toLocaleString() : '-'}</span>,
     width: 120,
   },
   {
     title: "Sold For",
     dataIndex: "soldFor",
     key: "soldFor",
-    render: (val: number) => <span className="font-bold">$ {val.toLocaleString()}</span>,
+    render: (val: number) => <span className="font-bold">$ {val ? val.toLocaleString() : '-'}</span>,
     width: 120,
   },
   {
     title: "Status",
     dataIndex: "status",
     key: "status",
-    render: (val: string) => <span className="font-semibold">{val}</span>,
+    render: (val: any) => {
+      let label = val;
+      let color = "gray";
+      if (val === 21 || val === "21") {
+        label = "Pending";
+        color = "orange";
+      } else if (val === 5 || val === "5") {
+        label = "Sold";
+        color = "green";
+      }
+      return (
+        <span
+          className={`font-semibold px-3 py-1 rounded`}
+          style={{
+            background:
+              color === "orange"
+                ? "#fbbf24"
+                : color === "green"
+                ? "#bbf7d0"
+                : "#f3f4f6",
+            color:
+              color === "orange"
+                ? "#b45309"
+                : color === "green"
+                ? "#166534"
+                : "#6b7280",
+          }}
+        >
+          {label}
+        </span>
+      );
+    },
     width: 100,
   },
 ];
 
 export default function DsEndedAuctionsSold() {
   const [search, setSearch] = useState("");
-  const [data, setData] = useState(soldAuctions);
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchSoldAuctions = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axios.get(`${apiUrl}/auctions/api/v1/sold/`, { headers });
+      const mapped = (response.data || []).map((item: any, idx: number) => {
+        const req = item.request_id || {};
+        // Determine yourBid/offer: max of offers.amount and bids.bid
+        let offerAmount = null;
+        if (Array.isArray(item.offers) && item.offers.length > 0) {
+          offerAmount = Math.max(...item.offers.map((o: any) => Number(o.amount) || 0));
+        } else if (item.offers && typeof item.offers === 'object' && item.offers.amount) {
+          offerAmount = Number(item.offers.amount);
+        }
+        let bidAmount = null;
+        if (Array.isArray(item.bids) && item.bids.length > 0) {
+          bidAmount = Math.max(...item.bids.map((b: any) => Number(b.bid) || 0));
+        } else if (item.bids && typeof item.bids === 'object' && item.bids.bid) {
+          bidAmount = Number(item.bids.bid);
+        }
+        let yourBid = null;
+        if (offerAmount !== null && bidAmount !== null) {
+          yourBid = Math.max(offerAmount, bidAmount);
+        } else if (offerAmount !== null) {
+          yourBid = offerAmount;
+        } else if (bidAmount !== null) {
+          yourBid = bidAmount;
+        } else {
+          yourBid = null;
+        }
+        // Sold For: from won_bid_id.bid if exists
+        let soldFor = null;
+        if (item.won_bid_id && typeof item.won_bid_id === 'object' && item.won_bid_id.bid) {
+          soldFor = item.won_bid_id.bid;
+        } else {
+          soldFor = null;
+        }
+        return {
+          key: item.id || idx + 1,
+          vin: req.vin ? String(req.vin).slice(-6) : '-',
+          auctionId: req.auction_id || item.id || '',
+          vehicle: `${req.year || ''} ${req.make || ''} ${req.model || ''}`.trim() || 'Vehicle',
+          yourBid: yourBid,
+          soldFor: soldFor,
+          status: req.status || item.status || '-',
+          image: "/images/auth-background.jpg",
+        };
+      });
+      setData(mapped);
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || err?.message || "Failed to fetch sold auctions.");
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSoldAuctions();
+  }, [fetchSoldAuctions]);
 
   // Optionally filter data by search (e.g., VIN, auctionId, vehicle)
   const filteredData = data.filter(row =>
@@ -188,6 +163,24 @@ export default function DsEndedAuctionsSold() {
     row.auctionId.toLowerCase().includes(search.toLowerCase()) ||
     row.vehicle.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <AuctionSearchBar value={search} onChange={setSearch} onSearch={() => {}} />
+        <div className="text-center py-8 text-gray-500">Loading sold auctions...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <AuctionSearchBar value={search} onChange={setSearch} onSearch={() => {}} />
+        <div className="text-center py-8 text-red-500">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="">

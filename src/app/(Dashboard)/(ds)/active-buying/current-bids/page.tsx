@@ -86,14 +86,14 @@ function ExpandedRow({ record, onNewOffer }: { record: any; onNewOffer: () => vo
           </tbody>
         </table>
       </div>
-      <div className="flex justify-center mt-6">
+      {/* <div className="flex justify-center mt-6">
         <button
           className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-8 py-2 rounded text-lg"
           onClick={onNewOffer}
         >
           New Offer
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }
