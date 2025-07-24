@@ -1,4 +1,4 @@
-import { Modal } from "antd";
+import { Modal, Input } from "antd";
 import React, { useState } from "react";
 
 interface SendToAuctionModalProps {
@@ -18,6 +18,7 @@ export default function SendToAuctionModal({
   const [auctionType, setAuctionType] = useState("bring_money");
   const [auctionTiming, setAuctionTiming] = useState("10_minutes");
   const [creditUse, setCreditUse] = useState("inspection");
+  const [editableReservePrice, setEditableReservePrice] = useState(vehicleData.reserve_price || 0);
 
   // Destructure and fallback
   const {
@@ -40,7 +41,14 @@ export default function SendToAuctionModal({
   const vehicleCredit = credit || 0;
 
   const handleSend = () => {
-    onOk({ auctionType, auctionTiming, creditUse, vehicleData });
+    const payload = {
+      request_id: vehicleData.id,
+      reserve_price: Number(editableReservePrice),
+      auction_type: auctionType === "bring_money" ? 1 : 2,
+      credit_use_for_inspection_fee: creditUse === "inspection" ? 1 : 0,
+      credit_use_for_selling_fee: creditUse === "selling" ? 1 : 0
+    };
+    onOk(payload);
   };
 
   return (
@@ -77,7 +85,16 @@ export default function SendToAuctionModal({
       <div className="px-8 pt-6 pb-0 bg-white">
         {/* Reserve Price */}
         <div className="font-bold text-xs text-gray-700 mb-2 mt-2 tracking-wider">RESERVE PRICE</div>
-        <div className="mb-2 text-lg font-bold text-sky-700">${Number(reservePrice).toLocaleString()}</div>
+        <div className="mb-2">
+          <Input
+            size="large"
+            value={editableReservePrice}
+            onChange={(e) => setEditableReservePrice(e.target.value.replace(/[^0-9]/g, ''))}
+            className="text-lg font-bold text-sky-700"
+            style={{ fontSize: '18px', fontWeight: 'bold', color: '#0369a1' }}
+            prefix="$"
+          />
+        </div>
         <hr className="mb-6" />
         {/* Auction Type */}
         <div className="font-semibold text-gray-700 mb-2">Auction Type</div>
@@ -133,8 +150,26 @@ export default function SendToAuctionModal({
             <span className="font-bold text-gray-700 text-base">${vehicleCredit?.toFixed(2) || "0.00"}</span>
           </div>
           <div className="flex gap-4">
-            <span className="flex-1 border border-gray-300 rounded-lg px-4 py-3 font-bold text-gray-900 bg-white select-none cursor-default text-center">For Inspection Fee</span>
-            <span className="flex-1 border border-gray-300 rounded-lg px-4 py-3 font-bold text-gray-900 bg-white select-none cursor-default text-center">For Selling Fee</span>
+            <div
+              className={`flex-1 border rounded-lg px-4 py-3 font-bold text-center cursor-pointer ${
+                creditUse === "inspection" 
+                  ? "border-sky-500 bg-sky-50 text-sky-700" 
+                  : "border-gray-300 bg-white text-gray-900"
+              }`}
+              onClick={() => setCreditUse("inspection")}
+            >
+              For Inspection Fee
+            </div>
+            <div
+              className={`flex-1 border rounded-lg px-4 py-3 font-bold text-center cursor-pointer ${
+                creditUse === "selling" 
+                  ? "border-sky-500 bg-sky-50 text-sky-700" 
+                  : "border-gray-300 bg-white text-gray-900"
+              }`}
+              onClick={() => setCreditUse("selling")}
+            >
+              For Selling Fee
+            </div>
           </div>
         </div>
         {/* Footer */}

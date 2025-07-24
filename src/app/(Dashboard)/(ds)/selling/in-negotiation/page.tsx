@@ -86,6 +86,12 @@ export default function DsSellingInNegotiation() {
         // Map API response to table data shape
         const mapped = (response.data || []).map((item: any, index: number) => {
           const req = item.request_id || {};
+          
+          // Debug logging to check the data structure
+          console.log('Selling In Negotiation API Item:', item);
+          console.log('Last Bid ID:', item.last_bid_id);
+          console.log('Bid Amount:', item.last_bid_id?.bid);
+          
           const bidPrice = item.last_bid_id?.bid || item.bid_price || item.current_bid || 0;
           return {
             key: item.id || index + 1,

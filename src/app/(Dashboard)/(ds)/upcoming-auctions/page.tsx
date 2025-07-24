@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import AuctionSearchBar from "@/components/ds/AuctionSearchBar";
 import AuctionFiltersSidebar from "@/components/ds/AuctionFiltersSidebar";
-import AuctionCard from "@/components/ds/AuctionCard";
+import UpcomingAuctionCard from "@/components/ds/UpcomingAuctionCard";
 import AuctionListPagination from "@/components/ds/AuctionListPagination";
 import AuctionListEmptyState from "@/components/ds/AuctionListEmptyState";
 import axios from "axios";
@@ -152,7 +152,7 @@ export default function DsUpcomingAuctions() {
             <AuctionListEmptyState />
           ) : (
             pagedAuctions.map((auction, idx) => (
-              <AuctionCard
+              <UpcomingAuctionCard
                 key={idx}
                 {...auction}
                 routePath={`/upcoming-auctions/${auction.id}`}

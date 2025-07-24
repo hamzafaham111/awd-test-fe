@@ -5,20 +5,21 @@ import { Modal, Button, Input } from "antd";
 import axios from "axios";
 import { showErrorToast, showSuccessToast, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
 
-interface AuctionCardProps {
+interface AuctionListCardProps {
     image: string;
     title: string;
     vin?: string;
     colors?: { color: string; label: string }[];
     specs?: { label: string; value: string }[];
     status: string;
-    onBuyNow?: () => void;
     labelText?: string;
     labelColor?: string;
     price?: string | number;
     id?: string | number;
+    auctionId?: string | number;
     routePath?: string;
-    hasBids?: boolean; // New prop to determine if there are existing bids
+    hasBids?: boolean;
+    currentBid?: number | null;
 }
 
 const statusColors: Record<string, string> = {
@@ -28,7 +29,22 @@ const statusColors: Record<string, string> = {
     "Ended": "bg-red-100 text-red-700",
 };
 
-export default function AuctionCard({ image, title, vin, colors = [], specs = [], status, onBuyNow, labelText, labelColor, price, id, routePath, hasBids = false }: AuctionCardProps) {
+export default function AuctionListCard({ 
+    image, 
+    title, 
+    vin, 
+    colors = [], 
+    specs = [], 
+    status, 
+    labelText, 
+    labelColor, 
+    price, 
+    id, 
+    auctionId,
+    routePath, 
+    hasBids = false,
+    currentBid = null
+}: AuctionListCardProps) {
     const miles = specs.find(s => s.label.toLowerCase().includes('mile'))?.value;
     const router = useRouter();
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -45,11 +61,42 @@ export default function AuctionCard({ image, title, vin, colors = [], specs = []
         setIsModalOpen(true);
     };
 
-    const handlePlaceBid = () => {
-        // Handle bid placement logic here
-        console.log("Placing bid:", bidAmount);
-        setIsModalOpen(false);
-        setBidAmount("0.00");
+    const handlePlaceBid = async () => {
+        // Use auctionId if available, otherwise fall back to id
+        const auctionIdToUse = auctionId || id;
+        
+        if (!auctionIdToUse) {
+            showErrorToast({ message: "Auction ID is required" }, "Bid placement");
+            return;
+        }
+
+        const bidValue = parseFloat(bidAmount);
+        if (isNaN(bidValue) || bidValue <= 0) {
+            showErrorToast({ message: "Please enter a valid bid amount" }, "Bid placement");
+            return;
+        }
+
+        setPlacingBid(true);
+        try {
+            const token = typeof window !== "undefined" ? localStorage.getItem("access") : null;
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+            const payload = {
+                auction_id: auctionIdToUse,
+                bid: bidValue
+            };
+
+            await axios.post(`${apiUrl}/auctions/api/v1/create-bid/`, payload, { headers });
+            
+            showSuccessToast(COMMON_SUCCESS_MESSAGES.CREATED, "Bid");
+            setIsModalOpen(false);
+            setBidAmount("0.00");
+        } catch (error: any) {
+            showErrorToast(error, "Bid placement");
+        } finally {
+            setPlacingBid(false);
+        }
     };
 
     const incrementBid = () => {
@@ -60,36 +107,34 @@ export default function AuctionCard({ image, title, vin, colors = [], specs = []
     return (
         <>
             <div className="flex flex-col md:flex-row bg-white rounded-xl shadow-md p-4 gap-4 w-full max-w-3xl min-h-[160px] relative">
-                {/* Timer in top right corner */}
-                <div className="absolute top-4 right-4 flex items-center gap-1 text-sm font-semibold text-gray-600">
-                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
-                        <polyline points="12,6 12,12 16,14" strokeWidth="2"/>
-                    </svg>
-                    10:00
-                </div>
-
+                {/* Left section - Image */}
                 <div className="w-full md:w-32 h-32 md:h-24 flex-shrink-0 relative rounded-lg overflow-hidden mx-auto md:mx-0">
                     <Image src={image} alt={title} fill className="object-cover" />
                 </div>
-                <div className="flex-1 flex flex-col gap-1">
-                    <div className="flex flex-row justify-between items-start">
-                        <div 
-                            className={`font-bold text-lg truncate ${routePath && id ? 'text-blue-600 cursor-pointer hover:text-blue-800' : 'text-gray-900'}`}
-                            onClick={handleTitleClick}
-                        >
-                            {title}
-                        </div>
-                        <div className="flex flex-col items-end min-w-[90px]">
-                            {labelText ? (
-                                <span className="text-xs font-bold px-2 py-1 rounded" style={{ color: labelColor || '#ef4444' }}>{labelText}</span>
-                            ) : (
-                                <span className="h-5 block" />
-                            )}
-                            {miles && <span className="text-xs text-gray-400 font-semibold mt-1">{miles} Miles</span>}
-                        </div>
+                
+                {/* Right section - Details */}
+                <div className="flex-1 flex flex-col gap-1 relative">
+                    {/* Timer in top right corner of the right section */}
+                    <div className="absolute top-0 right-0 flex items-center gap-1 text-sm font-semibold text-sky-600">
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <circle cx="12" cy="12" r="10" strokeWidth="2"/>
+                            <polyline points="12,6 12,12 16,14" strokeWidth="2"/>
+                        </svg>
+                        10:00
                     </div>
+                    
+                    {/* Title */}
+                    <div 
+                        className={`font-bold text-lg truncate ${routePath && id ? 'text-blue-600 cursor-pointer hover:text-blue-800' : 'text-gray-900'}`}
+                        onClick={handleTitleClick}
+                    >
+                        {title}
+                    </div>
+                    
+                    {/* VIN/ID */}
                     {vin && <div className="text-xs text-gray-500 font-mono mb-1">{vin}</div>}
+                    
+                    {/* Colors */}
                     {colors.length > 0 && (
                         <div className="flex flex-row gap-3 items-center mb-1">
                             {colors.map((c, i) => (
@@ -100,20 +145,29 @@ export default function AuctionCard({ image, title, vin, colors = [], specs = []
                             ))}
                         </div>
                     )}
+                    
+                    {/* Specs */}
                     {specs.length > 0 && (
                         <div className="flex flex-row flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400 mb-2">
-                            {specs.filter(s => !s.label.toLowerCase().includes('mile')).map((s, i) => (
+                            {specs.map((s, i) => (
                                 <span key={i}>{s.value} {s.label}</span>
                             ))}
                         </div>
                     )}
+                    
+                    {/* Mileage below timer */}
+                    {miles && <div className="text-xs text-gray-400 font-semibold mt-1">{miles} Miles</div>}
+                    
                     <div className="flex-1" />
+                    
+                    {/* Price and Status */}
                     <div className="flex flex-row items-center gap-4 mt-2 w-full">
                         {price && <div className="text-lg font-bold text-gray-800">$ {price}</div>}
-                        {status && (
+                        {/* {status && (
                             <div className={`rounded-lg px-4 py-1 text-sm font-semibold ${statusColors[status] || 'bg-gray-100 text-gray-500'}`}>{labelText || status}</div>
-                        )}
+                        )} */}
                     </div>
+                    
                     {/* Action buttons */}
                     <div className="flex flex-row gap-2 mt-2">
                         <Button 
@@ -121,12 +175,12 @@ export default function AuctionCard({ image, title, vin, colors = [], specs = []
                             className="bg-sky-600 hover:bg-sky-700"
                             onClick={handleBuyClick}
                         >
-                            {hasBids ? "Bid Now" : "Place starting bid"}
+                            {hasBids ? "Bid Now" : "Place the opening Bid"}
                         </Button>
-                        <Button className="border-sky-600 text-sky-600 hover:bg-sky-50">
+                        <Button className="border-gray-300 text-gray-600 hover:bg-gray-50">
                             Set Proxy
                         </Button>
-                        <Button className="border-sky-600 text-sky-600 hover:bg-sky-50">
+                        <Button className="border-gray-300 text-gray-600 hover:bg-gray-50">
                             Buy Now
                         </Button>
                     </div>
@@ -164,7 +218,15 @@ export default function AuctionCard({ image, title, vin, colors = [], specs = []
                     
                     {/* Bid Information */}
                     <div className="mb-6">
-                        <div className="text-lg font-semibold text-gray-900 mb-4">Bid Start From: $ 0.00</div>
+                        {currentBid ? (
+                            <div className="text-lg font-semibold text-gray-900 mb-4">
+                                Current Bid: $ {currentBid.toLocaleString()}
+                            </div>
+                        ) : (
+                            <div className="text-lg font-semibold text-gray-900 mb-4">
+                                Bid Start From: $ 0.00
+                            </div>
+                        )}
                         
                         {/* Bid Amount Input */}
                         <div className="flex items-center gap-3 mb-6">
@@ -175,6 +237,7 @@ export default function AuctionCard({ image, title, vin, colors = [], specs = []
                                     onChange={(e) => setBidAmount(e.target.value.replace(/[^0-9.]/g, ''))}
                                     className="text-2xl font-bold text-sky-600 text-center"
                                     style={{ fontSize: '24px', fontWeight: 'bold', color: '#0284c7' }}
+                                    placeholder={currentBid ? `Enter amount higher than $${currentBid}` : "Enter bid amount"}
                                 />
                             </div>
                             <Button 
@@ -193,6 +256,8 @@ export default function AuctionCard({ image, title, vin, colors = [], specs = []
                         size="large"
                         className="bg-sky-600 hover:bg-sky-700 w-full h-12 text-lg font-semibold"
                         onClick={handlePlaceBid}
+                        loading={placingBid}
+                        disabled={placingBid}
                     >
                         Place Now
                     </Button>

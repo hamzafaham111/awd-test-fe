@@ -2,7 +2,7 @@
 import DataTable from "@/components/common/DataTable";
 import Link from "next/link";
 import { Dropdown } from "antd";
-import { EyeOutlined, CheckCircleOutlined, DownOutlined } from "@ant-design/icons";
+import { EyeOutlined, CheckCircleOutlined, DownOutlined, CloseOutlined, CheckOutlined } from "@ant-design/icons";
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { showErrorToast, showSuccessToast } from "@/utils/errorHandler";
@@ -59,6 +59,16 @@ const columns = [
           key: "view",
           icon: <EyeOutlined />,
           label: <Link href={`/tasks/${record.id}`}>View</Link>,
+        },
+        {
+          key: "accept",
+          icon: <CheckOutlined />,
+          label: <span>Accept Inspection</span>,
+        },
+        {
+          key: "reject",
+          icon: <CloseOutlined />,
+          label: <span>Reject Inspection</span>,
         },
       ];
       if (record.status === "Inspection started") {

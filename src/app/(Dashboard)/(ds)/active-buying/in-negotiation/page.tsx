@@ -73,7 +73,7 @@ export default function DsActiveBuyingInNegotiation() {
             vin: req.vin ? req.vin.slice(-6) : '-',
             auctionId: item.auction_id || item.id || '',
             vehicle: `${req.year || ''} ${req.make || ''} ${req.model || ''}`.trim() || 'Vehicle',
-            bidPrice: item.bid_price || item.current_bid || 0,
+            bidPrice: item.last_bid_id?.bid || 0,
             status: item.status === 1 ? 'Active' : item.status === 2 ? 'In Negotiation' : item.status === 3 ? 'Ended' : 'Pending',
             image: req.image || "/images/auth-background.jpg",
           };

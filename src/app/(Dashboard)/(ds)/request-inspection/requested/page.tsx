@@ -164,15 +164,8 @@ const DsRequestInspectionPage = () => {
     };
 
     // Handler for SendToAuctionModal's onOk
-    const handleSendToAuction = (auctionData: any) => {
-      // Build the payload from auctionData and selected vehicle
-      const payload = {
-        request_id: auctionData.vehicleData.id,
-        reserve_price: auctionData.vehicleData.reserve_price || 0,
-        auction_type: auctionData.auctionType === "bring_money" ? 1 : 2,
-        credit_use_for_inspection_fee: auctionData.creditUse === "inspection" ? 1 : 0,
-        credit_use_for_selling_fee: auctionData.creditUse === "selling" ? 1 : 0,
-      };
+    const handleSendToAuction = (payload: any) => {
+      // The payload is now directly provided by the SendToAuctionModal
       setAuctionPayload(payload);
       setAuctionModalOpen(false);
       setConfirmModalOpen(true);

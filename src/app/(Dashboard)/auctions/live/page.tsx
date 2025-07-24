@@ -2,6 +2,8 @@
 import Breadcrumbs from "@/components/common/Breadcrumbs";
 import { Card, Tag } from "antd";
 import DataTable from "@/components/common/DataTable";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 const columns = [
   {
@@ -54,7 +56,8 @@ const columns = [
   },
 ];
 
-const data = [
+// Static data for fallback (keeping the same structure)
+const staticData = [
   {
     key: 1,
     name: "1987 Honda Concerto 4D SUV AWD",
@@ -151,15 +154,71 @@ const data = [
 ];
 
 export default function AuctionsLivePage() {
+  const [data, setData] = useState(staticData);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchLiveAuctions = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("access") : null;
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        
+        const response = await axios.get(`${apiUrl}/auctions/api/v1/live/`, { headers });
+        
+        // Map API response to match the existing data structure
+        const mappedData = (response.data || []).map((item: any, index: number) => {
+          const req = item.request_id || {};
+          
+          // Debug logging to check the structure
+          console.log('API Item:', item);
+          console.log('Last Bid ID:', item.last_bid_id);
+          console.log('Bid Amount:', item.last_bid_id?.bid);
+          
+          return {
+            key: item.id || index + 1,
+            name: `${req.year || ''} ${req.make || ''} ${req.model || ''}`.trim() || 'Vehicle',
+            img: req.image || "https://images.pexels.com/photos/358070/pexels-photo-358070.jpeg?auto=compress&w=60",
+            auctionId: item.auction_id || req.auction_id || item.id || '',
+            vin: req.vin ? req.vin.slice(-6) : '-',
+            expected: req.expected_price || 0,
+            lastBid: item.last_bid_id?.bid || 0,
+            timer: "10:00", // Static timer for now
+            status: item.status === 1 ? "On Going" : item.status === 2 ? "In Negotiation" : item.status === 3 ? "Ended" : "On Going",
+          };
+        });
+        
+        setData(mappedData);
+      } catch (err: any) {
+        console.error("Failed to fetch live auctions:", err);
+        setError(err?.response?.data?.detail || err?.message || "Failed to fetch live auctions.");
+        // Keep static data as fallback
+        setData(staticData);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLiveAuctions();
+  }, []);
+
   return (
     <div>
       <Breadcrumbs items={[{ label: "Auctions", href: "/auctions" }, { label: "Live" }]} />
       <div className="p-6">
         <div className="flex justify-end mb-2 text-gray-500 text-sm">
-          <span>Live 26 | Bids 34</span>
+          <span>Live {data.length} | Bids {data.reduce((sum, item) => sum + (item.lastBid > 0 ? 1 : 0), 0)}</span>
         </div>
         <Card>
-          <DataTable columns={columns} data={data} tableData={{}} />
+          <DataTable 
+            columns={columns} 
+            data={data} 
+            tableData={{}} 
+            loading={loading}
+          />
         </Card>
       </div>
     </div>

@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from "react";
 import AuctionSearchBar from "@/components/ds/AuctionSearchBar";
 import AuctionFiltersSidebar from "@/components/ds/AuctionFiltersSidebar";
-import AuctionCard from "@/components/ds/AuctionCard";
+import AuctionListCard from "@/components/ds/AuctionListCard";
 import AuctionListPagination from "@/components/ds/AuctionListPagination";
 import AuctionListEmptyState from "@/components/ds/AuctionListEmptyState";
 import axios from "axios";
@@ -123,6 +123,9 @@ export default function DsAuctions() {
             labelColor: labelColor || '#64748b',
             price: safe(req.expected_price),
             id: item.id || req.id,
+            auctionId: item.auction_id || req.auction_id, // Use auction_id for API calls
+            hasBids: item.last_bid_id !== null, // Determine if there are existing bids
+            currentBid: item.last_bid_id?.bid || null, // Current bid amount if exists
           };
         });
         setAuctions(mapped);
@@ -190,7 +193,14 @@ export default function DsAuctions() {
             <AuctionListEmptyState />
           ) : (
             pagedAuctions.map((auction, idx) => (
-              <AuctionCard key={idx} {...auction} routePath={`/auctions-ds/${auction.id}`} />
+              <AuctionListCard 
+                key={idx} 
+                {...auction} 
+                routePath={`/auctions-ds/${auction.id}`}
+                auctionId={auction.auctionId}
+                hasBids={auction.hasBids}
+                currentBid={auction.currentBid}
+              />
             ))
           )}
           <AuctionListPagination
