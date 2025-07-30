@@ -54,88 +54,97 @@ export default function DsAuctions() {
   const [error, setError] = useState<string | null>(null);
   const [auctions, setAuctions] = useState<any[]>([]);
 
-  React.useEffect(() => {
-    const fetchAuctions = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const response = await axios.get(`${apiUrl}/auctions/api/v1/marketplace/`, { headers });
-        // Robust mapping as in upcoming-auctions
-        const mapped = (response.data || []).map((item: any) => {
-          const req = item.request_id || item; // fallback to item if no request_id
-          const colors = Array.isArray(req.lights)
-            ? req.lights.map((color: string) => ({ color, label: color.charAt(0).toUpperCase() + color.slice(1) }))
-            : [];
-          // Map status number to label and color
-          let labelText = '';
-          let labelColor = '';
-          let statusLabel = '';
-          if (typeof item.status === 'number') {
-            switch (item.status) {
-              case 0:
-                labelText = 'Coming Soon';
-                labelColor = '#64748b';
-                statusLabel = 'Coming Soon';
-                break;
-              case 1:
-                labelText = 'Live';
-                labelColor = '#22c55e';
-                statusLabel = 'Live';
-                break;
-              case 2:
-                labelText = 'In Negotiation';
-                labelColor = '#eab308';
-                statusLabel = 'In Negotiation';
-                break;
-              case 3:
-                labelText = 'Ended';
-                labelColor = '#ef4444';
-                statusLabel = 'Ended';
-                break;
-              default:
-                labelText = 'Unknown';
-                labelColor = '#64748b';
-                statusLabel = 'Unknown';
-            }
-          } else if (typeof item.status === 'string') {
-            labelText = item.status;
-            labelColor = '#64748b';
-            statusLabel = item.status;
+  // Fetch auctions function
+  const fetchAuctions = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axios.get(`${apiUrl}/auctions/api/v1/marketplace/`, { headers });
+      // Robust mapping as in upcoming-auctions
+      const mapped = (response.data || []).map((item: any) => {
+        const req = item.request_id || item; // fallback to item if no request_id
+        const colors = Array.isArray(req.lights)
+          ? req.lights.map((color: string) => ({ color, label: color.charAt(0).toUpperCase() + color.slice(1) }))
+          : [];
+        // Map status number to label and color
+        let labelText = '';
+        let labelColor = '';
+        let statusLabel = '';
+        if (typeof item.status === 'number') {
+          switch (item.status) {
+            case 0:
+              labelText = 'Coming Soon';
+              labelColor = '#64748b';
+              statusLabel = 'Coming Soon';
+              break;
+            case 1:
+              labelText = 'Live';
+              labelColor = '#22c55e';
+              statusLabel = 'Live';
+              break;
+            case 2:
+              labelText = 'In Negotiation';
+              labelColor = '#eab308';
+              statusLabel = 'In Negotiation';
+              break;
+            case 3:
+              labelText = 'Ended';
+              labelColor = '#ef4444';
+              statusLabel = 'Ended';
+              break;
+            default:
+              labelText = 'Unknown';
+              labelColor = '#64748b';
+              statusLabel = 'Unknown';
           }
-          // Helper to replace empty/undefined/null with '-'
-          const safe = (v: any) => v === undefined || v === null || v === '' ? '-' : v;
-          return {
-            image: req.image || "/images/auth-background.jpg",
-            title: safe(`${req.year || ''} ${req.make || ''} ${req.model || ''}`.trim()),
-            vin: safe(req.vin),
-            colors,
-            specs: [
-              { label: "Miles", value: safe(req.odometer) },
-              { label: "ENG", value: safe(req.engine) },
-              { label: "Cyl", value: safe(req.cylinders) },
-              { label: "Transmission", value: safe(req.transmission) },
-            ],
-            status: safe(statusLabel),
-            labelText: safe(labelText),
-            labelColor: labelColor || '#64748b',
-            price: safe(req.expected_price),
-            id: item.id || req.id,
-            auctionId: item.auction_id || req.auction_id, // Use auction_id for API calls
-            hasBids: item.last_bid_id !== null, // Determine if there are existing bids
-            currentBid: item.last_bid_id?.bid || null, // Current bid amount if exists
-          };
-        });
-        setAuctions(mapped);
-      } catch (err: any) {
-        setError(err?.response?.data?.detail || err?.message || "Failed to fetch auctions.");
-        setAuctions([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+        } else if (typeof item.status === 'string') {
+          labelText = item.status;
+          labelColor = '#64748b';
+          statusLabel = item.status;
+        }
+        
+        const safe = (v: any) => v === undefined || v === null || v === '' ? '-' : v;
+        
+        return {
+          id: item.id || req.id,
+          auctionId: item.auction_id || req.auction_id,
+          image: req.image || "/images/auth-background.jpg",
+          title: `${safe(req.year)} ${safe(req.make)} ${safe(req.model)}`.replace(/-/g, '').trim() || 'Vehicle',
+          vin: req.vin ? req.vin.slice(-6) : '-',
+          colors,
+          specs: [
+            { label: 'Mileage', value: safe(req.odometer) },
+            { label: 'Transmission', value: safe(req.transmission) },
+            { label: 'Drivetrain', value: safe(req.drivetrain) },
+          ],
+          status: statusLabel,
+          labelText,
+          labelColor,
+          price: req.expected_price ? `$${Number(req.expected_price).toLocaleString()}` : 'N/A',
+          miles: req.odometer ? `${Number(req.odometer).toLocaleString()}` : null,
+          hasBids: item.last_bid_id !== null,
+          currentBid: item.last_bid_id?.bid || null,
+        };
+      });
+      setAuctions(mapped);
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || err?.message || "Failed to fetch auctions.");
+      setAuctions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Refresh auctions function to be passed to AuctionListCard
+  const refreshAuctions = () => {
+    console.log("Refreshing auctions list...");
+    fetchAuctions();
+  };
+
+  React.useEffect(() => {
     fetchAuctions();
   }, []);
 
@@ -200,6 +209,7 @@ export default function DsAuctions() {
                 auctionId={auction.auctionId}
                 hasBids={auction.hasBids}
                 currentBid={auction.currentBid}
+                onRefresh={refreshAuctions}
               />
             ))
           )}

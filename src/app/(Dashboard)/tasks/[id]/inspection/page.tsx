@@ -33,6 +33,8 @@ const defaultYesNoFields = [
 ];
 const defaultState: Record<string, any> = {};
 defaultYesNoFields.forEach(field => { defaultState[field] = 0; });
+// Set default color tag indication to GREEN (0)
+defaultState.colorTagIndication = 0;
 
 export default function InspectionFormPage() {
   const params = useParams();
@@ -394,10 +396,21 @@ export default function InspectionFormPage() {
         }
         
         // Set color indicators
-        newInspectionData.green = data.green ?? 0;
+        newInspectionData.green = data.green ?? 1;
         newInspectionData.red = data.red ?? 0;
         newInspectionData.yellow = data.yellow ?? 0;
         newInspectionData.purple = data.purple ?? 0;
+        
+        // Set color tag indication based on green/red values
+        // If green=1 and red=0, then GREEN is selected (colorTagIndication=0)
+        // If green=0 and red=1, then RED is selected (colorTagIndication=1)
+        const greenValue = parseInt(data.green) || 1;
+        const redValue = parseInt(data.red) || 0;
+        newInspectionData.colorTagIndication = greenValue === 1 ? 0 : 1; // 0=GREEN, 1=RED
+        
+        console.log("[Resume Inspection Debug] Color values from API:", { green: data.green, red: data.red });
+        console.log("[Resume Inspection Debug] Parsed values:", { greenValue, redValue });
+        console.log("[Resume Inspection Debug] Calculated colorTagIndication:", newInspectionData.colorTagIndication);
         
         console.log("[Resume Inspection Debug] Final newInspectionData:", newInspectionData);
         console.log("[Resume Inspection Debug] Final newFileLists:", newFileLists);
@@ -408,6 +421,12 @@ export default function InspectionFormPage() {
         
         // Update AntD form
         form.setFieldsValue(newInspectionData);
+        
+        // Force re-render for color tag indication with a small delay
+        console.log("[Resume Inspection Debug] Setting form field colorTagIndication to:", newInspectionData.colorTagIndication);
+        setTimeout(() => {
+          form.setFieldValue("colorTagIndication", newInspectionData.colorTagIndication);
+        }, 100);
         
       } catch (err) {
         console.error("[Resume Inspection Debug] Error fetching inspection data:", err);
@@ -421,13 +440,17 @@ export default function InspectionFormPage() {
 
   // Handle field changes for all types
   const handleFieldChange = (field: string, e: any) => {
+    console.log(`Field change for ${field}:`, e);
+    
     if (e && e.fileList !== undefined) {
       // Upload field
       setFileLists(prev => ({ ...prev, [field]: e.fileList }));
       setInspectionData(prev => ({ ...prev, [field]: e.fileList }));
     } else if (e && e.target) {
+      console.log(`Setting ${field} to:`, e.target.value);
       setInspectionData(prev => ({ ...prev, [field]: e.target.value }));
     } else {
+      console.log(`Setting ${field} to:`, e);
       setInspectionData(prev => ({ ...prev, [field]: e }));
     }
   };
@@ -619,8 +642,17 @@ export default function InspectionFormPage() {
     // 3. Append simple text fields
     formData.append("demage_notes", inspectionData.damageNotes || "");
     formData.append("rust_notes", inspectionData.rustNotes || "");
-    formData.append("green", inspectionData.green || "0");
-    formData.append("red", inspectionData.red || "0");
+    
+    // Set green/red based on color tag indication
+    const colorTagIndication = inspectionData.colorTagIndication ?? 0;
+    const greenValue = colorTagIndication === 0 ? "1" : "0"; // GREEN selected = 1, RED selected = 0
+    const redValue = colorTagIndication === 1 ? "1" : "0";   // RED selected = 1, GREEN selected = 0
+    
+    formData.append("green", greenValue);
+    formData.append("red", redValue);
+    console.log("Color tag indication value being sent:", inspectionData.colorTagIndication);
+    console.log("Green value:", greenValue, "Red value:", redValue);
+    formData.append("color_tag_indication", colorTagIndication.toString());
 
     // 4. Submit as before
     try {
@@ -953,6 +985,7 @@ export default function InspectionFormPage() {
                   { label: "GREEN", value: 0 },
                   { label: "RED", value: 1 },
                 ]}
+                key={`colorTagIndication-${inspectionData.colorTagIndication}`}
               />
             </div>
           </div>

@@ -20,6 +20,7 @@ interface AuctionListCardProps {
     routePath?: string;
     hasBids?: boolean;
     currentBid?: number | null;
+    onRefresh?: () => void;
 }
 
 const statusColors: Record<string, string> = {
@@ -43,7 +44,8 @@ export default function AuctionListCard({
     auctionId,
     routePath, 
     hasBids = false,
-    currentBid = null
+    currentBid = null,
+    onRefresh
 }: AuctionListCardProps) {
     const miles = specs.find(s => s.label.toLowerCase().includes('mile'))?.value;
     const router = useRouter();
@@ -92,6 +94,14 @@ export default function AuctionListCard({
             showSuccessToast(COMMON_SUCCESS_MESSAGES.CREATED, "Bid");
             setIsModalOpen(false);
             setBidAmount("0.00");
+            
+            // Refresh the auction list to show updated bid information
+            if (onRefresh) {
+                console.log("Refreshing auction list after successful bid...");
+                setTimeout(() => {
+                    onRefresh();
+                }, 500);
+            }
         } catch (error: any) {
             showErrorToast(error, "Bid placement");
         } finally {

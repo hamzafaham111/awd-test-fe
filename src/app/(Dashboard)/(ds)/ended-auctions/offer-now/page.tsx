@@ -5,8 +5,32 @@ import React, { useState, useEffect, useCallback } from "react";
 import AuctionSearchBar from "@/components/ds/AuctionSearchBar";
 import OfferNowModal from "@/components/modals/OfferNowModal";
 import axios from "axios";
-import { message } from "antd";
-// Dummy data for auctions
+import { showErrorToast, showSuccessToast } from "@/utils/errorHandler";
+
+// Status code to label mapping
+const STATUS_MAP: Record<number, string> = {
+  0: 'Pending',
+  1: 'Waiting for speciality approval',
+  2: 'Inspector Assigned',
+  3: 'Inspection started',
+  4: 'Inspection Completed',
+  21: 'On Auction',
+  5: 'Waiting for buyer confirmation',
+  6: 'Payment pending',
+  7: 'Delivered',
+};
+
+const statusColors: Record<string, string> = {
+  "Inspection Completed": "bg-blue-100 text-blue-700 border-blue-300",
+  "Inspection started": "bg-orange-100 text-orange-700 border-orange-300",
+  "Pending": "bg-gray-100 text-gray-700 border-gray-300",
+  "Waiting for speciality approval": "bg-yellow-100 text-yellow-700 border-yellow-300",
+  "Inspector Assigned": "bg-purple-100 text-purple-700 border-purple-300",
+  "On Auction": "bg-green-100 text-green-700 border-green-300",
+  "Waiting for buyer confirmation": "bg-indigo-100 text-indigo-700 border-indigo-300",
+  "Payment pending": "bg-pink-100 text-pink-700 border-pink-300",
+  "Delivered": "bg-emerald-100 text-emerald-700 border-emerald-300",
+};
 
 
 const columns = [
@@ -55,11 +79,13 @@ const columns = [
     title: "Status",
     dataIndex: "status",
     key: "status",
-    render: (val: string) => {
-      let color = "gray";
-      if (val === "Pending") color = "orange";
-      else if (val === "Sold") color = "green";
-      return <span className={`font-semibold px-3 py-1 rounded`} style={{ background: color === 'orange' ? '#fbbf24' : color === 'green' ? '#bbf7d0' : '#f3f4f6', color: color === 'orange' ? '#b45309' : color === 'green' ? '#166534' : '#6b7280' }}>{val}</span>;
+    render: (status: number) => {
+      const statusLabel = STATUS_MAP[status] || 'Unknown';
+      return (
+        <span className={`inline-block px-3 py-1 rounded-full border text-xs font-semibold ${statusColors[statusLabel] || "bg-gray-100 text-gray-700 border-gray-300"}`}>
+          {statusLabel}
+        </span>
+      );
     },
     width: 100,
   },
@@ -149,12 +175,7 @@ export default function DsEndedAuctionsOfferNow() {
       const response = await axios.get(`${apiUrl}/auctions/api/v1/offer-now/`, { headers });
       const mapped = (response.data || []).map((item: any, idx: number) => {
         const req = item.request_id || {};
-        let statusLabel = 'Pending';
-        if (typeof req.status === 'number') {
-          if (req.status === 21) statusLabel = 'Pending';
-          else if (req.status >= 5) statusLabel = 'Sold';
-          else statusLabel = String(item.status || 'Pending');
-        }
+        
         return {
           key: item.id || idx + 1,
           vin: req.vin ? String(req.vin).slice(-6) : '-',
@@ -162,7 +183,7 @@ export default function DsEndedAuctionsOfferNow() {
           vehicle: `${req.year || ''} ${req.make || ''} ${req.model || ''}`.trim() || 'Vehicle',
           reservePrice: req.reserve_price || 0,
           highestBid: item.last_bid_id?.bid ?? null,
-          status: statusLabel,
+          status: item.status || 0, // Pass status number directly like in tasks page
           image: "/images/auth-background.jpg",
           offers: item.offers || [],
         };
@@ -200,11 +221,13 @@ export default function DsEndedAuctionsOfferNow() {
         amount: amount,
       };
       await axios.post(`${apiUrl}/auctions/api/v1/create-offer/`, payload, { headers });
-      message.success("Offer placed successfully!");
+      showSuccessToast("Offer placed successfully!", "Offer");
       await fetchAuctions(); // Refresh data after successful offer
       setOfferModalOpen(false);
     } catch (err: any) {
-      message.error(err?.response?.data?.detail || err?.message || "Failed to place offer.");
+      console.log("API Error Response:", err?.response?.data);
+      // Pass the full error object to showErrorToast - it will handle the extraction
+      showErrorToast(err, "Offer");
     } finally {
       setSubmitting(false);
     }

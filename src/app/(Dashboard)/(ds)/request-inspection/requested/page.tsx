@@ -16,10 +16,12 @@ const STATUS_MAP: Record<number, { label: string; color: string }> = {
     2: { label: 'Inspector Assigned', color: 'blue' },
     3: { label: 'Inspection started', color: 'orange' },
     4: { label: 'Inspection Completed', color: 'green' },
-    5: { label: 'On Auction', color: 'cyan' },
-    6: { label: 'Waiting for buyer confirmation', color: 'purple' },
-    7: { label: 'Payment pending', color: 'magenta' },
-    8: { label: 'Delivered', color: 'lime' },
+    20: { label: 'In Run List', color: 'pink' },
+    21: { label: 'On Auction', color: 'cyan' },
+    22: { label: 'Auction Rejected', color: 'red' },
+    5: { label: 'Waiting for buyer confirmation', color: 'purple' },
+    6: { label: 'Payment pending', color: 'magenta' },
+    7: { label: 'Delivered', color: 'lime' },
 };
 
 const getStatusTag = (status: any) => {
