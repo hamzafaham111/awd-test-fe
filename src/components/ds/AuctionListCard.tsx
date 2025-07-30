@@ -4,6 +4,10 @@ import { useRouter } from "next/navigation";
 import { Modal, Button, Input } from "antd";
 import axios from "axios";
 import { showErrorToast, showSuccessToast, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
+import { useBuyNow } from "@/hooks/useBuyNow";
+import { useProxy } from "@/hooks/useProxy";
+import BuyNowModal from "@/components/modals/BuyNowModal";
+import SetProxyModal from "@/components/modals/SetProxyModal";
 
 interface AuctionListCardProps {
     image: string;
@@ -50,8 +54,34 @@ export default function AuctionListCard({
     const miles = specs.find(s => s.label.toLowerCase().includes('mile'))?.value;
     const router = useRouter();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isBuyNowModalOpen, setIsBuyNowModalOpen] = useState(false);
+    const [isProxyModalOpen, setIsProxyModalOpen] = useState(false);
     const [bidAmount, setBidAmount] = useState("0.00");
     const [placingBid, setPlacingBid] = useState(false);
+    
+    // Use the custom hook for buy now functionality
+    const { buyNow, isBuying } = useBuyNow({
+        onSuccess: () => {
+            setIsBuyNowModalOpen(false);
+            if (onRefresh) {
+                setTimeout(() => {
+                    onRefresh();
+                }, 500);
+            }
+        }
+    });
+
+    // Use the custom hook for proxy functionality
+    const { setProxy, isSettingProxy } = useProxy({
+        onSuccess: () => {
+            setIsProxyModalOpen(false);
+            if (onRefresh) {
+                setTimeout(() => {
+                    onRefresh();
+                }, 500);
+            }
+        }
+    });
     
     const handleTitleClick = () => {
         if (routePath && id) {
@@ -61,6 +91,28 @@ export default function AuctionListCard({
 
     const handleBuyClick = () => {
         setIsModalOpen(true);
+    };
+
+    const handleBuyNowClick = () => {
+        setIsBuyNowModalOpen(true);
+    };
+
+    const handleProxyClick = () => {
+        setIsProxyModalOpen(true);
+    };
+
+    const handleBuyNowConfirm = async () => {
+        const auctionIdToUse = auctionId || id;
+        if (auctionIdToUse) {
+            await buyNow(auctionIdToUse);
+        }
+    };
+
+    const handleProxyConfirm = async (amount: number) => {
+        const auctionIdToUse = auctionId || id;
+        if (auctionIdToUse) {
+            await setProxy(auctionIdToUse, amount);
+        }
     };
 
     const handlePlaceBid = async () => {
@@ -187,10 +239,16 @@ export default function AuctionListCard({
                         >
                             {hasBids ? "Bid Now" : "Place the opening Bid"}
                         </Button>
-                        <Button className="border-gray-300 text-gray-600 hover:bg-gray-50">
+                        <Button 
+                            className="border-gray-300 text-gray-600 hover:bg-gray-50"
+                            onClick={handleProxyClick}
+                        >
                             Set Proxy
                         </Button>
-                        <Button className="border-gray-300 text-gray-600 hover:bg-gray-50">
+                        <Button 
+                            className="border-gray-300 text-gray-600 hover:bg-gray-50"
+                            onClick={handleBuyNowClick}
+                        >
                             Buy Now
                         </Button>
                     </div>
@@ -273,6 +331,29 @@ export default function AuctionListCard({
                     </Button>
                 </div>
             </Modal>
+
+            {/* Buy Now Modal - Using the shared component */}
+            <BuyNowModal
+                open={isBuyNowModalOpen}
+                onClose={() => setIsBuyNowModalOpen(false)}
+                onConfirm={handleBuyNowConfirm}
+                title={title}
+                price={price}
+                vin={vin}
+                loading={isBuying}
+            />
+
+            {/* Set Proxy Modal - Using the shared component */}
+            <SetProxyModal
+                open={isProxyModalOpen}
+                onClose={() => setIsProxyModalOpen(false)}
+                onConfirm={handleProxyConfirm}
+                title={title}
+                price={price}
+                vin={vin}
+                currentBid={currentBid}
+                loading={isSettingProxy}
+            />
         </>
     );
 } 
