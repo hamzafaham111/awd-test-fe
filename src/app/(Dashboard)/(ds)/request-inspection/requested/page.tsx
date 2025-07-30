@@ -52,10 +52,32 @@ const ExpandedRowRender = ({ record, onOpenAuctionModal, auctionModalOpen, onAuc
                 <p className="font-bold text-2xl">${Number(record.expected_price).toLocaleString()}</p>
                 <p className="mt-2"><strong>Auction Fee:</strong> $10</p>
                 <div className="flex gap-2 mt-2">
-                    <span className="w-4 h-4 rounded-full bg-green-500 inline-block"></span>
-                    <span className="w-4 h-4 rounded-full bg-yellow-500 inline-block"></span>
-                    <span className="w-4 h-4 rounded-full bg-purple-500 inline-block"></span>
-                    <span className="w-4 h-4 rounded-full bg-pink-500 inline-block"></span>
+                    {record.lights && Array.isArray(record.lights) ? (
+                        record.lights.map((light: string, index: number) => {
+                            const lightColors: Record<string, string> = {
+                                'red': 'bg-red-500',
+                                'yellow': 'bg-yellow-500',
+                                'green': 'bg-green-500',
+                                'purple': 'bg-purple-500',
+                                'pink': 'bg-pink-500',
+                                'blue': 'bg-blue-500',
+                                'orange': 'bg-orange-500',
+                                'gray': 'bg-gray-500'
+                            };
+                            
+                            const colorClass = lightColors[light.toLowerCase()] || 'bg-gray-500';
+                            
+                            return (
+                                <span 
+                                    key={index} 
+                                    className={`w-4 h-4 rounded-full ${colorClass} inline-block`}
+                                    title={light.charAt(0).toUpperCase() + light.slice(1)}
+                                ></span>
+                            );
+                        })
+                    ) : (
+                        <span className="text-gray-400 text-sm">No lights available</span>
+                    )}
                 </div>
                 <button className="mt-2 px-4 py-2 bg-blue-600 text-white rounded" onClick={() => onOpenAuctionModal(record)}>
                     Send to auction
