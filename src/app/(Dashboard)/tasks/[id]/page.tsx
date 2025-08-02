@@ -38,6 +38,12 @@ export default function TaskDetailsPage() {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
         const res = await axios.get(`${apiUrl}/inspections/api/v1/inspector-task/${id}/`, { headers });
         setTask(res.data);
+        
+        // Store has_red and has_green in localStorage for inspection form
+        if (res.data.has_red !== undefined && res.data.has_green !== undefined) {
+          localStorage.setItem(`inspection_${id}_has_red`, JSON.stringify(res.data.has_red));
+          localStorage.setItem(`inspection_${id}_has_green`, JSON.stringify(res.data.has_green));
+        }
       } catch (err: any) {
         setError(err?.response?.data?.detail || err?.message || "Failed to fetch task data.");
         showErrorToast(err, "Task data");

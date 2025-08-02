@@ -152,27 +152,26 @@ const DsRequestInspectionPage = () => {
     const [auctionPayload, setAuctionPayload] = useState<any>(null);
     const [sendingAuction, setSendingAuction] = useState(false);
 
-    useEffect(() => {
-        const fetchRequests = async () => {
-            setLoading(true);
-            try {
-                const token = localStorage.getItem('access');
-                const response = await axios.get('https://dev.awdauctions.com/inspections/api/v1/requests/', {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
-                const data = response.data?.results || response.data?.data || (Array.isArray(response.data) ? response.data : []);
-                setRequests(data);
-                showSuccessToast('Inspection requests fetched successfully!', 'Inspection requests');
-            } catch (error) {
-                console.error("Failed to fetch inspection requests:", error);
-                showErrorToast(error, "Inspection requests");
-            } finally {
-                setLoading(false);
-            }
-        };
+    const fetchRequests = async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('access');
+            const response = await axios.get('https://dev.awdauctions.com/inspections/api/v1/requests/', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            const data = response.data?.results || response.data?.data || (Array.isArray(response.data) ? response.data : []);
+            setRequests(data);
+        } catch (error) {
+            console.error("Failed to fetch inspection requests:", error);
+            showErrorToast(error, "Inspection requests");
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchRequests();
     }, []);
 
@@ -208,7 +207,13 @@ const DsRequestInspectionPage = () => {
         await axios.post(`${apiUrl}/inspections/api/v1/send-to-auctions/`, auctionPayload, { headers });
         showSuccessToast("Vehicle sent to auction!", "Auction");
         setConfirmModalOpen(false);
-        // Optionally refresh data or close modals
+        
+        // Refresh the data to show updated status
+        await fetchRequests();
+        
+        // Clear expanded rows and selected vehicle
+        setExpandedRowKeys([]);
+        setSelectedVehicle(null);
       } catch (err: any) {
         showErrorToast(err, "Send to auction");
       } finally {

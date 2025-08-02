@@ -54,7 +54,34 @@ export default function InspectionFormPage() {
   useEffect(() => {
     const isResume = searchParams.get("resume") === "1";
     console.log("[Resume Inspection Debug] isResume:", isResume, "inspectionId:", inspectionId);
-    if (!isResume) return;
+    
+    if (!isResume) {
+      // First time visit - use localStorage values for color tag indication
+      const hasRed = localStorage.getItem(`inspection_${inspectionId}_has_red`);
+      const hasGreen = localStorage.getItem(`inspection_${inspectionId}_has_green`);
+      
+      if (hasRed !== null && hasGreen !== null) {
+        const redValue = JSON.parse(hasRed);
+        const greenValue = JSON.parse(hasGreen);
+        
+        // Set color tag indication based on localStorage values
+        // If has_green=true and has_red=false, then GREEN is selected (colorTagIndication=0)
+        // If has_green=false and has_red=true, then RED is selected (colorTagIndication=1)
+        const colorTagIndication = greenValue ? 0 : 1;
+        
+        setInspectionData(prev => ({ 
+          ...prev, 
+          colorTagIndication,
+          green: greenValue ? 1 : 0,
+          red: redValue ? 1 : 0
+        }));
+        
+        // Update form field
+        form.setFieldValue("colorTagIndication", colorTagIndication);
+      }
+      return;
+    }
+    
     const fetchInspection = async () => {
       setLoading(true);
       try {
@@ -395,21 +422,23 @@ export default function InspectionFormPage() {
           }
         }
         
-        // Set color indicators
-        newInspectionData.green = data.green ?? 1;
+        // Set color indicators from the inspection report data
+        newInspectionData.green = data.green ?? 0;
         newInspectionData.red = data.red ?? 0;
         newInspectionData.yellow = data.yellow ?? 0;
         newInspectionData.purple = data.purple ?? 0;
         
-        // Set color tag indication based on green/red values
-        // If green=1 and red=0, then GREEN is selected (colorTagIndication=0)
-        // If green=0 and red=1, then RED is selected (colorTagIndication=1)
-        const greenValue = parseInt(data.green) || 1;
-        const redValue = parseInt(data.red) || 0;
-        newInspectionData.colorTagIndication = greenValue === 1 ? 0 : 1; // 0=GREEN, 1=RED
+        // Set color tag indication based on request_id.has_red and has_green values
+        // These come from the original request data, not the inspection report
+        const requestData = data.request_id || {};
+        const hasRed = requestData.has_red || false;
+        const hasGreen = requestData.has_green || false;
         
-        console.log("[Resume Inspection Debug] Color values from API:", { green: data.green, red: data.red });
-        console.log("[Resume Inspection Debug] Parsed values:", { greenValue, redValue });
+        // If has_green=true and has_red=false, then GREEN is selected (colorTagIndication=0)
+        // If has_green=false and has_red=true, then RED is selected (colorTagIndication=1)
+        newInspectionData.colorTagIndication = hasGreen ? 0 : 1; // 0=GREEN, 1=RED
+        
+        console.log("[Resume Inspection Debug] Request color values:", { hasRed, hasGreen });
         console.log("[Resume Inspection Debug] Calculated colorTagIndication:", newInspectionData.colorTagIndication);
         
         console.log("[Resume Inspection Debug] Final newInspectionData:", newInspectionData);
@@ -663,6 +692,11 @@ export default function InspectionFormPage() {
         body: formData,
         headers,
       });
+      
+      // Remove localStorage values after successful submission
+      localStorage.removeItem(`inspection_${inspectionId}_has_red`);
+      localStorage.removeItem(`inspection_${inspectionId}_has_green`);
+      
       showSuccessToast(COMMON_SUCCESS_MESSAGES.SAVED, "Inspection report");
       router.push(`/tasks/${inspectionId}`);
     } catch (error) {

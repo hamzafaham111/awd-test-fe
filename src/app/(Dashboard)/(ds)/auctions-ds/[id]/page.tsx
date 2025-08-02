@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 import axios from "axios";
 
 const SECTION_FIELDS: { [key: string]: { key: string; label: string }[] } = {
@@ -160,6 +162,7 @@ function SectionModal({ open, onClose, section, data }: { open: boolean, onClose
 
 export default function MarketplaceAuctionDetail() {
   const { id } = useParams();
+  const user = useSelector((state: RootState) => state.user);
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -173,8 +176,16 @@ export default function MarketplaceAuctionDetail() {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
         const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        // Use marketplace detail endpoint
-        const response = await axios.get(`${apiUrl}/auctions/api/v1/marketplace/${id}/`, { headers });
+        
+        // Use different endpoint based on user role
+        let endpoint;
+        if (user.role === "superadmin") {
+          endpoint = `${apiUrl}/inspections/api/v1/admin/inspection-report/${id}/`;
+        } else {
+          endpoint = `${apiUrl}/auctions/api/v1/marketplace/${id}/`;
+        }
+        
+        const response = await axios.get(endpoint, { headers });
         setData(response.data);
       } catch (err: any) {
         setError(err?.response?.data?.detail || err?.message || "Failed to fetch auction details.");
@@ -183,7 +194,7 @@ export default function MarketplaceAuctionDetail() {
       }
     };
     if (id) fetchData();
-  }, [id]);
+  }, [id, user.role]);
 
   if (loading) return <div className="p-8 text-center text-gray-500">Loading...</div>;
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;

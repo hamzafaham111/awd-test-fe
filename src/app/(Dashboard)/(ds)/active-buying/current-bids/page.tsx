@@ -5,6 +5,31 @@ import AuctionSearchBar from "@/components/ds/AuctionSearchBar";
 import OfferNowModal from "@/components/modals/OfferNowModal";
 import axios from "axios";
 
+// Status code to label mapping for request status (following tasks page mapping)
+const REQUEST_STATUS_MAP: Record<number, string> = {
+  0: 'Pending',
+  1: 'Waiting for speciality approval',
+  2: 'Inspector Assigned',
+  3: 'Inspection started',
+  4: 'Inspection Completed',
+  21: 'On Auction',
+  5: 'Waiting for buyer confirmation',
+  6: 'Payment pending',
+  7: 'Delivered',
+};
+
+const requestStatusColors: Record<string, string> = {
+  "Pending": "bg-gray-100 text-gray-700 border-gray-300",
+  "Waiting for speciality approval": "bg-yellow-100 text-yellow-700 border-yellow-300",
+  "Inspector Assigned": "bg-purple-100 text-purple-700 border-purple-300",
+  "Inspection started": "bg-orange-100 text-orange-700 border-orange-300",
+  "Inspection Completed": "bg-blue-100 text-blue-700 border-blue-300",
+  "On Auction": "bg-green-100 text-green-700 border-green-300",
+  "Waiting for buyer confirmation": "bg-indigo-100 text-indigo-700 border-indigo-300",
+  "Payment pending": "bg-pink-100 text-pink-700 border-pink-300",
+  "Delivered": "bg-emerald-100 text-emerald-700 border-emerald-300",
+};
+
 const columns = [
   {
     title: "",
@@ -45,7 +70,14 @@ const columns = [
     title: "Status",
     dataIndex: "status",
     key: "status",
-    render: (val: string) => <span className="font-semibold text-green-600">{val}</span>,
+    render: (status: number) => {
+      const statusLabel = REQUEST_STATUS_MAP[status] || 'Unknown';
+      return (
+        <span className={`inline-block px-3 py-1 rounded-full border text-xs font-semibold ${requestStatusColors[statusLabel] || "bg-gray-100 text-gray-700 border-gray-300"}`}>
+          {statusLabel}
+        </span>
+      );
+    },
     width: 100,
   },
 ];
@@ -126,7 +158,7 @@ export default function DsActiveBuyingCurrentBids() {
             auctionId: item.auction_id || item.id || '',
             vehicle: `${req.year || ''} ${req.make || ''} ${req.model || ''}`.trim() || 'Vehicle',
             bidPrice: item.last_bid_id?.bid || 0,
-            status: item.status === 1 ? 'Active' : item.status === 2 ? 'In Negotiation' : item.status === 3 ? 'Ended' : 'Unknown',
+            status: req.status || 0, // Use status from request_id object
             image: req.image || "/images/auth-background.jpg",
             bids: item.bids ? item.bids.map((bid: any) => ({
               buyer: bid.buyer_name || bid.buyer || 'Unknown',

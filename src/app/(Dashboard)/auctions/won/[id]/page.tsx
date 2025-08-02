@@ -86,14 +86,12 @@ export default function WonAuctionDetailPage() {
           <div className="bg-white rounded-lg shadow p-6 mt-4">
             {/* Top bar: left and right icons/buttons */}
             <div className="flex justify-between items-center mb-2">
-              <a
-                href={reportUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => router.push(`/auctions-ds/${id}`)}
                 className="bg-white border border-sky-700 text-sky-700 px-3 py-1 rounded shadow-sm font-semibold hover:bg-sky-50 transition"
               >
                 View Report
-              </a>
+              </button>
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1 text-sky-900 font-semibold">
                   <PushpinOutlined /> Bids {bidsCount}

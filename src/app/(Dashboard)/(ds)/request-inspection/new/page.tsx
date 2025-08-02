@@ -24,6 +24,7 @@ const initialFormData = {
   expectedReservePrice: undefined,
   specialVehicle: 0,
   specialityDescription: "",
+  colorTagIndication: "green",
 };
 
 const formSteps = [
@@ -104,6 +105,8 @@ const DsRequestInspectionNew = () => {
                 manual_delivered: 0,
                 via_api: 1,
                 inspection_location_id: formData.inspectionLocation,
+                has_green: formData.colorTagIndication === "green" ? 1 : 0,
+                has_red: formData.colorTagIndication === "red" ? 1 : 0,
             };
 
             if (formData.specialVehicle && formData.specialityDescription) {
@@ -252,7 +255,9 @@ const DsRequestInspectionNew = () => {
                             type="radio"
                             label="Color Tag Indication"
                             options={[{ label: 'Green', value: 'green' }, { label: 'Red', value: 'red' }]}
+                            rules={[{ required: true, message: 'Color tag indication is required' }]}
                         />
+                        <Text type="secondary">Green indicates good condition, Red indicates issues</Text>
                     </Card>
                 </div>
 
@@ -293,7 +298,11 @@ const DsRequestInspectionNew = () => {
                                     <Col>
                                         <Space align="center">
                                             <Text style={{fontSize: '24px', fontWeight: 'bold'}}>$</Text>
-                                            <FormField name="expectedReservePrice" placeholder="700" />
+                                            <FormField 
+                                                name="expectedReservePrice" 
+                                                placeholder="700" 
+                                                rules={[{ required: true, message: 'Expected reserve price is required' }]}
+                                            />
                                         </Space>
                                     </Col>
                                     <Col>
