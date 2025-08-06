@@ -168,6 +168,7 @@ export default function DsAuctions() {
   return (
     <div className="flex flex-col gap-4 w-full">
       <h1 className="text-2xl font-bold mt-2">Marketplace</h1>
+      
       <AuctionSearchBar value={search} onChange={setSearch} onSearch={() => {}} />
       {/* Filters button for mobile */}
       <div className="md:hidden flex justify-end mb-2">

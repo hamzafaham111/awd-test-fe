@@ -1,285 +1,501 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { Card, Tabs, Button, Modal, Form, Select, message } from "antd";
+import { CheckCircleTwoTone, CarOutlined, FileTextOutlined, DollarOutlined, UserOutlined, CalendarOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import DataTable from "@/components/common/DataTable";
-import AuctionSearchBar from "@/components/ds/AuctionSearchBar";
-import { Tabs } from "antd";
-import { motion } from "framer-motion";
-import { CheckCircleTwoTone, DownOutlined, RightOutlined } from "@ant-design/icons";
 import axios from "axios";
+import { showErrorToast, showSuccessToast } from "@/utils/errorHandler";
 
-// --- Types ---
-type WonBid = {
-  key: string;
-  vin: string;
-  auctionId: string;
-  vehicle: string;
-  wonDate: string;
-  bidPrice: number;
-  reserved: boolean;
-  status: string;
+// Status code to label mapping
+const STATUS_MAP: Record<number, string> = {
+  0: 'Pending',
+  1: 'Waiting for speciality approval',
+  2: 'Inspector Assigned',
+  3: 'Inspection started',
+  4: 'Inspection Completed',
+  21: 'On Auction',
+  20: 'On Run List',
+  5: 'Waiting for buyer confirmation',
+  6: 'Payment pending',
+  7: 'Delivered',
 };
 
-// --- Tab Components ---
-function ConfirmationTab() {
-  return (
-    <div className="flex flex-col items-center py-8">
-      <CheckCircleTwoTone twoToneColor="#bdbdbd" style={{ fontSize: 56, marginBottom: 16 }} />
-      <h2 className="text-2xl font-bold mb-2">Congratulations! You won this bid!</h2>
-      <p className="text-gray-500 mb-6 text-center max-w-xl">
-        Kindly proceed with your confirmation and initiate the necessary payments. Your prompt action ensures a smooth and efficient process.
-      </p>
-      <button className="bg-blue-600 text-white px-8 py-2 rounded font-semibold text-lg hover:bg-blue-700 transition">Confirm Now</button>
-    </div>
-  );
+const statusColors: Record<string, string> = {
+  "Inspection Completed": "bg-blue-100 text-blue-700 border-blue-300",
+  "Inspection started": "bg-orange-100 text-orange-700 border-orange-300",
+  "Pending": "bg-gray-100 text-gray-700 border-gray-300",
+  "Waiting for speciality approval": "bg-yellow-100 text-yellow-700 border-yellow-300",
+  "Inspector Assigned": "bg-purple-100 text-purple-700 border-purple-300",
+  "On Auction": "bg-green-100 text-green-700 border-green-300",
+  "Waiting for buyer confirmation": "bg-indigo-100 text-indigo-700 border-indigo-300",
+  "Payment pending": "bg-pink-100 text-pink-700 border-pink-300",
+  "Delivered": "bg-emerald-100 text-emerald-700 border-emerald-300",
+};
+
+interface WonBid {
+  key: string;
+  auctionId: string;
+  wonAt: string;
+  expectedPrice: number;
+  wonPrice: number;
+  reservePrice: number | null;
+  vehicleInfo: string;
+  vin: string;
+  stockNo: string;
+  odometer: string;
+  originalData?: any;
+  status: number;
+  statusLabel: string;
 }
 
-function PaymentTab({ bid }: { bid: WonBid }) {
-  // Dummy toggles and calculations for demo
-  const [transport, setTransport] = useState(false);
-  const [arbitration, setArbitration] = useState(false);
-  const platformFee = 0;
-  const transportFee = transport ? 0 : 0; // Replace with real logic
-  const arbitrationFee = arbitration ? 0 : 0; // Replace with real logic
-  const total = bid.bidPrice + platformFee + transportFee + arbitrationFee;
+// --- Modal Components ---
+function ConfirmationModal({ 
+  visible, 
+  onCancel, 
+  onConfirm, 
+  loading, 
+  auctionData, 
+  locations 
+}: { 
+  visible: boolean; 
+  onCancel: () => void; 
+  onConfirm: (values: any) => void; 
+  loading: boolean; 
+  auctionData: WonBid; 
+  locations: any[]; 
+}) {
+  const [form] = Form.useForm();
+
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      onConfirm(values);
+    } catch (error) {
+      console.error('Form validation failed:', error);
+    }
+  };
 
   return (
-    <div className="flex flex-col md:flex-row gap-8 py-8">
-      <div className="flex-1 flex flex-col items-center justify-center border-r border-gray-200">
-        <div className="text-6xl text-gray-300 mb-4">$</div>
-        <p className="text-gray-500 text-center max-w-xs mb-6">
-          Please proceed to pay the auction amount to secure your desired item
-        </p>
-        <button className="bg-blue-600 text-white px-8 py-2 rounded font-semibold text-lg hover:bg-blue-700 transition">Pay Now</button>
-      </div>
-      <div className="flex-1 px-4">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-2xl text-gray-400">
-            <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><rect width="24" height="24" rx="4" fill="#F3F4F6"/><rect x="5" y="7" width="14" height="10" rx="2" fill="#D1D5DB"/><rect x="7" y="9" width="10" height="2" rx="1" fill="#9CA3AF"/><rect x="7" y="13" width="6" height="2" rx="1" fill="#9CA3AF"/></svg>
-          </span>
-          <span className="font-bold text-lg">Auction ID {bid.auctionId}</span>
-        </div>
-        <div className="space-y-1 mb-2">
-          <div className="flex justify-between"><span>Bid Amount</span><span className="font-semibold">${bid.bidPrice}</span></div>
-          <div className="flex justify-between"><span>Platform Fee</span><span className="font-semibold">${platformFee}</span></div>
-          <div className="flex justify-between items-center">
-            <span>Transportation</span>
-            <input type="checkbox" checked={transport} onChange={() => setTransport(v => !v)} className="accent-blue-600" />
-          </div>
-          <div className="flex justify-between items-center text-gray-400 line-through text-sm">
-            <span>Distance NaNmiles</span><span>$NaN</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span>Extend 30 days Arbitration</span>
-            <input type="checkbox" checked={arbitration} onChange={() => setArbitration(v => !v)} className="accent-blue-600" />
-          </div>
-          <div className="flex justify-between text-sm text-gray-500">
-            <span>7 days arbitration</span><span>$0</span>
-          </div>
-        </div>
-        <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
-          <span>Total</span><span>${total}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ArbitrationTab() {
-  return (
-    <div className="flex flex-col md:flex-row gap-8 py-8">
-      <div className="flex-1">
-        <h2 className="text-xl font-bold mb-2">7 days Arbitration</h2>
-        <div className="mb-2">
-          <span className="font-semibold">Status :</span> <span className="text-red-500">8 days remaining</span>
-        </div>
-        <div className="mb-2">
-          <span className="font-semibold">Start Date :</span> 03 Jun 2025
-        </div>
-        <div className="mb-2">
-          <span className="font-semibold">End Date :</span> 10 Jun 2025
-        </div>
-        <button className="mt-4 border border-blue-600 text-blue-600 px-6 py-2 rounded font-semibold hover:bg-blue-50 transition">Request for Arbitration</button>
-      </div>
-      <div className="flex-1">
-        <h2 className="text-xl font-bold mb-2">Arbitration Process</h2>
-        <ul className="list-disc pl-6 space-y-1 text-gray-700">
-          <li><b>General.</b> If a buyer has received a vehicle that has an undisclosed issue that is covered for arbitration under this policy, the buyer may notify.</li>
-          <li><b>Timing.</b> Buyer will have 10 calendar days from the date of purchase.</li>
-          <li><b>Extended Arbitration Windows.</b> Buyer may, at the time of purchase, choose to purchase an extended arbitration option for any given vehicle which would give the buyer either an additional 30 days.</li>
-          <li><b>Investigation.</b> In order to fully investigate the arbitration claim, AWD Auctions may require the buyer to provide evidence of the claim and assist in diagnosis of any undisclosed condition issues within a specified timeframe.</li>
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-// --- Expandable Row Content ---
-function ExpandableRowContent({ bid }: { bid: WonBid }) {
-  const [activeTab, setActiveTab] = useState("confirmation");
-  return (
-    <motion.div
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: "auto" }}
-      exit={{ opacity: 0, height: 0 }}
-      transition={{ duration: 0.3 }}
-      className="bg-white border-t border-gray-200"
+    <Modal
+      title="Confirm Auction Purchase"
+      open={visible}
+      onCancel={onCancel}
+      footer={[
+        <Button key="cancel" onClick={onCancel}>
+          Cancel
+        </Button>,
+        <Button key="confirm" type="primary" loading={loading} onClick={handleSubmit}>
+          Confirm Purchase
+        </Button>,
+      ]}
+      width={600}
     >
-      <div className="flex flex-col gap-4">
-        <div className="flex gap-2 py-4 px-2">
-          <button
-            className={`px-6 py-2 rounded font-semibold text-base transition ${activeTab === "confirmation" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500"}`}
-            onClick={() => setActiveTab("confirmation")}
-          >
-            Confirmation
-          </button>
-          <button
-            className={`px-6 py-2 rounded font-semibold text-base transition ${activeTab === "payment" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500"}`}
-            onClick={() => setActiveTab("payment")}
-          >
-            Payment
-          </button>
-          <button
-            className={`px-6 py-2 rounded font-semibold text-base transition ${activeTab === "arbitration" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500"}`}
-            onClick={() => setActiveTab("arbitration")}
-          >
-            Arbitration
-          </button>
-        </div>
-        <div>
-          {activeTab === "confirmation" && <ConfirmationTab />}
-          {activeTab === "payment" && <PaymentTab bid={bid} />}
-          {activeTab === "arbitration" && <ArbitrationTab />}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-4">Vehicle Information</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle</label>
+            <p className="text-gray-900">{auctionData.vehicleInfo}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">VIN</label>
+            <p className="text-gray-900 font-mono">{auctionData.vin}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Auction ID</label>
+            <p className="text-gray-900 font-mono">{auctionData.auctionId}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Winning Bid</label>
+            <p className="text-gray-900 font-bold">${auctionData.wonPrice?.toLocaleString()}</p>
+          </div>
         </div>
       </div>
-    </motion.div>
+
+      <Form form={form} layout="vertical">
+        <div className="grid grid-cols-2 gap-4">
+          <Form.Item
+            label="Vehicle Delivery Location"
+            name="vehicle_delivery_location"
+            rules={[{ required: true, message: 'Please select vehicle delivery location' }]}
+          >
+            <Select
+              placeholder="Select vehicle delivery location"
+              options={locations.map((location: any) => ({
+                label: location.address,
+                value: location.id,
+              }))}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Title Delivery Location"
+            name="title_delivery_location"
+            rules={[{ required: true, message: 'Please select title delivery location' }]}
+          >
+            <Select
+              placeholder="Select title delivery location"
+              options={locations.map((location: any) => ({
+                label: location.address,
+                value: location.id,
+              }))}
+            />
+          </Form.Item>
+        </div>
+      </Form>
+    </Modal>
+  );
+}
+
+// --- Tab Components ---
+function ConfirmationTab({ bid, onConfirm }: { bid: WonBid; onConfirm: (values: any) => void }) {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [locations, setLocations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [locationsLoading, setLocationsLoading] = useState(false);
+
+  // Check if auction is already confirmed based on request_id.status
+  const isConfirmed = bid.originalData?.request_id?.status === 6;
+
+  // Fetch locations when modal opens
+  const fetchLocations = async () => {
+    setLocationsLoading(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axios.get(`${apiUrl}/users/api/v1/dealer-locations/`, { headers });
+      setLocations(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch locations:', error);
+      showErrorToast(error, "Locations");
+    } finally {
+      setLocationsLoading(false);
+    }
+  };
+
+  const handleConfirmClick = () => {
+    setModalVisible(true);
+    fetchLocations();
+  };
+
+  const handleModalCancel = () => {
+    setModalVisible(false);
+  };
+
+  const handleModalConfirm = async (values: any) => {
+    setLoading(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const payload = {
+        auction_id: bid.originalData?.auction_id || bid.auctionId,
+        request_id: bid.originalData?.request_id?.id || bid.originalData?.request_id,
+        auction_won_id: bid.originalData?.id || bid.key,
+        title_delivery_location: values.title_delivery_location,
+        vehicle_delivery_location: values.vehicle_delivery_location,
+      };
+
+      await axios.post(`${apiUrl}/auctions/api/v1/buyer-confirmation/`, payload, { headers });
+      
+      showSuccessToast("Auction confirmed successfully!", "Confirmation");
+      setModalVisible(false);
+      onConfirm(values);
+    } catch (error) {
+      showErrorToast(error, "Confirmation");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="flex flex-col items-center py-8">
+        <CheckCircleTwoTone twoToneColor="#bdbdbd" style={{ fontSize: 56, marginBottom: 16 }} />
+        <h2 className="text-2xl font-bold mb-2">Congratulations! You won this bid!</h2>
+        <p className="text-gray-500 mb-6 text-center max-w-xl">
+          Kindly proceed with your confirmation and initiate the necessary payments. Your prompt action ensures a smooth and efficient process.
+        </p>
+        {isConfirmed ? (
+          <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded border border-green-200">
+            <CheckCircleTwoTone twoToneColor="#22c55e" style={{ fontSize: 20 }} />
+            <span className="font-semibold">Auction Confirmed</span>
+          </div>
+        ) : (
+          <button 
+            className="bg-blue-600 text-white px-8 py-2 rounded font-semibold text-lg hover:bg-blue-700 transition"
+            onClick={handleConfirmClick}
+          >
+            Confirm Now
+          </button>
+        )}
+      </div>
+
+      <ConfirmationModal
+        visible={modalVisible}
+        onCancel={handleModalCancel}
+        onConfirm={handleModalConfirm}
+        loading={loading}
+        auctionData={bid}
+        locations={locations}
+      />
+    </>
+  );
+}
+
+function VehicleDetailsTab({ bid }: { bid: WonBid }) {
+  const vehicleData = bid.originalData?.request_id;
+  
+  if (!vehicleData) {
+    return <div className="text-center py-8 text-gray-500">No vehicle details available</div>;
+  }
+
+  const details = [
+    { label: "Year", value: vehicleData.year },
+    { label: "Make", value: vehicleData.make },
+    { label: "Model", value: vehicleData.model },
+    { label: "Trim", value: vehicleData.trim },
+    { label: "Series", value: vehicleData.series },
+    { label: "VIN", value: vehicleData.vin },
+    { label: "Stock No", value: vehicleData.stock_no },
+    { label: "Odometer", value: `${vehicleData.odometer} mi` },
+    { label: "Cylinders", value: vehicleData.cylinders },
+    { label: "Transmission", value: vehicleData.transmission },
+    { label: "Drivetrain", value: vehicleData.drivetrain },
+    { label: "Days on Lot", value: vehicleData.days_on_lot },
+  ];
+
+  return (
+    <div className="p-6">
+      <h3 className="text-lg font-semibold mb-4">Vehicle Details</h3>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {details.map((detail, index) => (
+          <div key={index} className="bg-white p-3 rounded border">
+            <label className="block text-sm font-medium text-gray-700 mb-1">{detail.label}</label>
+            <p className="text-gray-900">{detail.value || 'N/A'}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function InspectionReportTab({ bid }: { bid: WonBid }) {
+  const inspectionReports = bid.originalData?.inspection_reports || [];
+  
+  if (!inspectionReports.length) {
+    return <div className="text-center py-8 text-gray-500">No inspection reports available</div>;
+  }
+
+  return (
+    <div className="p-6">
+      <h3 className="text-lg font-semibold mb-4">Inspection Reports</h3>
+      <div className="space-y-4">
+        {inspectionReports.map((report: any, index: number) => (
+          <Card key={index} title={`Report ${index + 1}`} className="mb-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Report ID</label>
+                <p className="text-gray-900">{report.id}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Created At</label>
+                <p className="text-gray-900">{new Date(report.created_at).toLocaleDateString()}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Yellow Lights</label>
+                <p className="text-gray-900">{report.yellow}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Red Lights</label>
+                <p className="text-gray-900">{report.red}</p>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
   );
 }
 
 // --- Main Page ---
 export default function DsActiveBuyingWon() {
-  const [search, setSearch] = useState("");
-  const [data, setData] = useState<WonBid[]>([]);
+  const [wonBids, setWonBids] = useState<WonBid[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
+  const [expandedRowKey, setExpandedRowKey] = useState<string | null>(null);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await axios.get(`${apiUrl}/auctions/api/v1/buying-won/`, { headers });
+      
+      const mapped = (response.data || []).map((item: any, idx: number) => {
+        const req = item.request_id || {};
+        const reservePrice = item.reserve_price || req.reserve_price || null;
+        const status = req.status || 0;
+        const statusLabel = STATUS_MAP[status] || 'Unknown';
+        const wonPrice = item.last_bid_id?.bid || 0;
+        
+        return {
+          key: item.id || idx,
+          auctionId: item.auction_id,
+          wonAt: item.won_at,
+          expectedPrice: item.expected_price,
+          wonPrice: wonPrice,
+          reservePrice: reservePrice,
+          vehicleInfo: req ? `${req.year || ''} ${req.make || ''} ${req.model || ''}`.trim() : 'N/A',
+          vin: req.vin || 'N/A',
+          stockNo: req.stock_no || 'N/A',
+          odometer: req.odometer || 'N/A',
+          originalData: item, // Store full original data
+          status: status,
+          statusLabel: statusLabel,
+        };
+      });
+      
+      setWonBids(mapped);
+    } catch (error) {
+      console.error('Failed to fetch won bids:', error);
+      showErrorToast(error, "Won Bids");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const response = await axios.get(`${apiUrl}/auctions/api/v1/buying-won/`, { headers });
-        
-        // Map API response to table data shape
-        const mapped = (response.data || []).map((item: any, index: number) => {
-          const req = item.request_id || {};
-          return {
-            key: item.id || index + 1,
-            vin: req.vin ? req.vin.slice(-6) : '-',
-            auctionId: item.auction_id || item.id || '',
-            vehicle: `${req.year || ''} ${req.make || ''} ${req.model || ''}`.trim() || 'Vehicle',
-            wonDate: item.won_date ? new Date(item.won_date).toLocaleDateString() : item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A',
-            bidPrice: item.bid_price || item.winning_bid || 0,
-            reserved: item.reserved_price ? true : false,
-            status: item.status === 1 ? 'Waiting for Buyer Confirmation' : item.status === 2 ? 'Payment Pending' : item.status === 3 ? 'Completed' : 'Pending',
-          };
-        });
-        setData(mapped);
-      } catch (err: any) {
-        setError(err?.response?.data?.detail || err?.message || "Failed to fetch won buying data.");
-        setData([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
-  const filteredData = data.filter(row =>
-    row.vin.toLowerCase().includes(search.toLowerCase()) ||
-    row.auctionId.toLowerCase().includes(search.toLowerCase()) ||
-    row.vehicle.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleConfirmation = () => {
+    // Refresh data after confirmation
+    fetchData();
+  };
 
-  // Columns moved inside the component to access expandedRowKeys
   const columns = [
-    {
-      title: "VIN(last six)",
-      dataIndex: "vin",
-      key: "vin",
-      width: 120,
-    },
     {
       title: "Auction ID",
       dataIndex: "auctionId",
       key: "auctionId",
-      width: 140,
-    },
-    {
-      title: "Vehicle",
-      dataIndex: "vehicle",
-      key: "vehicle",
-      width: 220,
-    },
-    {
-      title: "Won Date",
-      dataIndex: "wonDate",
-      key: "wonDate",
+      render: (val: string) => <span className="font-mono text-sm">{val}</span>,
       width: 120,
     },
     {
-      title: "Bid Price",
-      dataIndex: "bidPrice",
-      key: "bidPrice",
-      width: 140,
-      render: (val: number, record: WonBid) => (
-        <span className="font-bold">$ {val.toLocaleString()} {record.reserved && <span className="text-yellow-500 font-semibold">Reserved Price</span>}</span>
-      ),
+      title: "Vehicle",
+      dataIndex: "vehicleInfo",
+      key: "vehicleInfo",
+      render: (val: string) => <span className="font-medium">{val}</span>,
+      width: 150,
+    },
+    {
+      title: "VIN",
+      dataIndex: "vin",
+      key: "vin",
+      render: (val: string) => <span className="font-mono text-sm">{val}</span>,
+      width: 120,
+    },
+    {
+      title: "Stock No",
+      dataIndex: "stockNo",
+      key: "stockNo",
+      render: (val: string) => <span className="text-gray-600">{val}</span>,
+      width: 100,
+    },
+    {
+      title: "Odometer",
+      dataIndex: "odometer",
+      key: "odometer",
+      render: (val: string) => <span className="text-gray-600">{val} mi</span>,
+      width: 100,
+    },
+    {
+      title: "Won At",
+      dataIndex: "wonAt",
+      key: "wonAt",
+      render: (val: string) => {
+        const date = new Date(val);
+        return (
+          <span className="text-sm font-medium">{date.toLocaleDateString()}</span>
+        );
+      },
+      width: 120,
+    },
+    {
+      title: "Expected Price",
+      dataIndex: "expectedPrice",
+      key: "expectedPrice",
+      render: (val: number) => <span className="font-bold text-green-600">$ {val ? val.toLocaleString() : '-'}</span>,
+      width: 120,
+    },
+    {
+      title: "Won Price",
+      dataIndex: "wonPrice",
+      key: "wonPrice",
+      render: (val: number) => <span className="font-bold text-blue-600">$ {val ? val.toLocaleString() : '-'}</span>,
+      width: 120,
     },
     {
       title: "Status",
-      dataIndex: "status",
+      dataIndex: "statusLabel",
       key: "status",
-      width: 200,
-      render: (val: string) => <span className="font-semibold text-gray-500 whitespace-pre-line">{val}</span>,
+      render: (statusLabel: string) => (
+        <span className={`inline-block px-3 py-1 rounded-full border text-xs font-semibold ${statusColors[statusLabel] || "bg-gray-100 text-gray-700 border-gray-300"}`}>
+          {statusLabel}
+        </span>
+      ),
+      width: 150,
     },
   ];
 
-  if (loading) {
-    return (
-      <div className="p-6">
-        <AuctionSearchBar value={search} onChange={setSearch} onSearch={() => {}} />
-        <div className="text-center py-8 text-gray-500">Loading won buying data...</div>
-      </div>
-    );
-  }
+  const ExpandableRowContent = ({ record }: { record: WonBid }) => {
+    const items = [
+      {
+        key: "confirmation",
+        label: "Confirmation",
+        children: <ConfirmationTab bid={record} onConfirm={handleConfirmation} />,
+      },
+      {
+        key: "details",
+        label: "Vehicle Details",
+        children: <VehicleDetailsTab bid={record} />,
+      },
+      {
+        key: "inspection",
+        label: "Inspection Report",
+        children: <InspectionReportTab bid={record} />,
+      },
+    ];
 
-  if (error) {
     return (
-      <div className="p-6">
-        <AuctionSearchBar value={search} onChange={setSearch} onSearch={() => {}} />
-        <div className="text-center py-8 text-red-500">{error}</div>
+      <div className="p-6 bg-gray-50">
+        <Tabs items={items} />
       </div>
     );
-  }
+  };
 
   return (
     <div className="p-6">
-      <AuctionSearchBar value={search} onChange={setSearch} onSearch={() => {}} />
-      <DataTable
-        columns={columns}
-        data={filteredData}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Won Auctions</h1>
+        <p className="text-gray-600">Manage your successfully won auction bids</p>
+      </div>
+      
+      <DataTable 
+        columns={columns} 
+        data={wonBids} 
+        loading={loading}
         expandable={{
-          expandedRowRender: (record: WonBid) => <ExpandableRowContent bid={record} />,
-          expandedRowKeys,
+          expandedRowRender: (record: WonBid) => <ExpandableRowContent record={record} />,
+          expandedRowKeys: expandedRowKey ? [expandedRowKey] : [],
           onExpand: (expanded: boolean, record: WonBid) => {
-            setExpandedRowKeys(expanded ? [record.key] : []);
+            setExpandedRowKey(expanded ? record.key : null);
           },
         }}
-        tableData={{ isEnableFilterInput: false }}
       />
     </div>
   );

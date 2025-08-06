@@ -31,12 +31,28 @@ export default function DataTable({ columns, data, tableData = {}, rowSelection,
   });
 
   const filteredData = useMemo(() => {
-    if (!tableData.isEnableFilterInput || !search) return data;
-    return data.filter(row =>
-      Object.values(row).some(val =>
-        String(val).toLowerCase().includes(search.toLowerCase())
-      )
-    );
+    let processedData = data;
+    
+    // Sort by ID in descending order (newest first)
+    if (data && data.length > 0) {
+      processedData = [...data].sort((a, b) => {
+        // Handle different ID field names (id, Id, ID, etc.)
+        const aId = a.id || a.Id || a.ID || a.Id || 0;
+        const bId = b.id || b.Id || b.ID || b.Id || 0;
+        return bId - aId; // Descending order (newest first)
+      });
+    }
+    
+    // Apply search filter if enabled
+    if (tableData.isEnableFilterInput && search) {
+      processedData = processedData.filter(row =>
+        Object.values(row).some(val =>
+          String(val).toLowerCase().includes(search.toLowerCase())
+        )
+      );
+    }
+    
+    return processedData;
   }, [search, data, tableData.isEnableFilterInput]);
 
   const handleTableChange = (pag: any) => {

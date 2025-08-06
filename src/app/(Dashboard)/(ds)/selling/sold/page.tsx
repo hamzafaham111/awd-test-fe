@@ -34,9 +34,9 @@ const columns = [
     width: 220,
   },
   {
-    title: "Your Bid/Offer",
-    dataIndex: "yourBid",
-    key: "yourBid",
+    title: "Reserve Price",
+    dataIndex: "reservePrice",
+    key: "reservePrice",
     render: (val: number) => <span className="font-bold">$ {val ? val.toLocaleString() : '-'}</span>,
     width: 120,
   },
@@ -103,29 +103,10 @@ export default function DsSellingSold() {
       const response = await axios.get(`${apiUrl}/auctions/api/v1/selling-won/`, { headers });
       const mapped = (response.data || []).map((item: any, idx: number) => {
         const req = item.request_id || {};
-        // Determine yourBid/offer: max of offers.amount and bids.bid
-        let offerAmount = null;
-        if (Array.isArray(item.offers) && item.offers.length > 0) {
-          offerAmount = Math.max(...item.offers.map((o: any) => Number(o.amount) || 0));
-        } else if (item.offers && typeof item.offers === 'object' && item.offers.amount) {
-          offerAmount = Number(item.offers.amount);
-        }
-        let bidAmount = null;
-        if (Array.isArray(item.bids) && item.bids.length > 0) {
-          bidAmount = Math.max(...item.bids.map((b: any) => Number(b.bid) || 0));
-        } else if (item.bids && typeof item.bids === 'object' && item.bids.bid) {
-          bidAmount = Number(item.bids.bid);
-        }
-        let yourBid = null;
-        if (offerAmount !== null && bidAmount !== null) {
-          yourBid = Math.max(offerAmount, bidAmount);
-        } else if (offerAmount !== null) {
-          yourBid = offerAmount;
-        } else if (bidAmount !== null) {
-          yourBid = bidAmount;
-        } else {
-          yourBid = null;
-        }
+        
+        // Use reserve_price from the API response
+        const reservePrice = item.reserve_price || req.reserve_price || null;
+        
         // Sold For: from won_bid_id.bid if exists
         let soldFor = null;
         if (item.won_bid_id && typeof item.won_bid_id === 'object' && item.won_bid_id.bid) {
@@ -133,12 +114,13 @@ export default function DsSellingSold() {
         } else {
           soldFor = null;
         }
+        
         return {
           key: item.id || idx + 1,
           vin: req.vin ? String(req.vin).slice(-6) : '-',
           auctionId: req.auction_id || item.id || '',
           vehicle: `${req.year || ''} ${req.make || ''} ${req.model || ''}`.trim() || 'Vehicle',
-          yourBid: yourBid,
+          reservePrice: reservePrice,
           soldFor: soldFor,
           status: req.status || item.status || '-',
           image: "/images/auth-background.jpg",

@@ -36,7 +36,10 @@ export const getErrorMessage = (error: unknown, context?: string): string => {
       if (errorData?.error) {
         // Handle the specific error format: {"error":["message"]}
         const errorArray = errorData.error;
-        return Array.isArray(errorArray) ? errorArray.join(', ') : errorArray;
+        if (Array.isArray(errorArray)) {
+          return errorArray.join(', ');
+        }
+        return String(errorArray);
       }
       if (errorData?.errors) {
         // Handle validation errors

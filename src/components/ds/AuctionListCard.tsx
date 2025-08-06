@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Modal, Button, Input } from "antd";
+import { Modal, Button, Input, message } from "antd";
 import axios from "axios";
 import { showErrorToast, showSuccessToast, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
 import { useBuyNow } from "@/hooks/useBuyNow";
@@ -155,6 +155,7 @@ export default function AuctionListCard({
                 }, 500);
             }
         } catch (error: any) {
+            console.error('Bid placement error:', error);
             showErrorToast(error, "Bid placement");
         } finally {
             setPlacingBid(false);
@@ -262,6 +263,7 @@ export default function AuctionListCard({
                 footer={null}
                 width={500}
                 centered
+                style={{ zIndex: 1000 }}
                 closeIcon={
                     <div className="w-8 h-8 rounded-full bg-sky-600 flex items-center justify-center">
                         <span className="text-white text-lg font-bold">×</span>
@@ -356,4 +358,4 @@ export default function AuctionListCard({
             />
         </>
     );
-} 
+}

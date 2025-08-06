@@ -173,38 +173,73 @@ export default function DsSellingInNegotiation() {
       dataIndex: "action",
       key: "action",
       width: 200,
-      render: (val: string, record: any) => (
-        <div className="flex gap-2">
-          <Button
-            type="primary"
-            size="small"
-            icon={<CheckCircleOutlined />}
-            className="bg-green-600 hover:bg-green-700 border-green-600"
-            onClick={() => handleConfirm(record)}
-          >
-            CONFIRM
-          </Button>
-          <Button
-            type="primary"
-            size="small"
-            icon={<CloseCircleOutlined />}
-            danger
-            className="bg-red-600 hover:bg-red-700 border-red-600"
-            onClick={() => handleReject(record)}
-          >
-            REJECT
-          </Button>
-          <Button
-            type="primary"
-            size="small"
-            icon={<EditOutlined />}
-            className="bg-blue-600 hover:bg-blue-700 border-blue-600"
-            onClick={() => handleChange(record)}
-          >
-            Counter
-          </Button>
-        </div>
-      ),
+      render: (val: string, record: any) => {
+        // Hide action buttons if negotiation is accepted
+        if (record.originalData?.is_accepted === 1) {
+          return (
+            <div className="flex gap-2">
+              <span className="text-green-500 text-sm font-medium px-3 py-1 bg-green-100 rounded border border-green-200">
+                Negotiation Accepted
+              </span>
+            </div>
+          );
+        }
+        
+        // Hide action buttons if negotiation is rejected
+        if (record.originalData?.is_rejected === 1) {
+          return (
+            <div className="flex gap-2">
+              <span className="text-red-500 text-sm font-medium px-3 py-1 bg-red-100 rounded border border-red-200">
+                Negotiation Rejected
+              </span>
+            </div>
+          );
+        }
+        
+        // Hide action buttons if seller has already made a change request
+        if (record.originalData?.price_change_requested_by_seller === true) {
+          return (
+            <div className="flex gap-2">
+              <span className="text-gray-500 text-sm font-medium px-3 py-1 bg-gray-100 rounded">
+                Change Request Sent
+              </span>
+            </div>
+          );
+        }
+        
+        return (
+          <div className="flex gap-2">
+            <Button
+              type="primary"
+              size="small"
+              icon={<CheckCircleOutlined />}
+              className="bg-green-600 hover:bg-green-700 border-green-600"
+              onClick={() => handleConfirm(record)}
+            >
+              CONFIRM
+            </Button>
+            <Button
+              type="primary"
+              size="small"
+              icon={<CloseCircleOutlined />}
+              danger
+              className="bg-red-600 hover:bg-red-700 border-red-600"
+              onClick={() => handleReject(record)}
+            >
+              REJECT
+            </Button>
+            <Button
+              type="primary"
+              size="small"
+              icon={<EditOutlined />}
+              className="bg-blue-600 hover:bg-blue-700 border-blue-600"
+              onClick={() => handleChange(record)}
+            >
+              Counter
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 

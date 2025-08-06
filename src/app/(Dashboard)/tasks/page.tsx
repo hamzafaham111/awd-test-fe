@@ -15,6 +15,7 @@ const STATUS_MAP: Record<number, string> = {
   3: 'Inspection started',
   4: 'Inspection Completed',
   21: 'On Auction',
+  20:'On Run List',
   5: 'Waiting for buyer confirmation',
   6: 'Payment pending',
   7: 'Delivered',

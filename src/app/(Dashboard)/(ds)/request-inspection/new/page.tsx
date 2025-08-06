@@ -4,6 +4,7 @@ import { Form, Steps, Row, Col, Card, Typography, Space, ConfigProvider } from '
 import { FormField } from "@/components/common/FormField";
 import axios from "axios";
 import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS_MESSAGES } from "@/utils/errorHandler";
+import { useRouter } from "next/navigation";
 
 const { Title, Text } = Typography;
 
@@ -52,6 +53,7 @@ const DsRequestInspectionNew = () => {
     const [locationsLoading, setLocationsLoading] = useState(true);
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         const fetchLocations = async () => {
@@ -121,6 +123,7 @@ const DsRequestInspectionNew = () => {
                     }
                 });
                 showSuccessToast(COMMON_SUCCESS_MESSAGES.CREATED, "Inspection request");
+                router.push('/request-inspection/requested');
             } catch (error) {
                 console.error('API Error:', error);
                 showErrorToast(error, "Inspection request");

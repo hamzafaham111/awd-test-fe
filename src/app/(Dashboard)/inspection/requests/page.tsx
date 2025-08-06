@@ -39,6 +39,7 @@ export default function Page() {
       // Refresh the list
       const response = await axios.get(`${apiUrl}/inspections/api/v1/admin-requests/?status=Requests`, { headers });
       const transformedData = response.data.map((item: any) => ({
+        id: item.id, // Add explicit id field for sorting
         key: item.id.toString(),
         vin: item.vin || "N/A",
         location: (
@@ -166,6 +167,7 @@ export default function Page() {
         const response = await axios.get(`${apiUrl}/inspections/api/v1/admin-requests/?status=Requests`, { headers });
         
         const transformedData = response.data.map((item: any) => ({
+          id: item.id, // Add explicit id field for sorting
           key: item.id.toString(),
           vin: item.vin || "N/A",
           location: (
