@@ -9,6 +9,37 @@ import { showErrorToast, showSuccessToast, COMMON_ERROR_MESSAGES, COMMON_SUCCESS
 
 const { Option } = Select;
 
+// Mapping constants for proper label display
+const dealershipTypeOptions = [
+  { value: "1", label: "Franchise" },
+  { value: "2", label: "Independent" },
+  { value: "3", label: "Wholesale" },
+  { value: "4", label: "Commercial" },
+];
+
+const dealershipInterestOptions = [
+  { value: "1", label: "Sell a vehicle" },
+  { value: "2", label: "Purchase a vehicle" },
+  { value: "3", label: "Both" },
+];
+
+const approvedStatusOptions = [
+  { value: "0", label: "Pending" },
+  { value: "1", label: "Approved" },
+  { value: "2", label: "Not Approved" },
+];
+
+const contactPreferenceOptions = [
+  { value: "email", label: "Email" },
+  { value: "phone", label: "Phone" },
+  { value: "text", label: "Text Message" },
+];
+
+const sellerFeeTypeOptions = [
+  { value: "Basic $10", label: "Basic $10" },
+  { value: "Basic %2", label: "Basic %2" },
+];
+
 const defaultDealer = {
   first_name: "",
   last_name: "",
@@ -41,6 +72,18 @@ export default function DealerViewEditPage() {
   const [loading, setLoading] = useState(false);
   const [initialDealerValues, setInitialDealerValues] = useState<typeof defaultDealer | null>(null);
   const [states, setStates] = useState<{ id: number; name: string; code: string }[]>([]);
+
+  // Transform API data to ensure proper string values for dropdowns
+  const transformApiData = (data: any) => {
+    return {
+      ...data,
+      dealership_type: data.dealership_type ? String(data.dealership_type) : "",
+      dealership_interest: data.dealership_interest ? String(data.dealership_interest) : "",
+      approved: data.approved !== undefined && data.approved !== null ? String(data.approved) : "",
+      seller_fees_type_id: data.seller_fees_type_id ? String(data.seller_fees_type_id) : "",
+      contact_preference: data.contact_preference ? String(data.contact_preference) : "",
+    };
+  };
 
   const handleChange = (field: keyof typeof defaultDealer, value: any) => {
     setDealerValues({ ...dealerValues, [field]: value });
@@ -77,8 +120,9 @@ export default function DealerViewEditPage() {
           const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
           const headers = token ? { Authorization: `Bearer ${token}` } : {};
           const { data } = await axios.get(`${apiUrl}/users/api/v1/dealership/${id}/`, { headers });
-          setDealerValues(data);
-          setInitialDealerValues(data);
+          const transformedData = transformApiData(data);
+          setDealerValues(transformedData);
+          setInitialDealerValues(transformedData);
         } catch (error) {
           showErrorToast(error, "Dealer data");
         } finally {
@@ -169,10 +213,9 @@ export default function DealerViewEditPage() {
                 onChange={v => handleChange("dealership_type", v)}
                 disabled={!isAddMode}
               >
-                <Option value="1">Franchise</Option>
-                <Option value="2">Independent</Option>
-                <Option value="3">Wholesale</Option>
-                <Option value="4">Commercial</Option>
+                {dealershipTypeOptions.map(option => (
+                  <Option key={option.value} value={option.value}>{option.label}</Option>
+                ))}
               </Select>
             </Form.Item>
             <Form.Item label="Dealership Interest">
@@ -181,9 +224,9 @@ export default function DealerViewEditPage() {
                 value={dealerValues.dealership_interest}
                 onChange={v => handleChange("dealership_interest", v)}
               >
-                <Option value="1">Sell a vehicle</Option>
-                <Option value="2">Purchase a vehicle</Option>
-                <Option value="3">Both</Option>
+                {dealershipInterestOptions.map(option => (
+                  <Option key={option.value} value={option.value}>{option.label}</Option>
+                ))}
               </Select>
             </Form.Item>
             <Form.Item label="Seller Fee Type">
@@ -192,8 +235,9 @@ export default function DealerViewEditPage() {
                 value={dealerValues.seller_fees_type_id}
                 onChange={v => handleChange("seller_fees_type_id", v)}
               >
-                <Option value="Basic $10">Basic $10</Option>
-                <Option value="Basic %2">Basic %2</Option>
+                {sellerFeeTypeOptions.map(option => (
+                  <Option key={option.value} value={option.value}>{option.label}</Option>
+                ))}
               </Select>
             </Form.Item>
             <Form.Item label="Dealership Name">
@@ -251,8 +295,9 @@ export default function DealerViewEditPage() {
                 value={dealerValues.contact_preference}
                 onChange={v => handleChange("contact_preference", v)}
               >
-                <Option value="Email">Email</Option>
-                <Option value="Phone">Phone</Option>
+                {contactPreferenceOptions.map(option => (
+                  <Option key={option.value} value={option.value}>{option.label}</Option>
+                ))}
               </Select>
             </Form.Item>
             <Form.Item label="Approved">
@@ -262,9 +307,9 @@ export default function DealerViewEditPage() {
                 onChange={v => handleChange("approved", v)}
                 disabled={!isAddMode}
               >
-                <Option value="0">Pending</Option>
-                <Option value="1">Approved</Option>
-                <Option value="2">Not Approved</Option>
+                {approvedStatusOptions.map(option => (
+                  <Option key={option.value} value={option.value}>{option.label}</Option>
+                ))}
               </Select>
             </Form.Item>
           </div>

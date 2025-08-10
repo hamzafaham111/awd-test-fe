@@ -22,6 +22,7 @@ import {
   InfoCircleOutlined,
   TagsOutlined,
   PlusOutlined,
+  QuestionCircleOutlined,
 } from "@ant-design/icons";
 import React from "react";
 
@@ -248,6 +249,15 @@ const dsNavItemsBoth: NavItem[] = [
   { label: "Payments", icon: <CreditCardOutlined />, href: "/payments-ds" },
 ];
 
+// Transporter navigation items - completely separate naming
+const transporterNavItems: NavItem[] = [
+  { label: "Dashboard", icon: <HomeOutlined />, href: "/" },
+  { label: "New Jobs", icon: <CarOutlined />, href: "/transporter-new-jobs" },
+  { label: "Accepted Jobs", icon: <UserOutlined />, href: "/transporter-accepted-jobs" },
+  { label: "Completed Jobs", icon: <SafetyCertificateOutlined />, href: "/transporter-completed-jobs" },
+  { label: "Payments", icon: <CreditCardOutlined />, href: "/transporter-payments" },
+];
+
 export function getDsNavItems(backendRole: string): NavItem[] {
   if (backendRole === "SELLER") {
     return dsNavItemsSeller;
@@ -258,4 +268,8 @@ export function getDsNavItems(backendRole: string): NavItem[] {
   }
   // fallback to both
   return dsNavItemsBoth;
+}
+
+export function getTransporterNavItems(): NavItem[] {
+  return transporterNavItems;
 } 

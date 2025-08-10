@@ -32,6 +32,8 @@ function mapBackendRoleToFrontend(roleName: string) {
       return "ds";
     case "INSPECTOR":
       return "inspector";
+    case "TRANSPORTER":
+      return "transporter";
     default:
       return "ds";
   }

@@ -718,6 +718,7 @@ export default function InspectionFormPage() {
                   label="Front Right Corner"
                   name="frontRightCorner"
                   fileList={fileLists.frontRightCorner}
+                  uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}      
                   onChange={(e: any) => handleFieldChange("frontRightCorner", e)}
                 />
                 <FormField
@@ -725,6 +726,7 @@ export default function InspectionFormPage() {
                   label="Back Right Corner"
                   name="backRightCorner"
                   fileList={fileLists.backRightCorner}
+                  uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}
                   onChange={(e: any) => handleFieldChange("backRightCorner", e)}
                 />
                 <FormField
@@ -732,6 +734,7 @@ export default function InspectionFormPage() {
                   label="Right Side"
                   name="rightSide"
                   fileList={fileLists.rightSide}
+                  uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}
                   onChange={(e: any) => handleFieldChange("rightSide", e)}
                 />
                 <FormField
@@ -739,6 +742,7 @@ export default function InspectionFormPage() {
                   label="Sunroof"
                   name="sunroof"
                   fileList={fileLists.sunroof}
+                  uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}
                   onChange={(e: any) => handleFieldChange("sunroof", e)}
                 />
               </div>
@@ -748,6 +752,7 @@ export default function InspectionFormPage() {
                   label="Front"
                   name="front"
                   fileList={fileLists.front}
+                  uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}
                   onChange={(e: any) => handleFieldChange("front", e)}
                 />
                 <FormField
@@ -755,6 +760,7 @@ export default function InspectionFormPage() {
                   label="Back"
                   name="back"
                   fileList={fileLists.back}
+                  uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}
                   onChange={(e: any) => handleFieldChange("back", e)}
                 />
                 <FormField
@@ -762,6 +768,7 @@ export default function InspectionFormPage() {
                   label="Car Model Badge"
                   name="carModelBadge"
                   fileList={fileLists.carModelBadge}
+                  uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}
                   onChange={(e: any) => handleFieldChange("carModelBadge", e)}
                 />
                 <FormField
@@ -769,6 +776,7 @@ export default function InspectionFormPage() {
                   label="Windshield Vin"
                   name="windshieldVin"
                   fileList={fileLists.windshieldVin}
+                  uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}
                   onChange={(e: any) => handleFieldChange("windshieldVin", e)}
                 />
               </div>
@@ -778,6 +786,7 @@ export default function InspectionFormPage() {
                   label="Front Left Corner"
                   name="frontLeftCorner"
                   fileList={fileLists.frontLeftCorner}
+                  uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}
                   onChange={(e: any) => handleFieldChange("frontLeftCorner", e)}
                 />
                 <FormField
@@ -785,6 +794,7 @@ export default function InspectionFormPage() {
                   label="Back Left Corner"
                   name="backLeftCorner"
                   fileList={fileLists.backLeftCorner}
+                  uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}
                   onChange={(e: any) => handleFieldChange("backLeftCorner", e)}
                 />
                 <FormField
@@ -792,6 +802,7 @@ export default function InspectionFormPage() {
                   label="Roof"
                   name="roof"
                   fileList={fileLists.roof}
+                  uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}
                   onChange={(e: any) => handleFieldChange("roof", e)}
                 />
                 <FormField
@@ -799,6 +810,7 @@ export default function InspectionFormPage() {
                   label="Gas Fill Area Open"
                   name="gasFillAreaOpen"
                   fileList={fileLists.gasFillAreaOpen}
+                  uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}
                   onChange={(e: any) => handleFieldChange("gasFillAreaOpen", e)}
                 />
               </div>
@@ -811,6 +823,7 @@ export default function InspectionFormPage() {
                 label="Front Driver Wheel"
                 name="frontDriverWheel"
                 fileList={fileLists.frontDriverWheel}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("frontDriverWheel", e)}
               />
               <FormField
@@ -818,6 +831,7 @@ export default function InspectionFormPage() {
                 label="Front Passenger Wheel"
                 name="frontPassengerWheel"
                 fileList={fileLists.frontPassengerWheel}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("frontPassengerWheel", e)}
               />
               <FormField
@@ -825,13 +839,15 @@ export default function InspectionFormPage() {
                 label="Back Driver Wheel"
                 name="backDriverWheel"
                 fileList={fileLists.backDriverWheel}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("backDriverWheel", e)}
               />
               <FormField
                 type="upload"
                 label="Back Passenger Wheel"
                 name="backPassengerWheel"
-                fileList={fileLists.backPassengerWheel}
+                fileList={fileLists.backPassengerWheel} 
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("backPassengerWheel", e)}
               />
             </div>
@@ -843,6 +859,7 @@ export default function InspectionFormPage() {
                 label="Front Driver Wheel"
                 name="undercarFrontDriverWheel"
                 fileList={fileLists.undercarFrontDriverWheel}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("undercarFrontDriverWheel", e)}
               />
               <FormField
@@ -850,6 +867,7 @@ export default function InspectionFormPage() {
                 label="Under Front Bumper"
                 name="underFrontBumper"
                 fileList={fileLists.underFrontBumper}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("underFrontBumper", e)}
               />
               <FormField
@@ -857,6 +875,7 @@ export default function InspectionFormPage() {
                 label="Front Passenger Wheel"
                 name="undercarFrontPassengerWheel"
                 fileList={fileLists.undercarFrontPassengerWheel}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("undercarFrontPassengerWheel", e)}
               />
               <FormField
@@ -864,6 +883,7 @@ export default function InspectionFormPage() {
                 label="Back Driver Wheel"
                 name="undercarBackDriverWheel"
                 fileList={fileLists.undercarBackDriverWheel}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("undercarBackDriverWheel", e)}
               />
               <FormField
@@ -871,6 +891,7 @@ export default function InspectionFormPage() {
                 label="Under Back Bumper"
                 name="underBackBumper"
                 fileList={fileLists.underBackBumper}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("underBackBumper", e)}
               />
               <FormField
@@ -878,6 +899,7 @@ export default function InspectionFormPage() {
                 label="Back Passenger Wheel"
                 name="undercarBackPassengerWheel"
                 fileList={fileLists.undercarBackPassengerWheel}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("undercarBackPassengerWheel", e)}
               />
               <FormField
@@ -885,6 +907,7 @@ export default function InspectionFormPage() {
                 label="Panoramic Photo (front half)"
                 name="panoramicFront"
                 fileList={fileLists.panoramicFront}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("panoramicFront", e)}
               />
               <FormField
@@ -892,6 +915,7 @@ export default function InspectionFormPage() {
                 label="Panoramic Photo (back half)"
                 name="panoramicBack"
                 fileList={fileLists.panoramicBack}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("panoramicBack", e)}
               />
             </div>
@@ -1035,6 +1059,7 @@ export default function InspectionFormPage() {
                 label="Front Driver Side"
                 name="interiorFrontDriverSide"
                 fileList={fileLists.interiorFrontDriverSide}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("interiorFrontDriverSide", e)}
               />
               <FormField
@@ -1042,6 +1067,7 @@ export default function InspectionFormPage() {
                 label="Front Passenger Side"
                 name="interiorFrontPassengerSide"
                 fileList={fileLists.interiorFrontPassengerSide}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("interiorFrontPassengerSide", e)}
               />
               <FormField
@@ -1049,6 +1075,7 @@ export default function InspectionFormPage() {
                 label="Backseat Picture From Right Side"
                 name="interiorBackseatRight"
                 fileList={fileLists.interiorBackseatRight}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("interiorBackseatRight", e)}
               />
               <FormField
@@ -1056,6 +1083,7 @@ export default function InspectionFormPage() {
                 label="Backseat Picture From Left Side"
                 name="interiorBackseatLeft"
                 fileList={fileLists.interiorBackseatLeft}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("interiorBackseatLeft", e)}
               />
               <FormField
@@ -1063,6 +1091,7 @@ export default function InspectionFormPage() {
                 label="Center Stack"
                 name="interiorCenterStack"
                 fileList={fileLists.interiorCenterStack}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("interiorCenterStack", e)}
               />
               <FormField
@@ -1070,6 +1099,7 @@ export default function InspectionFormPage() {
                 label="Center Console"
                 name="interiorCenterConsole"
                 fileList={fileLists.interiorCenterConsole}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("interiorCenterConsole", e)}
               />
               <FormField
@@ -1077,6 +1107,7 @@ export default function InspectionFormPage() {
                 label="Odometer / Dashboard Full View"
                 name="interiorOdometerDashboard"
                 fileList={fileLists.interiorOdometerDashboard}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("interiorOdometerDashboard", e)}
               />
               <FormField
@@ -1084,6 +1115,7 @@ export default function InspectionFormPage() {
                 label="Navigation"
                 name="interiorNavigation"
                 fileList={fileLists.interiorNavigation}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("interiorNavigation", e)}
               />
               <FormField
@@ -1091,6 +1123,7 @@ export default function InspectionFormPage() {
                 label="Odometer Mileage"
                 name="interiorOdometerMileage"
                 fileList={fileLists.interiorOdometerMileage}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("interiorOdometerMileage", e)}
               />
               <FormField
@@ -1098,6 +1131,7 @@ export default function InspectionFormPage() {
                 label="Trunk Interior"
                 name="interiorTrunk"
                 fileList={fileLists.interiorTrunk}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("interiorTrunk", e)}
               />
               <FormField
@@ -1105,6 +1139,7 @@ export default function InspectionFormPage() {
                 label="Under trunk space"
                 name="interiorUnderTrunk"
                 fileList={fileLists.interiorUnderTrunk}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("interiorUnderTrunk", e)}
               />
               <FormField
@@ -1112,6 +1147,7 @@ export default function InspectionFormPage() {
                 label="Full View Front Dash & Center Console"
                 name="interiorFullDashConsole"
                 fileList={fileLists.interiorFullDashConsole}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("interiorFullDashConsole", e)}
               />
               <FormField
@@ -1119,6 +1155,7 @@ export default function InspectionFormPage() {
                 label="Sunroof"
                 name="interiorSunroof"
                 fileList={fileLists.interiorSunroof}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("interiorSunroof", e)}
               />
               <FormField
@@ -1126,6 +1163,7 @@ export default function InspectionFormPage() {
                 label="Car Manual"
                 name="interiorCarManual"
                 fileList={fileLists.interiorCarManual}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("interiorCarManual", e)}
               />
             </div>
@@ -1312,6 +1350,7 @@ export default function InspectionFormPage() {
                 label="Oil Stick"
                 name="mechOilStick"
                 fileList={fileLists.mechOilStick}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("mechOilStick", e)}
               />
               <FormField
@@ -1319,6 +1358,7 @@ export default function InspectionFormPage() {
                 label="Emission/Vin Sticker"
                 name="mechEmissionVinSticker"
                 fileList={fileLists.mechEmissionVinSticker}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("mechEmissionVinSticker", e)}
               />
               <FormField
@@ -1326,6 +1366,7 @@ export default function InspectionFormPage() {
                 label="Engine Full View"
                 name="mechEngineFullView"
                 fileList={fileLists.mechEngineFullView}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("mechEngineFullView", e)}
               />
               <FormField
@@ -1333,6 +1374,7 @@ export default function InspectionFormPage() {
                 label="Coolant"
                 name="mechCoolant"
                 fileList={fileLists.mechCoolant}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("mechCoolant", e)}
               />
               <FormField
@@ -1340,6 +1382,7 @@ export default function InspectionFormPage() {
                 label="Starting Sound"
                 name="mechStartingSound"
                 fileList={fileLists.mechStartingSound}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("mechStartingSound", e)}
               />
               <FormField
@@ -1347,6 +1390,7 @@ export default function InspectionFormPage() {
                 label="Idle Sound"
                 name="mechIdleSound"
                 fileList={fileLists.mechIdleSound}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("mechIdleSound", e)}
               />
             </div>
@@ -2180,6 +2224,7 @@ export default function InspectionFormPage() {
                 label="Add File"
                 name="rustFiles"
                 fileList={fileLists.rustFiles}
+                uploadProps={{ maxCount: 1, listType: "picture", maxSize: 400 }}    
                 onChange={(e: any) => handleFieldChange("rustFiles", e)}
               />
             </div>

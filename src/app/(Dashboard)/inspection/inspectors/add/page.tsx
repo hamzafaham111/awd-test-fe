@@ -1,7 +1,7 @@
 "use client";
 import Breadcrumbs from "@/components/common/Breadcrumbs";
 import { Card, Form, Input, Button, DatePicker, Select, Checkbox, TimePicker, message } from "antd";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { showErrorToast, showSuccessToast } from "@/utils/errorHandler";
 import { useRouter } from "next/navigation";
@@ -23,6 +23,8 @@ export default function AddInspectorPage() {
   const [form] = Form.useForm();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [states, setStates] = useState<any[]>([]);
+  const [statesLoading, setStatesLoading] = useState(true);
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -38,6 +40,30 @@ export default function AddInspectorPage() {
     shift_end: null,
     days: []
   });
+
+  // Fetch states from API
+  const fetchStates = async () => {
+    try {
+      setStatesLoading(true);
+      const token = typeof window !== 'undefined' ? localStorage.getItem("access") : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      
+      const response = await axios.get(`${apiUrl}/utils/api/v1/states/`, { headers });
+      setStates(response.data || []);
+    } catch (error) {
+      console.error('Error fetching states:', error);
+      showErrorToast(error, "States");
+      // Fallback to empty array if API fails
+      setStates([]);
+    } finally {
+      setStatesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStates();
+  }, []);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({
@@ -156,13 +182,18 @@ export default function AddInspectorPage() {
                   placeholder="Select..."
                   value={formData.state}
                   onChange={(value) => handleInputChange("state", value)}
+                  loading={statesLoading}
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+                  }
                 >
-                  <Option value={1}>Alaska</Option>
-                  <Option value={2}>Alabama</Option>
-                  <Option value={3}>Arizona</Option>
-                  <Option value={4}>Illinois</Option>
-                  <Option value={5}>Florida</Option>
-                  <Option value={6}>Tennessee</Option>
+                  {states.map((state) => (
+                    <Option key={state.id} value={state.id}>
+                      {state.name}
+                    </Option>
+                  ))}
                 </Select>
               </Form.Item>
               <Form.Item label="Password" name="password" className="mb-0" rules={[{ required: true, message: "Password is required" }]}>

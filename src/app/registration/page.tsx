@@ -203,13 +203,27 @@ export default function Registration() {
       console.log(apiData);
       await axios.post(`${apiUrl}/users/api/v1/register/`, apiData);
       showSuccessToast(COMMON_SUCCESS_MESSAGES.REGISTERED);
-      // Redirect to login page after successful registration
-      router.push("/login");
+      // Move to verification step after successful registration
+      animateStep(1);
     } catch (error: any) {
       showErrorToast(error, "Registration");
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleRegisterStep5 = async () => {
+    setShowErrors(true);
+    try {
+      await form.validateFields();
+      await onFinish(); // Call registration API
+    } catch (error) {
+      showErrorToast({ message: COMMON_ERROR_MESSAGES.VALIDATION_ERROR });
+    }
+  };
+
+  const redirectToLogin = () => {
+    router.push("/login");
   };
 
   // Animation classes for Tailwind
@@ -459,9 +473,17 @@ export default function Registration() {
           <div className="text-center">
             <div className="text-6xl mb-4">🎉</div>
             <h3 className="text-2xl font-bold text-sky-600">Registration Complete!</h3>
-            <p className="text-gray-600">
-              Thank you for registering with AWD Auctions. We&apos;ll review your information and get back to you within 24 hours.
+            <p className="text-gray-600 mb-4">
+              Congratulations! You have been registered successfully.
             </p>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+              <p className="text-gray-800 font-medium">
+                <span className="font-bold">Account Status:</span> Your account status is pending.
+              </p>
+              <p className="text-sm text-gray-600 mt-2">
+                Thank you for registering with AWD Auctions. We&apos;ll review your information and get back to you within 24 hours.
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -494,7 +516,7 @@ export default function Registration() {
           </div>
           {/* Navigation Buttons - always at the bottom */}
           <div className="flex justify-center space-x-4 w-full">
-            {currentStep > 1 && (
+            {currentStep > 1 && currentStep < 6 && (
               <button
                 onClick={prevStep}
                 className="px-12 py-2 h-11 border border-sky-600 text-sky-600 hover:bg-sky-50 rounded-lg font-[600]"
@@ -503,7 +525,7 @@ export default function Registration() {
                 Back
               </button>
             )}
-            {currentStep < steps.length ? (
+            {currentStep < 5 ? (
               <button
                 onClick={nextStep}
                 className={`px-12 py-2 h-11 bg-sky-600 hover:bg-sky-700 rounded-lg text-white ${currentStep === 1 && !formData.has_dealer ? "opacity-50 cursor-not-allowed" : ""}`}
@@ -511,15 +533,24 @@ export default function Registration() {
               >
                 Continue
               </button>
-            ) : (
+            ) : currentStep === 5 ? (
               <Button
                 type="primary"
                 htmlType="submit"
-                className="px-8 py-2 h-11 bg-sky-600 hover:bg-sky-700 rounded-lg"
-                onClick={onFinish}
+                className="px-12 py-2 h-11 bg-sky-600 hover:bg-sky-700 rounded-lg"
+                onClick={handleRegisterStep5}
                 disabled={animating || submitting}
               >
-                Complete Registration
+                Register
+              </Button>
+            ) : (
+              <Button
+                type="primary"
+                className="px-12 py-2 h-11 bg-sky-600 hover:bg-sky-700 rounded-lg"
+                onClick={redirectToLogin}
+                disabled={animating}
+              >
+                Redirect to Login
               </Button>
             )}
           </div>

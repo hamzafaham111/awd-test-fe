@@ -1,8 +1,8 @@
-import { Form, Input, Select, Radio, Upload, Button, Checkbox } from "antd"
+import { Form, Input, Select, Radio, Upload, Button, Checkbox, message } from "antd"
 import { PaperClipOutlined } from "@ant-design/icons"
 import type { FormItemProps } from "antd"
 import type { UploadFile } from "antd/es/upload/interface"
-import { ReactNode } from "react"
+import { ReactNode, useState } from "react"
 
 interface FormFieldProps extends Omit<FormItemProps, "children"> {
   type?: "text" | "password" | "email" | "select" | "radio" | "upload" | "checkbox" | "textarea" | "link" | "button-group"
@@ -10,6 +10,7 @@ interface FormFieldProps extends Omit<FormItemProps, "children"> {
   uploadProps?: {
     maxCount?: number
     listType?: "text" | "picture" | "picture-card"
+    maxSize?: number // in KB
   }
   prefix?: ReactNode
   placeholder?: string
@@ -37,6 +38,48 @@ export function FormField({
   name,
   ...props
 }: FormFieldProps & { value?: any; onChange?: any; fileList?: any; name?: string }) {
+  const [fileSizeError, setFileSizeError] = useState<string>("");
+  
+  // File size validation function
+  const validateFileSize = (file: File): boolean => {
+    if (!uploadProps.maxSize) {
+      // No size limit set, allow any size
+      setFileSizeError("");
+      return true;
+    }
+    
+    const maxSizeInBytes = uploadProps.maxSize * 1024; // Convert KB to bytes
+    if (file.size > maxSizeInBytes) {
+      setFileSizeError(`File size must be less than ${uploadProps.maxSize} KB`);
+      return false;
+    }
+    
+    setFileSizeError("");
+    return true;
+  };
+  
+  // Handle file change with validation
+  const handleFileChange = (info: any) => {
+    if (type === "upload" && uploadProps.maxSize) {
+      const { fileList } = info;
+      const lastFile = fileList[fileList.length - 1];
+      
+      if (lastFile && lastFile.originFileObj) {
+        const isValidSize = validateFileSize(lastFile.originFileObj);
+        if (!isValidSize) {
+          // Remove the invalid file from the list
+          const validFileList = fileList.slice(0, -1);
+          const modifiedInfo = { ...info, fileList: validFileList };
+          onChange && onChange(modifiedInfo);
+          return;
+        }
+      }
+    }
+    
+    // Clear any previous errors and proceed with normal onChange
+    setFileSizeError("");
+    onChange && onChange(info);
+  };
   const renderField = () => {
     switch (type) {
       case "password":
@@ -90,22 +133,34 @@ export function FormField({
         )
       case "upload":
         return (
-          <Upload
-            listType={uploadProps.listType}
-            maxCount={uploadProps.maxCount}
-            beforeUpload={() => false}
-            disabled={disabled}
-            fileList={fileList}
-            onChange={onChange}
-            className="w-full"
-          >
-            <div className="w-full">
-              <button type="button" className="bg-gray-100 text-sky-700 rounded-md border-none py-1 px-12">
-                <PaperClipOutlined />
-                Attachment
-              </button>
-            </div>
-          </Upload>
+          <div>
+            <Upload
+              listType={uploadProps.listType}
+              maxCount={uploadProps.maxCount}
+              beforeUpload={() => false}
+              disabled={disabled}
+              fileList={fileList}
+              onChange={handleFileChange}
+              className="w-full"
+            >
+              <div className="w-full">
+                <button type="button" className="bg-gray-100 text-sky-700 rounded-md border-none py-1 px-12">
+                  <PaperClipOutlined />
+                  Attachment
+                </button>
+              </div>
+            </Upload>
+            {fileSizeError && (
+              <div className="text-red-500 text-sm mt-1">
+                {fileSizeError}
+              </div>
+            )}
+            {/* {uploadProps.maxSize && (
+              <div className="text-gray-500 text-xs mt-1">
+                Maximum file size: {uploadProps.maxSize} KB
+              </div>
+            )} */}
+          </div>
         )
       case "link":
         return (

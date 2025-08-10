@@ -3,7 +3,7 @@ import "../globals.css";
 import ClientHeader from "@/components/layout/ClientHeader";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
-import { navItemsByRole, getDsNavItems } from "@/data/navItems";
+import { navItemsByRole, getDsNavItems, getTransporterNavItems } from "@/data/navItems";
 import { Drawer, Button, Menu, Avatar, Dropdown } from "antd";
 import Image from "next/image";
 import { MenuOutlined, CloseOutlined, SettingOutlined, LogoutOutlined } from "@ant-design/icons";
@@ -27,6 +27,9 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
   let dsMode = false;
   if (user.role === "ds") {
     navItems = getDsNavItems(user.backendRole || "BOTH");
+    dsMode = true;
+  } else if (user.role === "transporter") {
+    navItems = getTransporterNavItems();
     dsMode = true;
   } else {
     navItems = navItemsByRole[user.role] || [];

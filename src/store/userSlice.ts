@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 interface UserState {
   id: number;
   name: string;
-  role: string; // frontend role: 'ds', 'superadmin', 'inspector'
+  role: string; // frontend role: 'ds', 'superadmin', 'inspector', 'transporter'
   backendRole?: string; // backend role: 'SELLER', 'BUYER', 'BOTH', etc.
   avatar: string;
 }
@@ -11,7 +11,7 @@ interface UserState {
 const initialState: UserState = {
   id: 1,
   name: "Hamza Faham",
-  role: "ds", // or "inspector" - "ds" - "superadmin"
+  role: "ds", // or "inspector" - "ds" - "superadmin" - "transporter"
   backendRole: "BOTH", // default fallback
   avatar: "/images/dummy-profile-logo.jpg",
 };
