@@ -69,7 +69,7 @@ const columns = [
     dataIndex: "status",
     key: "status",
     render: (status: string) => (
-      <Tag color="green">{status}</Tag>
+      <Tag color="green">Completed</Tag>
     ),
   },
   {

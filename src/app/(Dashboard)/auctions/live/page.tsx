@@ -216,7 +216,10 @@ export default function AuctionsLivePage() {
           <DataTable 
             columns={columns} 
             data={data} 
-            tableData={{}} 
+            tableData={{
+              isEnableFilterInput: true,
+              showAddButton: false,
+            }} 
             loading={loading}
           />
         </Card>

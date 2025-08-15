@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Card, Tabs, Button, Modal, Form, Select, Upload, message, Input } from "antd";
-import { CheckCircleTwoTone, CarOutlined, FileTextOutlined, DollarOutlined, UserOutlined, CalendarOutlined, ClockCircleOutlined, UploadOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import { CheckCircleTwoTone, CarOutlined, FileTextOutlined, DollarOutlined, UserOutlined, CalendarOutlined, ClockCircleOutlined, UploadOutlined, CheckCircleOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import type { UploadFile } from "antd/es/upload/interface";
 
 const { TextArea } = Input;
@@ -106,6 +106,14 @@ function ArbitrationFormModal({
       ]}
       width={800}
     >
+      {/* Note about Oil Leak */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+        <div className="flex items-center">
+          <ExclamationCircleOutlined className="text-yellow-600 mr-2" />
+          <span className="text-yellow-800 font-medium">Oil Leak is not acceptable for arbitration</span>
+        </div>
+      </div>
+
       <Form form={form} layout="vertical" 
             initialValues={{
               name: `${auctionData.originalData?.request_id?.buyer_id?.first_name || ''} ${auctionData.originalData?.request_id?.buyer_id?.last_name || ''}`.trim() || 'N/A',
@@ -134,19 +142,6 @@ function ArbitrationFormModal({
         </Form.Item>
 
         <Form.Item
-          label="Priority"
-          name="priority"
-          rules={[{ required: true, message: 'Please select priority' }]}
-        >
-          <Select placeholder="Select priority">
-            <Select.Option value="1">Low</Select.Option>
-            <Select.Option value="2">Medium</Select.Option>
-            <Select.Option value="3">High</Select.Option>
-            <Select.Option value="4">Urgent</Select.Option>
-          </Select>
-        </Form.Item>
-
-        <Form.Item
           label="Define Issues"
           name="issues"
           rules={[{ required: true, message: 'Please describe the issues' }]}
@@ -157,7 +152,7 @@ function ArbitrationFormModal({
           />
         </Form.Item>
 
-        <Form.Item label="Attachments">
+        <Form.Item label="Add Images, Add Videos">
           <Upload {...uploadProps}>
             <Button icon={<UploadOutlined />}>
               Drag 'n' drop some files here, or click to select files

@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Button, Tabs, Timeline } from 'antd';
+import { Button, Tabs, Timeline, Space } from 'antd';
+import { EyeOutlined } from '@ant-design/icons';
 import Image from 'next/image';
+import Link from 'next/link';
 import DataTable from '@/components/common/DataTable';
 import ExpandableRowContent from '@/components/common/ExpandableRowContent';
 import { JobData, JobStatus } from '@/hooks/useTransportationJobs';
@@ -23,7 +25,7 @@ const JobsTable = ({ data, loading, status, title }: JobsTableProps) => {
         dataIndex: "image",
         key: "image",
         render: (img: any) => (
-          <Image src={img || "/images/car1.jpg"} alt="car" width={70} height={50} className="rounded" />
+          <Image src={img || "/images/dummy-profile-logo.jpg"} alt="car" width={70} height={50} className="rounded" />
         ),
       },
       { title: "VIN(last six)", dataIndex: "vin", key: "vin" },
@@ -50,6 +52,24 @@ const JobsTable = ({ data, loading, status, title }: JobsTableProps) => {
     // Add Drop Time for Ended jobs
     if (status === 'Ended') {
       baseColumns.splice(4, 0, { title: "Drop Time", dataIndex: "dropTime", key: "dropTime" });
+    }
+
+    // Add Action column for Accepted jobs
+    if (status === 'Accepted') {
+      baseColumns.push({
+        title: "Action",
+        key: "action",
+        dataIndex: "action",
+        render: (_: any, record: JobData) => (
+          <Space>
+            <Link href={`/transporter-accepted-jobs/${record.key}`}>
+              <Button type="primary" icon={<EyeOutlined />} size="small">
+                View Details
+              </Button>
+            </Link>
+          </Space>
+        ),
+      });
     }
 
     return baseColumns;
