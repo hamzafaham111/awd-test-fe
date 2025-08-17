@@ -4,6 +4,7 @@ import DataTable from "@/components/common/DataTable";
 import { Button, Dropdown, Tag, Spin } from "antd";
 import { SettingOutlined, DownOutlined, EyeOutlined, UserOutlined } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import axios from "axios";
 import { showErrorToast, showSuccessToast } from "@/utils/errorHandler";
 
@@ -11,6 +12,7 @@ export default function TicketListPage() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   // Fetch tickets from API
   const fetchTickets = async () => {
@@ -26,12 +28,18 @@ export default function TicketListPage() {
       // Map API response to table format
       const mappedData = (response.data || []).map((item: any, index: number) => ({
         key: item.id || index + 1,
-        ticketNo: item.ticket_number || item.ticket_no || item.id || `TKT-${index + 1}`,
-        updated: item.updated_at ? new Date(item.updated_at).toLocaleDateString() : item.updated || "N/A",
-        name: item.user_name || item.name || item.created_by || "N/A",
-        subject: item.subject || item.title || "No subject",
-        status: item.status || "New",
-        priority: item.priority || "Medium",
+        ticketNo: item.id || `TKT-${index + 1}`,
+        updated: item.updated_at ? new Date(item.updated_at).toLocaleDateString() : "N/A",
+        name: item.name || "N/A",
+        email: item.email || "N/A",
+        auctionId: item.auction_id || "N/A",
+        subject: item.subject || "No subject",
+        message: item.message || "No message",
+        status: item.status?.name || "New",
+        statusColor: item.status?.color || "default",
+        priority: item.priority || "2",
+        category: item.category_id?.name || "N/A",
+        createdAt: item.created_at ? new Date(item.created_at).toLocaleDateString() : "N/A",
         originalData: item
       }));
       
@@ -58,14 +66,12 @@ export default function TicketListPage() {
       render: (val: string) => <span className="font-semibold text-blue-700 cursor-pointer">{val}</span>,
     },
     {
-      title: "Updated",
-      dataIndex: "updated",
-      key: "updated",
-    },
-    {
-      title: "Name",
-      dataIndex: "name",
-      key: "name",
+      title: "Category",
+      dataIndex: "category",
+      key: "category",
+      render: (val: string) => (
+        <Tag color="blue">{val}</Tag>
+      ),
     },
     {
       title: "Subject",
@@ -76,28 +82,42 @@ export default function TicketListPage() {
       ),
     },
     {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      render: (val: string, record: any) => (
+        <div>
+          <div className="font-semibold">{val}</div>
+          <div className="text-xs text-gray-500">{record.email}</div>
+        </div>
+      ),
+    },
+    {
+      title: "Auction ID",
+      dataIndex: "auctionId",
+      key: "auctionId",
+      render: (val: string) => (
+        <span className="font-mono text-sm">{val}</span>
+      ),
+    },
+    {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (val: string) => {
-        let color = "default";
-        if (val === "New") color = "red";
-        else if (val === "Resolved") color = "green";
-        else if (val === "Reported to Seller") color = "blue";
-        return <Tag color={color}>{val}</Tag>;
+      render: (val: string, record: any) => {
+        return <Tag color={record.statusColor || "default"}>{val}</Tag>;
       },
     },
     {
-      title: "Priority",
-      dataIndex: "priority",
-      key: "priority",
-      render: (val: string) => {
-        let color = "default";
-        if (val === "Hight") color = "gold";
-        else if (val === "Medium") color = "green";
-        else if (val === "Low") color = "blue";
-        return <Tag color={color}>{val}</Tag>;
-      },
+      title: "Updated",
+      dataIndex: "updated",
+      key: "updated",
+      render: (val: string) => (
+        <div className="text-sm">
+          <div>{val}</div>
+          <div className="text-xs text-gray-500">Updated</div>
+        </div>
+      ),
     },
     {
       title: "Action",
@@ -107,10 +127,12 @@ export default function TicketListPage() {
           {
             key: 'view',
             label: (
-              <span className="flex items-center gap-2"><EyeOutlined /> view</span>
+              <span className="flex items-center gap-2"><EyeOutlined /> View Details</span>
             ),
             onClick: () => {
-              // Implement view logic here
+              // Pass the ticket data through URL state
+              const ticketData = encodeURIComponent(JSON.stringify(record));
+              router.push(`/tickets/list/${record.key}?data=${ticketData}`);
             },
           },
         ];

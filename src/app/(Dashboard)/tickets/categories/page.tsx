@@ -5,6 +5,7 @@ import { Button, Dropdown, Spin, Modal } from "antd";
 import { SettingOutlined, DownOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import axios from "axios";
 import { showErrorToast, showSuccessToast } from "@/utils/errorHandler";
 
@@ -60,13 +61,8 @@ export default function TicketCategoriesPage() {
         ...(token && { Authorization: `Bearer ${token}` }),
       };
       
-      const payload = {
-        is_active: "True"
-      };
-      
-      await axios.delete(`${apiUrl}/arbitration/api/v1/inactive-ticket-type/${record.key}/`, { 
-        headers,
-        data: payload 
+      await axios.delete(`${apiUrl}/arbitration/api/v1/ticket-type/${record.key}/`, { 
+        headers
       });
       
       showSuccessToast("Category deleted successfully!", "Category");
@@ -190,6 +186,11 @@ export default function TicketCategoriesPage() {
             addButtonHref: "/tickets/categories/create",
           }}
         />
+        <div className="flex gap-4 mt-4">
+          <Link href="/tickets/categories/trash" className="text-blue-700 hover:underline">
+            View Trash
+          </Link>
+        </div>
       </div>
     </div>
   );
