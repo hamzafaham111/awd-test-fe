@@ -181,7 +181,7 @@ export default function TransporterNewJobsPage() {
             <Image src="/icons/distance.svg" alt="distance" width={60} height={60} />
           </div>
           <div className="font-bold text-blue-900 mb-1">Distance</div>
-          <div className="text-lg font-semibold">{record.distance} Km</div>
+          <div className="text-lg font-semibold">{record.distance}</div>
           <Button 
             type="primary" 
             size="large" 

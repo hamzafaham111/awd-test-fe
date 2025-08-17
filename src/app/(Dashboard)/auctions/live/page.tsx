@@ -132,7 +132,7 @@ export default function AuctionsLivePage() {
         status: 0
       };
       
-      await axios.patch(`${apiUrl}/auctions/api/v1/stop/${selectedAuction.key}/`, payload, { headers });
+      await axios.patch(`${apiUrl}/auctions/api/v1/stop/${selectedAuction.auctionId}/`, payload, { headers });
       
       showSuccessToast("Auction stopped successfully!", "Auction");
       setStopModalVisible(false);

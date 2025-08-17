@@ -72,20 +72,20 @@ const columns = [
       <Tag color="green">Completed</Tag>
     ),
   },
-  {
-    title: "Action",
-    key: "action",
-    render: (_: any, record: any) => (
-      <Space>
-        <Button type="primary" icon={<EyeOutlined />} size="small">
-          View Details
-        </Button>
-        <Button type="default" size="small">
-          Download Receipt
-        </Button>
-      </Space>
-    ),
-  },
+  // {
+  //   title: "Action",
+  //   key: "action",
+  //   render: (_: any, record: any) => (
+  //     <Space>
+  //       <Button type="primary" icon={<EyeOutlined />} size="small">
+  //         View Details
+  //       </Button>
+  //       <Button type="default" size="small">
+  //         Download Receipt
+  //       </Button>
+  //     </Space>
+  //   ),
+  // },
 ];
 
 export default function TransporterCompletedJobsPage() {

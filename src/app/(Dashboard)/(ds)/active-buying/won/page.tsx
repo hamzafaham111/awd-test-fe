@@ -152,12 +152,15 @@ function ArbitrationFormModal({
           />
         </Form.Item>
 
-        <Form.Item label="Add Images, Add Videos">
+        <Form.Item label="Upload Evidence (Images/Videos of the issue)">
           <Upload {...uploadProps}>
             <Button icon={<UploadOutlined />}>
-              Drag 'n' drop some files here, or click to select files
+              Drag 'n' drop evidence files here, or click to select files
             </Button>
           </Upload>
+          <div className="text-xs text-gray-500 mt-1">
+            Upload clear photos or videos showing the specific issue with the vehicle
+          </div>
         </Form.Item>
       </Form>
     </Modal>
