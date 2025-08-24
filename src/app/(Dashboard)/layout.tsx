@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import Header from "@/components/layout/Header";
 import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/store/userSlice";
+import NotificationBell from "@/components/common/NotificationBell";
 
 interface NavItem {
   key?: string;
@@ -163,6 +164,7 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
               {/* Right: Amount and Avatar */}
               <div className="flex items-center gap-6 pr-6">
                 <span className="text-lg font-semibold text-gray-900">$0.00</span>
+                <NotificationBell />
                 <Dropdown overlay={userMenu} trigger={["click"]} placement="bottomRight" arrow>
                   <Avatar size={40} src="/images/dummy-profile-logo.jpg" className="bg-blue-100 cursor-pointer" />
                 </Dropdown>

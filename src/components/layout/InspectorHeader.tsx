@@ -11,6 +11,7 @@ import { Drawer, Button, Avatar } from "antd";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import NotificationBell from "@/components/common/NotificationBell";
 
 const navItems = [
   { label: "Dashboard", icon: <HomeOutlined />, href: "/" },
@@ -71,6 +72,7 @@ export default function InspectorHeader() {
             aria-label="Toggle Fullscreen"
             onClick={handleFullscreen}
           />
+          <NotificationBell />
         </div>
         <Avatar size={40} src="/images/dummy-profile-logo.jpg" className="bg-blue-100 cursor-pointer" />
       </div>

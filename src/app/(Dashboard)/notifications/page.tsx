@@ -35,28 +35,13 @@ import {
 } from '@ant-design/icons';
 import { formatDistanceToNow } from 'date-fns';
 import { useNotifications } from '@/hooks/useNotifications';
+import { Notification } from '@/services/api/notifications';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 const { Search } = Input;
-
-interface Notification {
-  id: string;
-  title: string;
-  content: string;
-  priority: 'high' | 'medium' | 'low';
-  type: 'system' | 'auction' | 'payment' | 'inspection' | 'transport' | 'general';
-  isRead: boolean;
-  createdAt: string;
-  sender?: string;
-  actionUrl?: string;
-  metadata?: {
-    auctionId?: string;
-    amount?: number;
-    vehicleId?: string;
-    [key: string]: any;
-  };
-}
 
 // Remove mock data - now using real-time API
 
@@ -106,22 +91,30 @@ const getTypeIcon = (type: string) => {
 const getTypeColor = (type: string) => {
   switch (type) {
     case 'auction':
-      return 'purple';
+      return 'blue';
     case 'payment':
       return 'green';
     case 'inspection':
-      return 'cyan';
+      return 'orange';
     case 'transport':
-      return 'blue';
+      return 'purple';
     case 'system':
-      return 'gray';
+      return 'red';
     default:
       return 'default';
   }
 };
 
 export default function NotificationsPage() {
-  // Use the notifications hook with real-time API
+  const user = useSelector((state: RootState) => state.user);
+  const [filters, setFilters] = useState({
+    priority: 'all',
+    type: 'all',
+    readStatus: 'all',
+    search: ''
+  });
+  const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
+
   const {
     notifications,
     loading,
@@ -136,17 +129,11 @@ export default function NotificationsPage() {
     handlePageChange
   } = useNotifications();
 
-  const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
-  const [filters, setFilters] = useState({
-    priority: 'all',
-    type: 'all',
-    readStatus: 'all',
-    search: ''
-  });
-
+  // Filter notifications based on current filters
   useEffect(() => {
-    // Apply filters locally
-    let filtered = notifications;
+    if (!notifications) return;
+    
+    let filtered = [...notifications];
     
     if (filters.priority !== 'all') {
       filtered = filtered.filter(n => n.priority === filters.priority);
@@ -158,14 +145,14 @@ export default function NotificationsPage() {
     
     if (filters.readStatus !== 'all') {
       filtered = filtered.filter(n => 
-        filters.readStatus === 'read' ? n.isRead : !n.isRead
+        filters.readStatus === 'read' ? (n.isRead || n.is_read) : !(n.isRead || n.is_read)
       );
     }
     
     if (filters.search) {
       filtered = filtered.filter(n => 
         n.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-        n.content.toLowerCase().includes(filters.search.toLowerCase())
+        (n.content || n.text || '').toLowerCase().includes(filters.search.toLowerCase())
       );
     }
     
@@ -194,11 +181,11 @@ export default function NotificationsPage() {
   const renderNotificationItem = (notification: Notification) => (
     <List.Item
       key={notification.id}
-      className={`notification-item ${!notification.isRead ? 'unread' : ''} hover:shadow-md transition-all duration-200`}
+      className={`notification-item ${!(notification.isRead || notification.is_read) ? 'unread' : ''} hover:shadow-md transition-all duration-200`}
       data-priority={notification.priority}
       style={{
-        backgroundColor: notification.isRead ? 'transparent' : '#f0f9ff',
-        borderLeft: `4px solid ${notification.isRead ? '#e5e7eb' : getPriorityColor(notification.priority) === 'red' ? '#ef4444' : getPriorityColor(notification.priority) === 'orange' ? '#f97316' : '#3b82f6'}`,
+        backgroundColor: (notification.isRead || notification.is_read) ? 'transparent' : '#f0f9ff',
+        borderLeft: `4px solid ${(notification.isRead || notification.is_read) ? '#e5e7eb' : getPriorityColor(notification.priority) === 'red' ? '#ef4444' : getPriorityColor(notification.priority) === 'orange' ? '#f97316' : '#3b82f6'}`,
         borderRadius: '8px',
         marginBottom: '8px',
         padding: '16px',
@@ -206,14 +193,14 @@ export default function NotificationsPage() {
         cursor: 'pointer'
       }}
       onClick={() => {
-        if (!notification.isRead) {
-          handleMarkAsRead(notification.id);
+        if (!(notification.isRead || notification.is_read)) {
+          handleMarkAsRead(notification.id.toString());
         }
       }}
     >
       <div className="flex items-start w-full">
         <div className="flex-shrink-0 mr-3">
-          <Badge count={notification.isRead ? 0 : 1} size="small">
+          <Badge count={(notification.isRead || notification.is_read) ? 0 : 1} size="small">
             <Avatar 
               size={48} 
               icon={getPriorityIcon(notification.priority)}
@@ -228,17 +215,19 @@ export default function NotificationsPage() {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center gap-2">
-              <Title level={5} className="mb-0" style={{ color: notification.isRead ? '#6b7280' : '#111827' }}>
+              <Title level={5} className="mb-0" style={{ color: (notification.isRead || notification.is_read) ? '#6b7280' : '#111827' }}>
                 {notification.title}
               </Title>
-              {!notification.isRead && (
+              {!(notification.isRead || notification.is_read) && (
                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>
               )}
             </div>
             <Space size="small">
-              <Tag color={getTypeColor(notification.type)}>
-                {getTypeIcon(notification.type)} {notification.type.charAt(0).toUpperCase() + notification.type.slice(1)}
-              </Tag>
+              {notification.type && (
+                <Tag color={getTypeColor(notification.type)}>
+                  {getTypeIcon(notification.type)} {notification.type.charAt(0).toUpperCase() + notification.type.slice(1)}
+                </Tag>
+              )}
               <Tag color={getPriorityColor(notification.priority)}>
                 {notification.priority.charAt(0).toUpperCase() + notification.priority.slice(1)} Priority
               </Tag>
@@ -246,14 +235,14 @@ export default function NotificationsPage() {
           </div>
           
           <Paragraph className="mb-2 text-gray-600">
-            {notification.content}
+            {notification.content || notification.text}
           </Paragraph>
           
           <div className="flex items-center justify-between">
             <Space size="middle">
               <Text type="secondary" className="text-sm">
                 <ClockCircleOutlined className="mr-1" />
-                {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                {formatDistanceToNow(new Date(notification.createdAt || notification.created_at || Date.now()), { addSuffix: true })}
               </Text>
               {notification.sender && (
                 <Text type="secondary" className="text-sm">
@@ -272,12 +261,12 @@ export default function NotificationsPage() {
                   View Details
                 </Button>
               )}
-              {!notification.isRead && (
+              {!(notification.isRead || notification.is_read) && (
                 <Button 
                   type="link" 
                   size="small"
                   className="p-0 h-auto text-gray-500 hover:text-gray-700"
-                  onClick={() => handleMarkAsRead(notification.id)}
+                  onClick={() => handleMarkAsRead(notification.id.toString())}
                 >
                   Mark as Read
                 </Button>
@@ -315,6 +304,13 @@ export default function NotificationsPage() {
               </Badge>
             )}
             
+            {/* User role indicator */}
+            <div className="flex items-center gap-2">
+              <Tag color="blue" className="text-xs">
+                {user?.role || user?.backendRole || 'User'}
+              </Tag>
+            </div>
+            
             {/* Real-time status indicator */}
             <div className="flex items-center gap-2">
               {loading && <Spin size="small" />}
@@ -348,106 +344,83 @@ export default function NotificationsPage() {
         <Text type="secondary">
           Stay updated with important updates, auction results, payments, and system notifications
         </Text>
-        
-        {/* Error alert */}
-        {error && (
-          <Alert
-            message="Error loading notifications"
-            description={error}
-            type="error"
-            showIcon
-            className="mt-3"
-            action={
-              <Button size="small" onClick={() => fetchNotifications()}>
-                Retry
-              </Button>
-            }
-          />
-        )}
       </div>
 
-      {/* Filters Section */}
-      <Card className="mb-6 shadow-sm notifications-filters">
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} md={6}>
-            <div>
-              <Text strong className="block mb-2">Priority</Text>
-              <Select
-                value={filters.priority}
-                onChange={(value) => setFilters(prev => ({ ...prev, priority: value }))}
-                className="w-full"
-                placeholder="All Priorities"
-              >
-                <Option value="all">All Priorities</Option>
-                <Option value="high">High Priority</Option>
-                <Option value="medium">Medium Priority</Option>
-                <Option value="low">Low Priority</Option>
-              </Select>
-            </div>
-          </Col>
+      {/* Error Alert */}
+      {error && (
+        <Alert
+          message="Error Loading Notifications"
+          description={error}
+          type="error"
+          showIcon
+          className="mb-4"
+          action={
+            <Button size="small" onClick={() => fetchNotifications()}>
+              Retry
+            </Button>
+          }
+        />
+      )}
+
+      {/* Filters */}
+      <Card className="mb-6">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <FilterOutlined className="text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">Filters:</span>
+          </div>
           
-          <Col xs={24} sm={12} md={6}>
-            <div>
-              <Text strong className="block mb-2">Type</Text>
-              <Select
-                value={filters.type}
-                onChange={(value) => setFilters(prev => ({ ...prev, type: value }))}
-                className="w-full"
-                placeholder="All Types"
-              >
-                <Option value="all">All Types</Option>
-                <Option value="auction">Auction</Option>
-                <Option value="payment">Payment</Option>
-                <Option value="inspection">Inspection</Option>
-                <Option value="transport">Transport</Option>
-                <Option value="system">System</Option>
-                <Option value="general">General</Option>
-              </Select>
-            </div>
-          </Col>
+          <Select
+            value={filters.priority}
+            onChange={(value) => setFilters(prev => ({ ...prev, priority: value }))}
+            style={{ width: 150 }}
+            placeholder="Priority"
+          >
+            <Option value="all">All Priorities</Option>
+            <Option value="high">High Priority</Option>
+            <Option value="medium">Medium Priority</Option>
+            <Option value="low">Low Priority</Option>
+          </Select>
           
-          <Col xs={24} sm={12} md={6}>
-            <div>
-              <Text strong className="block mb-2">Status</Text>
-              <Select
-                value={filters.readStatus}
-                onChange={(value) => setFilters(prev => ({ ...prev, readStatus: value }))}
-                className="w-full"
-                placeholder="All Statuses"
-              >
-                <Option value="all">All Statuses</Option>
-                <Option value="unread">Unread Only</Option>
-                <Option value="read">Read Only</Option>
-              </Select>
-            </div>
-          </Col>
+          <Select
+            value={filters.type}
+            onChange={(value) => setFilters(prev => ({ ...prev, type: value }))}
+            style={{ width: 150 }}
+            placeholder="Type"
+          >
+            <Option value="all">All Types</Option>
+            <Option value="system">System</Option>
+            <Option value="auction">Auction</Option>
+            <Option value="payment">Payment</Option>
+            <Option value="inspection">Inspection</Option>
+            <Option value="transport">Transport</Option>
+            <Option value="general">General</Option>
+          </Select>
           
-          <Col xs={24} sm={12} md={6}>
-            <div>
-              <Text strong className="block mb-2">Search</Text>
-              <Search
-                placeholder="Search notifications..."
-                value={filters.search}
-                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                prefix={<SearchOutlined />}
-                allowClear
-                className="notifications-search"
-              />
-            </div>
-          </Col>
-        </Row>
-        
-        <Divider className="my-4" />
-        
-        <div className="flex items-center justify-between">
-          <Text type="secondary">
-            Showing {filteredNotifications.length} of {notifications.length} notifications
-          </Text>
+          <Select
+            value={filters.readStatus}
+            onChange={(value) => setFilters(prev => ({ ...prev, readStatus: value }))}
+            style={{ width: 150 }}
+            placeholder="Status"
+          >
+            <Option value="all">All Statuses</Option>
+            <Option value="unread">Unread</Option>
+            <Option value="read">Read</Option>
+          </Select>
+          
+          <Search
+            placeholder="Search notifications..."
+            value={filters.search}
+            onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+            style={{ width: 250 }}
+            allowClear
+          />
           
           <Button 
-            icon={<ClearOutlined />}
+            type="text" 
+            icon={<ClearOutlined />} 
             onClick={handleClearFilters}
-            disabled={filters.priority === 'all' && filters.type === 'all' && filters.readStatus === 'all' && !filters.search}
+            className="text-gray-500 hover:text-gray-700"
           >
             Clear Filters
           </Button>
@@ -455,23 +428,21 @@ export default function NotificationsPage() {
       </Card>
 
       {/* Notifications List */}
-      <Card className="shadow-sm">
-        {loading ? (
-          <div className="text-center py-12">
-            <Spin size="large" />
-            <div className="mt-4 text-gray-500">Loading notifications...</div>
+      <Card>
+        <div className="mb-4">
+          <div className="flex items-center justify-between">
+            <Text className="text-gray-600">
+              Showing {filteredNotifications.length} of {total} notifications
+            </Text>
+            {loading && <Spin size="small" />}
           </div>
-        ) : filteredNotifications.length === 0 ? (
+        </div>
+        
+        {filteredNotifications.length === 0 ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={
-              <div>
-                <Text type="secondary">No notifications found</Text>
-                <br />
-                <Text type="secondary">Try adjusting your filters or check back later</Text>
-              </div>
-            }
-            className="py-12"
+            description="No notifications found. Try adjusting your filters or check back later"
+            className="py-8"
           />
         ) : (
           <List
@@ -481,12 +452,11 @@ export default function NotificationsPage() {
               current: currentPage,
               pageSize: pageSize,
               total: total,
+              onChange: handlePageChange,
+              onShowSizeChange: handlePageChange,
               showSizeChanger: true,
               showQuickJumper: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} notifications`,
-              className: 'mt-6',
-              onChange: handlePageChange,
-              onShowSizeChange: handlePageChange
+              showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
             }}
           />
         )}

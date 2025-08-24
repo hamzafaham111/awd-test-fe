@@ -15,7 +15,7 @@ This document describes the Stripe integration implemented for customer creation
 
 ### Test Environment (Current)
 ```env
-NEXT_PUBLIC_STRIPE_TEST_PUBLIC_KEY=pk_test_your_test_public_key_here
+NEXT_PUBLIC_STRIPE_TEST_PUBLIC_KEY=pk_test_51NYyRFEaPimPIhjgHrqQ69zPKJcrawhGcaP4KD6vNTqsjDgzCucIxwjlh0fIPhq7KqrOtXAIiX1nde5zcN84HNIv00gCZ6R9Du
 STRIPE_TEST_SECRET_KEY=sk_test_your_test_secret_key_here
 STRIPE_LIVE_MODE=false
 ```

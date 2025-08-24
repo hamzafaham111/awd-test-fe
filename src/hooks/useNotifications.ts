@@ -26,8 +26,15 @@ export const useNotifications = () => {
         pageSize,
       });
       
-      setNotifications(response.notifications);
-      setTotal(response.total);
+      // Ensure we have valid data before setting state
+      if (response && Array.isArray(response.notifications)) {
+        setNotifications(response.notifications);
+        setTotal(response.total || 0);
+      } else {
+        console.warn('Invalid notifications response:', response);
+        setNotifications([]);
+        setTotal(0);
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch notifications';
       setError(errorMessage);
@@ -154,8 +161,8 @@ export const useNotifications = () => {
     
     // Computed
     hasUnread: unreadCount > 0,
-    unreadNotifications: notifications.filter(n => !n.isRead),
-    readNotifications: notifications.filter(n => n.isRead),
+    unreadNotifications: notifications?.filter(n => !(n.isRead || n.is_read)) || [],
+    readNotifications: notifications?.filter(n => (n.isRead || n.is_read)) || [],
   };
 };
 
@@ -169,8 +176,16 @@ export const useRecentNotifications = (limit: number = 5) => {
     setError(null);
     
     try {
-      const recentNotifications = await notificationService.getRecentNotifications(limit);
-      setNotifications(recentNotifications);
+      // Use the main notifications endpoint instead of /recent/ to ensure it works
+      const response = await notificationService.getNotifications({ pageSize: limit });
+      
+      // Ensure we have valid data before setting state
+      if (response && Array.isArray(response.notifications)) {
+        setNotifications(response.notifications);
+      } else {
+        console.warn('Invalid recent notifications response:', response);
+        setNotifications([]);
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch recent notifications';
       setError(errorMessage);
@@ -213,7 +228,7 @@ export const useRecentNotifications = (limit: number = 5) => {
     error,
     fetchRecentNotifications,
     markAsRead,
-    unreadCount: notifications.filter(n => !n.isRead).length,
+    unreadCount: notifications?.filter(n => !(n.isRead || n.is_read))?.length || 0,
   };
 };
 
@@ -235,8 +250,20 @@ export const useRealTimeNotifications = (pollingInterval: number = DEFAULT_POLLI
         notificationService.getUnreadCount()
       ]);
       
-      setNotifications(notificationsResponse);
-      setUnreadCount(unreadCountResponse);
+      // Ensure we have valid data before setting state
+      if (Array.isArray(notificationsResponse)) {
+        setNotifications(notificationsResponse);
+      } else {
+        console.warn('Invalid real-time notifications response:', notificationsResponse);
+        setNotifications([]);
+      }
+      
+      if (typeof unreadCountResponse === 'number') {
+        setUnreadCount(unreadCountResponse);
+      } else {
+        console.warn('Invalid unread count response:', unreadCountResponse);
+        setUnreadCount(0);
+      }
       setLastUpdate(new Date());
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch notifications';
@@ -251,9 +278,9 @@ export const useRealTimeNotifications = (pollingInterval: number = DEFAULT_POLLI
     try {
       await notificationService.markAsRead(notificationId);
       
-      // Update local state
+      // Update local state - handle both field names
       setNotifications(prev => 
-        prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n)
+        prev.map(n => n.id.toString() === notificationId ? { ...n, isRead: true, is_read: true } : n)
       );
       
       // Update unread count

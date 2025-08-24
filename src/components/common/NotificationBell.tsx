@@ -4,23 +4,13 @@ import React, { useState } from 'react';
 import { Badge, Popover, Button, List, Typography, Space, Tag, Avatar, Empty, Spin } from 'antd';
 import { BellOutlined, ExclamationCircleOutlined, InfoCircleOutlined, CheckCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
-import { useRealTimeNotifications } from '@/hooks/useNotifications';
+import { useNotifications } from '@/hooks/useNotifications';
+import { Notification } from '@/services/api/notifications';
+import { formatDistanceToNow } from 'date-fns';
 
 const { Text, Title } = Typography;
 
-interface Notification {
-  id: string;
-  title: string;
-  content: string;
-  priority: 'high' | 'medium' | 'low';
-  type: 'system' | 'auction' | 'payment' | 'inspection' | 'transport' | 'general';
-  isRead: boolean;
-  createdAt: string;
-  sender?: string;
-  actionUrl?: string;
-}
-
-// Remove mock data - now using real-time API
+// Remove the local Notification interface since we're importing it
 
 const getPriorityIcon = (priority: string) => {
   switch (priority) {
@@ -69,19 +59,15 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   
-  // Use real-time notifications hook with 30-second polling
+  // Use the main notifications hook for the dropdown
   const {
     notifications,
-    unreadCount,
     loading,
     error,
-    lastUpdate,
-    isRealTime,
+    fetchNotifications,
     markAsRead,
-    refresh,
-    pausePolling,
-    resumePolling
-  } = useRealTimeNotifications(30000); // 30 seconds
+    unreadCount
+  } = useNotifications();
 
   const recentNotifications = notifications.slice(0, 5); // Show only 5 most recent
 
@@ -94,9 +80,13 @@ export default function NotificationBell() {
     router.push('/notifications');
   };
 
+  const handleRefresh = () => {
+    fetchNotifications();
+  };
+
   const handleNotificationClick = (notification: Notification) => {
-    if (!notification.isRead) {
-      handleMarkAsRead(notification.id);
+    if (!(notification.isRead || notification.is_read)) {
+      handleMarkAsRead(notification.id.toString());
     }
     if (notification.actionUrl) {
       router.push(notification.actionUrl);
@@ -111,19 +101,17 @@ export default function NotificationBell() {
           <Title level={5} className="mb-0">Notifications</Title>
           {loading && <Spin size="small" />}
           {error && <span className="text-red-500 text-xs">Error loading</span>}
-          {isRealTime && (
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-xs text-gray-500">Live</span>
-            </div>
-          )}
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-xs text-gray-500">Live</span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Button 
             type="text" 
             size="small" 
             icon={<ReloadOutlined />} 
-            onClick={refresh}
+            onClick={handleRefresh}
             loading={loading}
             title="Refresh notifications"
           />
@@ -142,11 +130,11 @@ export default function NotificationBell() {
       ) : (
         <List
           dataSource={recentNotifications}
-          renderItem={(notification) => (
+          renderItem={(notification: Notification) => (
             <List.Item
               key={notification.id}
               className={`cursor-pointer hover:bg-gray-50 rounded-md p-2 transition-colors ${
-                !notification.isRead ? 'bg-blue-50' : ''
+                !(notification.isRead || notification.is_read) ? 'bg-blue-50' : ''
               }`}
               onClick={() => handleNotificationClick(notification)}
             >
@@ -165,57 +153,29 @@ export default function NotificationBell() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <Title level={5} className="mb-0 text-sm" style={{ 
-                      color: notification.isRead ? '#6b7280' : '#111827',
-                      fontWeight: notification.isRead ? 'normal' : '600'
+                      color: (notification.isRead || notification.is_read) ? '#6b7280' : '#111827',
+                      fontWeight: (notification.isRead || notification.is_read) ? 'normal' : '600'
                     }}>
                       {notification.title}
                     </Title>
-                    {!notification.isRead && (
+                    {!(notification.isRead || notification.is_read) && (
                       <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                     )}
                   </div>
                   
                   <Text className="text-xs text-gray-600 line-clamp-2 mb-2 block">
-                    {notification.content}
+                    {notification.content || notification.text}
                   </Text>
                   
-                  <div className="flex items-center justify-between">
-                    <Space size="small">
-                      <Tag color={getTypeColor(notification.type)}>
-                        {notification.type.charAt(0).toUpperCase() + notification.type.slice(1)}
-                      </Tag>
-                      <Tag color={getPriorityColor(notification.priority)}>
-                        {notification.priority.charAt(0).toUpperCase() + notification.priority.slice(1)}
-                      </Tag>
-                    </Space>
-                    
-                    <Text type="secondary" className="text-xs">
-                      {new Date(notification.createdAt).toLocaleTimeString([], { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
-                    </Text>
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>{formatDistanceToNow(new Date(notification.createdAt || notification.created_at || Date.now()), { addSuffix: true })}</span>
+                    {notification.sender && <span>From: {notification.sender}</span>}
                   </div>
                 </div>
               </div>
             </List.Item>
           )}
-          className="max-h-96 overflow-y-auto"
         />
-      )}
-      
-      {notifications.length > 5 && (
-        <div className="text-center pt-2 border-t">
-          <Button type="link" size="small" onClick={handleViewAll}>
-            View {notifications.length - 5} more notifications
-          </Button>
-        </div>
-      )}
-      
-      {lastUpdate && (
-        <div className="text-center pt-2 border-t text-xs text-gray-500">
-          Last updated: {lastUpdate.toLocaleTimeString()}
-        </div>
       )}
     </div>
   );
