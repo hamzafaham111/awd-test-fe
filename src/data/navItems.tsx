@@ -23,6 +23,7 @@ import {
   TagsOutlined,
   PlusOutlined,
   QuestionCircleOutlined,
+  BellOutlined,
 } from "@ant-design/icons";
 import React from "react";
 
@@ -116,6 +117,7 @@ export const navItemsByRole: NavItemsByRole = {
       ]
     },
     { label: "Titles", icon: <FileTextOutlined />, href: "/titles" },
+    { label: "Notifications", icon: <BellOutlined />, href: "/notifications" },
     {
       label: "Transportation", icon: <CarOutlined />, 
       children: [

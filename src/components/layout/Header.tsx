@@ -8,6 +8,7 @@ import {
   LogoutOutlined,
   CloseOutlined,
 } from "@ant-design/icons";
+import NotificationBell from "@/components/common/NotificationBell";
 import { Drawer, Button, Avatar, Dropdown, Menu } from "antd";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
@@ -184,6 +185,7 @@ export default function Header({ navItems, roleLabel, dsMode = false, children }
             aria-label="Toggle Fullscreen"
             onClick={handleFullscreen}
           />
+          <NotificationBell />
         </div>
         <Dropdown overlay={userMenu} trigger={["click"]} placement="bottomRight" arrow>
           <Avatar size={40} src={user.avatar} className="bg-blue-100 cursor-pointer" />

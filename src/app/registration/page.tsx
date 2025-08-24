@@ -1,13 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Form, Button, message, Radio, Checkbox } from "antd"
+import { Form, Button, message, Radio, Checkbox, Modal } from "antd"
 import type { UploadFile } from "antd/es/upload/interface"
 import { AuthLayout } from "@/components/layout/AuthLayout"
 import { FormField } from "@/components/common/FormField"
 import { ProgressIndicator } from "@/components/common/ProgressIndicator"
+import StripeCustomerSetup from "@/components/stripe/StripeCustomerSetup"
 
-import { CheckCircleFilled } from "@ant-design/icons"
+import { CheckCircleFilled, CreditCardOutlined } from "@ant-design/icons"
 import Image from "next/image"
 import axios from "axios"
 import Link from "next/link"
@@ -170,6 +171,8 @@ export default function Registration() {
 
   // 6. Update onFinish to build FormData and map fields
   const [submitting, setSubmitting] = useState(false);
+  const [stripeModalVisible, setStripeModalVisible] = useState(false);
+  const [stripeCustomerId, setStripeCustomerId] = useState<string | null>(null);
 
   const onFinish = async () => {
     const apiData = new FormData();
@@ -224,6 +227,20 @@ export default function Registration() {
 
   const redirectToLogin = () => {
     router.push("/login");
+  };
+
+  const handleStripeSuccess = (customerId: string) => {
+    setStripeCustomerId(customerId);
+    setStripeModalVisible(false);
+    showSuccessToast('Stripe setup completed successfully!');
+  };
+
+  const handleStripeCancel = () => {
+    setStripeModalVisible(false);
+  };
+
+  const openStripeSetup = () => {
+    setStripeModalVisible(true);
   };
 
   // Animation classes for Tailwind
@@ -484,6 +501,18 @@ export default function Registration() {
                 Thank you for registering with AWD Auctions. We&apos;ll review your information and get back to you within 24 hours.
               </p>
             </div>
+            
+            {/* Stripe Status */}
+            {stripeCustomerId && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <p className="text-green-800 font-medium">
+                  <span className="font-bold">✅ Stripe Connected:</span> Your payment method has been successfully set up.
+                </p>
+                <p className="text-sm text-green-600 mt-2">
+                  You can now participate in auctions and make payments.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -544,14 +573,27 @@ export default function Registration() {
                 Register
               </Button>
             ) : (
-              <Button
-                type="primary"
-                className="px-12 py-2 h-11 bg-sky-600 hover:bg-sky-700 rounded-lg"
-                onClick={redirectToLogin}
-                disabled={animating}
-              >
-                Redirect to Login
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                {!stripeCustomerId && (
+                  <Button
+                    type="primary"
+                    className="px-8 py-2 h-11 bg-green-600 hover:bg-green-700 rounded-lg"
+                    onClick={openStripeSetup}
+                    disabled={animating}
+                    icon={<CreditCardOutlined />}
+                  >
+                    Connect to Stripe
+                  </Button>
+                )}
+                <Button
+                  type="primary"
+                  className="px-8 py-2 h-11 bg-sky-600 hover:bg-sky-700 rounded-lg"
+                  onClick={redirectToLogin}
+                  disabled={animating}
+                >
+                  Redirect to Login
+                </Button>
+              </div>
             )}
           </div>
           {/* Progress Indicator - always at the bottom */}
@@ -560,6 +602,34 @@ export default function Registration() {
           </div>
         </div>
       </div>
+
+      {/* Stripe Customer Setup Modal */}
+      <Modal
+        title="Connect to Stripe"
+        open={stripeModalVisible}
+        onCancel={handleStripeCancel}
+        footer={null}
+        width={800}
+        centered
+        destroyOnClose
+      >
+        <StripeCustomerSetup
+          userData={{
+            email: formData.email,
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            phone_number: formData.phone_number,
+            dealership_name: formData.dealership_name,
+            street_name: formData.street_name,
+            city_name: formData.city_name,
+            state_id: formData.state_id,
+            zipcode: formData.zipcode,
+            tax_id: formData.tax_id,
+          }}
+          onSuccess={handleStripeSuccess}
+          onCancel={handleStripeCancel}
+        />
+      </Modal>
     </AuthLayout>
   )
 } 
